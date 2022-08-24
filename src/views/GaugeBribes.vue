@@ -13,6 +13,8 @@ import { ethers } from 'ethers';
 import { BigNumber } from '@ethersproject/bignumber';
 import gaugeController from '../abi/gaugeController.json';
 import gauge from '../abi/gauge.json';
+import angleGauge from '../abi/angleGauge.json';
+import fraxGauge from '../abi/fraxGauge.json';
 import bribeV3 from '../abi/bribev3.json';
 import erc20 from '../abi/erc20.json';
 import { commify } from '@/helpers/utils';
@@ -24,7 +26,7 @@ const { env } = useApp();
 const themeBefore = userTheme.value;
 
 const state = reactive({
-  selectedProject: projects[0],
+  selectedProject: projects[1],
   gaugesLoading: true,
   gauges: [],
   showTable: false,
@@ -39,7 +41,7 @@ const state = reactive({
 loadGauges();
 
 async function loadGauges(skip = 0) {
-  //ToDo: get lp token from frax and angle
+  //ToDo: support some special cases for frax and angle or just add them to the json
   //ToDo: show claimable rewards for all projects
   //ToDo: get rewards for all projects in backend
   //ToDo: create json for adding manual gauge names
@@ -75,16 +77,16 @@ async function loadGauges(skip = 0) {
       for (let i = skip; i < numGauges; i++) {
         const {
           gaugeAddress,
-          lpTokenAddress,
+          tokenAddress,
           gaugeName,
           gaugeWeight,
           totalRewards,
           dollarsPerVote
-        } = await getGaugeInfo(signer, gaugeControllerContract, i);
+        } = await getGaugeInfo(provider, signer, gaugeControllerContract, i);
         let newGauge = {
           id: i,
           address: gaugeAddress,
-          lpTokenAddress,
+          tokenAddress,
           name: gaugeName,
           gaugeWeight,
           totalRewards,
@@ -102,7 +104,7 @@ async function loadGauges(skip = 0) {
   }
 }
 
-async function getGaugeInfo(signer, gaugeController, index) {
+async function getGaugeInfo(provider, signer, gaugeController, index) {
   try {
     const gaugeAddress = await gaugeController.gauges(index);
     console.log(gaugeAddress);
@@ -116,6 +118,8 @@ async function getGaugeInfo(signer, gaugeController, index) {
       gaugeController.get_gauge_weight(gaugeAddress),
       bribeContract.rewards_per_gauge(gaugeAddress)
     ]);
+
+    console.log(gaugeType.toString());
 
     gaugeWeight = parseFloat(ethers.utils.formatUnits(gaugeWeight, 18));
 
@@ -141,19 +145,71 @@ async function getGaugeInfo(signer, gaugeController, index) {
     let dollarsPerVote = gaugeWeight > 0 ? totalRewards / gaugeWeight : 0;
 
     let name = 'Unknown';
-    let lpTokenAddress = '';
+    let tokenAddress = '';
 
     if (['0', '5', '6'].includes(gaugeType.toString())) {
-      const gaugeContract = new ethers.Contract(
-        gaugeAddress,
-        gauge.abi,
-        signer
-      );
-      let lpTokenAddress = await gaugeContract.lp_token();
-      // if not 0, we cant get LP token info because it is on a different chain
-      const lpToken = new ethers.Contract(lpTokenAddress, erc20.abi, signer);
-      name = await lpToken.name();
-    } else {
+      switch (state.selectedProject.name) {
+        case 'FRAX': {
+          const bytecode = await provider.getCode(gaugeAddress);
+          const gaugeContract = new ethers.Contract(
+            gaugeAddress,
+            fraxGauge.abi,
+            signer
+          );
+          try {
+            if (
+              bytecode.includes(ethers.utils.id('uni_token0()').slice(2, 10))
+            ) {
+              let token1 = await gaugeContract.uni_token0();
+              let token2 = await gaugeContract.uni_token1();
+              console.log(token1, token2);
+              const token1Contract = new ethers.Contract(
+                token1,
+                erc20.abi,
+                signer
+              );
+              const token2Contract = new ethers.Contract(
+                token2,
+                erc20.abi,
+                signer
+              );
+              let token1Name = await token1Contract.name();
+              let token2Name = await token2Contract.name();
+              name = `${token1Name}/${token2Name}`;
+            }
+            if (bytecode.includes(ethers.utils.id('name()').slice(2, 10))) {
+              name = await gaugeContract.name();
+            }
+          } catch (e) {
+            console.log(e);
+          }
+          break;
+        }
+        case 'ANGLE': {
+          const gaugeContract = new ethers.Contract(
+            gaugeAddress,
+            angleGauge.abi,
+            signer
+          );
+          tokenAddress = await gaugeContract.staking_token();
+          const lpToken = new ethers.Contract(tokenAddress, erc20.abi, signer);
+          name = await lpToken.name();
+          break;
+        }
+        default: {
+          const gaugeContract = new ethers.Contract(
+            gaugeAddress,
+            gauge.abi,
+            signer
+          );
+          tokenAddress = await gaugeContract.lp_token();
+          const lpToken = new ethers.Contract(tokenAddress, erc20.abi, signer);
+          name = await lpToken.name();
+          break;
+        }
+      }
+    }
+    if (name === 'Unknown') {
       //manually map gauge names
       switch (gaugeAddress) {
         case '0xb9C05B8EE41FDCbd9956114B3aF15834FDEDCb54':
@@ -252,7 +308,7 @@ async function getGaugeInfo(signer, gaugeController, index) {
 
     return {
       gaugeAddress: gaugeAddress,
-      lpTokenAddress: lpTokenAddress,
+      tokenAddress: tokenAddress,
       gaugeName: name,
       gaugeWeight: gaugeWeight,
       totalRewards,
