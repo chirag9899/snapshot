@@ -12,7 +12,7 @@
     "name": "FRAX",
     "gaugeControllerAddress": "0x3669C421b77340B2979d1A00a792CC2ee0FcE737",
     "veAddress": "0xc8418aF6358FFddA74e09Ca9CC3Fe03Ca6aDC5b0",
-    "bribeAddress": "0x3fdc08D815cc4ED3B7F69Ee246716f2C8bCD6b07",
+    "bribeAddress": "0xe38b6847E611e942E6c80eD89aE867F522402e80",
     "voteUrl": "https://app.frax.finance/gauge"
   },
   {
@@ -20,7 +20,7 @@
     "name": "ANGLE",
     "gaugeControllerAddress": "0x9aD7e7b0877582E14c17702EecF49018DD6f2367",
     "veAddress": "0x0C462Dbb9EC8cD1630f1728B2CFD2769d09f0dd5",
-    "bribeAddress": "0x286B8DecD5ED79c962b2d8F4346CD97FF0E2C352",
+    "bribeAddress": "0x2c8ED11fd7A058096F2e5828799c68BE88744E2F",
     "voteUrl": "https://app.angle.money/#/gauge"
   },
   {
@@ -28,7 +28,7 @@
     "name": "IDLE",
     "gaugeControllerAddress": "0xaC69078141f76A1e257Ee889920d02Cc547d632f",
     "veAddress": "0xaAC13a116eA7016689993193FcE4BadC8038136f",
-    "bribeAddress": "0xb868Cc77A95a65F42611724AF05Aa2d3B6Ec05F2",
+    "bribeAddress": "0x7580708993de7CA120E957A62f26A5dDD4b3D8aC",
     "voteUrl": "https://app.idle.finance/#/gauges"
   }
 ]

@@ -10,6 +10,7 @@ import InputString from '../components/InputString.vue';
 import InputNumber from '../components/InputNumber.vue';
 import Projects from '../../config/Projects.json';
 import GaugeNames from '../../config/GaugeNames.json';
+import ignoredGauges from '../../config/ignoredGauges.json';
 import { ethers } from 'ethers';
 import { BigNumber } from '@ethersproject/bignumber';
 import gaugeController from '../abi/gaugeController.json';
@@ -36,7 +37,8 @@ const state = reactive({
   bribeToken: '',
   bribeAmount: 0,
   tokenError: {},
-  amountError: {}
+  amountError: {},
+  ignoredGauges: 0
 });
 
 loadGauges();
@@ -62,36 +64,44 @@ async function loadGauges(skip = 0) {
       const count = await gaugeControllerContract.n_gauges();
       console.log('count', count.toString());
 
-      let numGauges = 10;
+      let numGauges = 5;
 
       if (skip == 0) {
         state.gauges = [];
+        state.ignoredGauges = 0;
       } else {
         if (count >= state.gauges.length + numGauges) {
-          numGauges = state.gauges.length - 1 + 5;
+          numGauges = state.gauges.length - 1 + numGauges;
         } else {
           numGauges = count;
         }
       }
 
-      for (let i = skip; i < numGauges; i++) {
-        const {
-          gaugeAddress,
-          gaugeName,
-          gaugeWeight,
-          totalRewards,
-          dollarsPerVote
-        } = await getGaugeInfo(provider, signer, gaugeControllerContract, i);
-        let newGauge = {
-          id: i,
-          address: gaugeAddress,
-          name: gaugeName,
-          gaugeWeight,
-          totalRewards,
-          dollarsPerVote
-        };
-        gauges.push(newGauge);
+      for (let i = skip; i < numGauges - state.ignoredGauges; i++) {
+        const gaugeAddress = await gaugeControllerContract.gauges(i);
+        console.log(gaugeAddress);
+        if (!ignoredGauges.includes(gaugeAddress)) {
+          const { gaugeName, gaugeWeight, totalRewards, dollarsPerVote } =
+            await getGaugeInfo(
+              provider,
+              signer,
+              gaugeAddress,
+              gaugeControllerContract,
+              i
+            );
+          let newGauge = {
+            id: i,
+            address: gaugeAddress,
+            name: gaugeName,
+            gaugeWeight,
+            totalRewards,
+            dollarsPerVote
+          };
+          gauges.push(newGauge);
+        }
       }
+    } else {
+      state.ignoredGauges++;
     }
   } catch (e) {
     console.log('e', e);
@@ -102,10 +112,14 @@ async function loadGauges(skip = 0) {
   }
 }
 
-async function getGaugeInfo(provider, signer, gaugeController, index) {
+async function getGaugeInfo(
+  provider,
+  signer,
+  gaugeAddress,
+  gaugeController,
+  index
+) {
   try {
-    const gaugeAddress = await gaugeController.gauges(index);
-    console.log(gaugeAddress);
     const bribeContract = new ethers.Contract(
       state.selectedProject.bribeAddress,
       bribeV3.abi,
@@ -203,6 +217,7 @@ async function getGaugeInfo(provider, signer, gaugeController, index) {
         }
       }
     }
+
     if (name === 'Unknown') {
       //get gauge name from config file
       let item = GaugeNames.find(({ address }) => address === gaugeAddress);
@@ -212,7 +227,6 @@ async function getGaugeInfo(provider, signer, gaugeController, index) {
     }
 
     return {
-      gaugeAddress: gaugeAddress,
       gaugeName: name,
       gaugeWeight: gaugeWeight,
       totalRewards,
