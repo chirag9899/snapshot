@@ -46,7 +46,6 @@ loadGauges();
 async function loadGauges(skip = 0) {
   //ToDo: support some special cases for frax and angle or just add them to the json
   //ToDo: show claimable rewards for all Projects
-  //ToDo: get rewards for all Projects in backend
   //ToDo: improve app stucture
   state.gaugesLoading = true;
   state.showTable = skip > 0 ? true : false;
