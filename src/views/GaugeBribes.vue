@@ -166,6 +166,17 @@ async function getGaugeInfo(
           );
           try {
             if (
+              bytecode.includes(ethers.utils.id('stakingToken()').slice(2, 10))
+            ) {
+              tokenAddress = await gaugeContract.stakingToken();
+              const lpToken = new ethers.Contract(
+                tokenAddress,
+                erc20.abi,
+                signer
+              );
+              name = await lpToken.name();
+            }
+            if (
               bytecode.includes(ethers.utils.id('uni_token0()').slice(2, 10))
             ) {
               let token1 = await gaugeContract.uni_token0();
