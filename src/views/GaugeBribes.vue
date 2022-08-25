@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, onUnmounted, ref, computed, reactive } from 'vue';
+import { onMounted, onUnmounted, reactive } from 'vue';
 import { useI18n } from '@/composables/useI18n';
 import { useSkin, DARK } from '@/composables/useSkin';
 import { useApp } from '@/composables/useApp';
@@ -9,17 +9,12 @@ import BaseModal from '../components/BaseModal.vue';
 import InputString from '../components/InputString.vue';
 import InputNumber from '../components/InputNumber.vue';
 import Projects from '../../config/Projects.json';
-import GaugeNames from '../../config/GaugeNames.json';
 import ignoredGauges from '../../config/ignoredGauges.json';
 import { ethers } from 'ethers';
-import { BigNumber } from '@ethersproject/bignumber';
 import gaugeController from '../abi/gaugeController.json';
-import gauge from '../abi/gauge.json';
-import angleGauge from '../abi/angleGauge.json';
-import fraxGauge from '../abi/fraxGauge.json';
-import bribeV3 from '../abi/bribev3.json';
-import erc20 from '../abi/erc20.json';
 import { commify } from '@/helpers/utils';
+
+import { getGaugeInfo, addRewardAmount } from '@/helpers/bribeContracts';
 
 const { setPageTitle } = useI18n();
 const { userTheme } = useSkin();
@@ -46,7 +41,6 @@ loadGauges();
 async function loadGauges(skip = 0) {
   //ToDo: support some special cases for frax and angle or just add them to the json
   //ToDo: show claimable rewards for all Projects
-  //ToDo: improve app stucture
   state.gaugesLoading = true;
   state.showTable = skip > 0 ? true : false;
   let gauges = [];
@@ -82,8 +76,10 @@ async function loadGauges(skip = 0) {
         if (!ignoredGauges.includes(gaugeAddress)) {
           const { gaugeName, gaugeWeight, totalRewards, dollarsPerVote } =
             await getGaugeInfo(
+              state.selectedProject.name,
               provider,
               signer,
+              state.selectedProject.bribeAddress,
               gaugeAddress,
               gaugeControllerContract,
               i
@@ -109,167 +105,6 @@ async function loadGauges(skip = 0) {
     state.gaugesLoading = false;
     state.showTable = true;
   }
-}
-
-async function getGaugeInfo(
-  provider,
-  signer,
-  gaugeAddress,
-  gaugeController,
-  index
-) {
-  try {
-    const bribeContract = new ethers.Contract(
-      state.selectedProject.bribeAddress,
-      bribeV3.abi,
-      signer
-    );
-    let [gaugeType, gaugeWeight, rewards] = await Promise.all([
-      gaugeController.gauge_types(gaugeAddress),
-      gaugeController.get_gauge_weight(gaugeAddress),
-      bribeContract.rewards_per_gauge(gaugeAddress)
-    ]);
-
-    console.log(gaugeType.toString());
-
-    gaugeWeight = parseFloat(ethers.utils.formatUnits(gaugeWeight, 18));
-
-    //calculate total dollar amounts
-    let period = getActivePeriod();
-    let totalRewards = 0;
-    for (let i = 0; i < rewards.length; i++) {
-      const token = new ethers.Contract(rewards[i], erc20.abi, signer);
-      let decimals = BigNumber.from(await token.decimals()).toNumber();
-      console.log(decimals);
-      let bribeAmount = ethers.utils.formatUnits(
-        await bribeContract._reward_per_gauge(period, gaugeAddress, rewards[i]),
-        decimals
-      );
-      let { price } = await tokenPriceLogo(rewards[i]);
-      let dollarAmount = bribeAmount * price;
-      totalRewards += dollarAmount;
-    }
-
-    let dollarsPerVote = gaugeWeight > 0 ? totalRewards / gaugeWeight : 0;
-
-    let name = 'Unknown';
-    let tokenAddress = '';
-
-    if (['0', '5', '6'].includes(gaugeType.toString())) {
-      switch (state.selectedProject.name) {
-        case 'FRAX': {
-          const bytecode = await provider.getCode(gaugeAddress);
-          const gaugeContract = new ethers.Contract(
-            gaugeAddress,
-            fraxGauge.abi,
-            signer
-          );
-          try {
-            if (
-              bytecode.includes(ethers.utils.id('stakingToken()').slice(2, 10))
-            ) {
-              tokenAddress = await gaugeContract.stakingToken();
-              const lpToken = new ethers.Contract(
-                tokenAddress,
-                erc20.abi,
-                signer
-              );
-              name = await lpToken.name();
-            }
-            if (
-              bytecode.includes(ethers.utils.id('uni_token0()').slice(2, 10))
-            ) {
-              let token1 = await gaugeContract.uni_token0();
-              let token2 = await gaugeContract.uni_token1();
-              const token1Contract = new ethers.Contract(
-                token1,
-                erc20.abi,
-                signer
-              );
-              const token2Contract = new ethers.Contract(
-                token2,
-                erc20.abi,
-                signer
-              );
-              let token1Name = await token1Contract.name();
-              let token2Name = await token2Contract.name();
-              name = `${token1Name}/${token2Name}`;
-            }
-            if (bytecode.includes(ethers.utils.id('name()').slice(2, 10))) {
-              name = await gaugeContract.name();
-            }
-          } catch (e) {
-            console.log(e);
-          }
-          break;
-        }
-        case 'ANGLE': {
-          const gaugeContract = new ethers.Contract(
-            gaugeAddress,
-            angleGauge.abi,
-            signer
-          );
-          tokenAddress = await gaugeContract.staking_token();
-          const lpToken = new ethers.Contract(tokenAddress, erc20.abi, signer);
-          name = await lpToken.name();
-          break;
-        }
-        default: {
-          const gaugeContract = new ethers.Contract(
-            gaugeAddress,
-            gauge.abi,
-            signer
-          );
-          tokenAddress = await gaugeContract.lp_token();
-          const lpToken = new ethers.Contract(tokenAddress, erc20.abi, signer);
-          name = await lpToken.name();
-          break;
-        }
-      }
-    }
-
-    if (name === 'Unknown') {
-      //get gauge name from config file
-      let item = GaugeNames.find(({ address }) => address === gaugeAddress);
-      if (item) {
-        name = item.name;
-      }
-    }
-
-    return {
-      gaugeName: name,
-      gaugeWeight: gaugeWeight,
-      totalRewards,
-      dollarsPerVote,
-      gaugeType: gaugeType
-    };
-  } catch (ex) {
-    console.log('------------------------------------');
-    console.log(
-      `exception thrown in getGaugeInfo(${gaugeController}, ${index})`
-    );
-    console.log(ex);
-    console.log('------------------------------------');
-    return null;
-  }
-}
-
-function getActivePeriod() {
-  const WEEK = BigNumber.from(86400).mul(7);
-  const date = Math.floor(new Date().getTime() / 1000);
-  return Math.floor(date / WEEK) * WEEK;
-}
-
-async function tokenPriceLogo(token) {
-  let url = `https://api.coingecko.com/api/v3/coins/ethereum/contract/${token}`;
-
-  const response = await fetch(url);
-  const body = await response.json();
-  const data = {
-    price: body.market_data ? body.market_data.current_price.usd : 0,
-    logo: body.image ? body.image.large : null
-  };
-  return data;
 }
 
 onMounted(() => {
@@ -298,44 +133,20 @@ async function addBribe() {
 
   if (state.bribeAmount < 0) {
     state.amountError.message = 'Please enter a valid token amount';
+    return;
   }
 
   try {
-    const { ethereum } = window;
-    if (ethereum) {
-      const provider = new ethers.providers.Web3Provider(ethereum);
-      const signer = provider.getSigner();
+    await addRewardAmount(
+      state.selectedProject.bribeAddress,
+      state.selectedGauge,
+      state.bribeAmount,
+      state.bribeToken
+    );
+    state.bribeAmount = 0;
+    state.bribeToken = '';
 
-      const token = new ethers.Contract(state.bribeToken, erc20.abi, signer);
-      let decimals = await token.decimals();
-      let amount = ethers.utils.parseUnits(
-        state.bribeAmount.toString(),
-        decimals
-      );
-
-      let approveTx = await token.approve(
-        state.selectedProject.bribeAddress,
-        amount
-      );
-      console.log(approveTx);
-
-      const bribeContract = new ethers.Contract(
-        state.selectedProject.bribeAddress,
-        bribeV3.abi,
-        signer
-      );
-      let tx = await bribeContract.add_reward_amount(
-        state.selectedGauge.address,
-        state.bribeToken,
-        amount
-      );
-      console.log(tx);
-
-      state.bribeAmount = 0;
-      state.bribeToken = '';
-
-      loadGauges();
-    }
+    loadGauges();
   } catch (e) {
     console.log(e);
   }
