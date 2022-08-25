@@ -77,8 +77,6 @@ async function loadGauges(skip = 0) {
           const { gaugeName, gaugeWeight, totalRewards, dollarsPerVote } =
             await getGaugeInfo(
               state.selectedProject.name,
-              provider,
-              signer,
               state.selectedProject.bribeAddress,
               gaugeAddress,
               gaugeControllerContract,
@@ -93,10 +91,10 @@ async function loadGauges(skip = 0) {
             dollarsPerVote
           };
           gauges.push(newGauge);
+        } else {
+          state.ignoredGauges++;
         }
       }
-    } else {
-      state.ignoredGauges++;
     }
   } catch (e) {
     console.log('e', e);

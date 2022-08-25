@@ -8,10 +8,14 @@ import { BigNumber } from '@ethersproject/bignumber';
 import { ethers } from 'ethers';
 import GaugeNames from '../../config/GaugeNames.json';
 
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+const { ethereum } = window;
+const provider = new ethers.providers.Web3Provider(ethereum);
+const signer = provider.getSigner();
+
 export async function getGaugeInfo(
   projectName,
-  provider,
-  signer,
   bribeAddress,
   gaugeAddress,
   gaugeController,
@@ -60,12 +64,12 @@ export async function getGaugeInfo(
     if (['0', '5', '6'].includes(gaugeType.toString())) {
       switch (projectName) {
         case 'FRAX': {
-          const bytecode = await provider.getCode(gaugeAddress);
-          const gaugeContract = new ethers.Contract(
-            gaugeAddress,
-            fraxGauge.abi,
-            signer
-          );
+          // const bytecode = await provider.getCode(gaugeAddress);
+          // const gaugeContract = new ethers.Contract(
+          //   gaugeAddress,
+          //   fraxGauge.abi,
+          //   signer
+          // );
           try {
             name = await getContractName(gaugeAddress);
             console.log(name);
@@ -186,13 +190,7 @@ export async function addRewardAmount(
   bribeAmount,
   bribeToken
 ) {
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  const { ethereum } = window;
   if (ethereum) {
-    const provider = new ethers.providers.Web3Provider(ethereum);
-    const signer = provider.getSigner();
-
     const token = new ethers.Contract(bribeToken, erc20.abi, signer);
     const decimals = await token.decimals();
     const amount = ethers.utils.parseUnits(bribeAmount.toString(), decimals);
