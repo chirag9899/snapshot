@@ -26,15 +26,15 @@ const { web3Account } = useWeb3();
             class="-ml-3 hidden items-center sm:block"
             style="font-size: 24px"
           >
-            snapshot
+            quicksnap
           </router-link>
         </div>
         <div :key="web3Account" class="flex space-x-2">
           <NavbarAccount />
 
-          <NavbarNotifications v-if="web3Account && !domain" />
+          <!--          <NavbarNotifications v-if="web3Account && !domain" />-->
 
-          <NavbarExtras />
+          <!--          <NavbarExtras />-->
         </div>
       </div>
     </BaseContainer>
