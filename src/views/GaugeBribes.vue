@@ -4,7 +4,6 @@ import { useI18n } from '@/composables/useI18n';
 import { useSkin, DARK } from '@/composables/useSkin';
 import { useApp } from '@/composables/useApp';
 import ProjectsListbox from '../components/ProjectsListbox.vue';
-import LoadingSpinner from '../components/LoadingSpinner.vue';
 import BaseModal from '../components/BaseModal.vue';
 import InputString from '../components/InputString.vue';
 import InputNumber from '../components/InputNumber.vue';
@@ -213,7 +212,7 @@ async function addBribe() {
           </tbody>
         </table>
 
-        <LoadingRow v-if="state.gaugesLoading" :block="true" />
+        <LoadingRow v-if="state.gaugesLoading" class="mt-4" :block="true" />
         <BaseButton
           class="mt-4 w-full"
           :disabled="state.gaugesLoading"
