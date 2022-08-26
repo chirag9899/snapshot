@@ -44,11 +44,11 @@ export async function getGaugeInfo(
     for (let i = 0; i < rewards.length; i++) {
       const token = new ethers.Contract(rewards[i], erc20.abi, signer);
       const decimals = BigNumber.from(await token.decimals()).toNumber();
-      console.log(decimals);
       const bribeAmount = ethers.utils.formatUnits(
         await bribeContract._reward_per_gauge(period, gaugeAddress, rewards[i]),
         decimals
       );
+      console.log(rewards[i], bribeAmount);
       const { price } = await tokenPriceLogo(rewards[i]);
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
@@ -64,48 +64,8 @@ export async function getGaugeInfo(
     if (['0', '5', '6'].includes(gaugeType.toString())) {
       switch (projectName) {
         case 'FRAX': {
-          // const bytecode = await provider.getCode(gaugeAddress);
-          // const gaugeContract = new ethers.Contract(
-          //   gaugeAddress,
-          //   fraxGauge.abi,
-          //   signer
-          // );
           try {
             name = await getContractName(gaugeAddress);
-            console.log(name);
-            // if (
-            //   bytecode.includes(ethers.utils.id('stakingToken()').slice(2, 10))
-            // ) {
-            //   tokenAddress = await gaugeContract.stakingToken();
-            //   const lpToken = new ethers.Contract(
-            //     tokenAddress,
-            //     erc20.abi,
-            //     signer
-            //   );
-            //   name = await lpToken.name();
-            // }
-            // if (
-            //   bytecode.includes(ethers.utils.id('uni_token0()').slice(2, 10))
-            // ) {
-            //   let token1 = await gaugeContract.uni_token0();
-            //   let token2 = await gaugeContract.uni_token1();
-            //   const token1Contract = new ethers.Contract(
-            //     token1,
-            //     erc20.abi,
-            //     signer
-            //   );
-            //   const token2Contract = new ethers.Contract(
-            //     token2,
-            //     erc20.abi,
-            //     signer
-            //   );
-            //   let token1Name = await token1Contract.name();
-            //   let token2Name = await token2Contract.name();
-            //   name = `${token1Name}/${token2Name}`;
-            // }
-            // if (bytecode.includes(ethers.utils.id('name()').slice(2, 10))) {
-            //   name = await gaugeContract.name();
-            // }
           } catch (e) {
             console.log(e);
           }
@@ -151,7 +111,7 @@ export async function getGaugeInfo(
       gaugeWeight: gaugeWeight,
       totalRewards,
       dollarsPerVote,
-      gaugeType: gaugeType
+      gaugeType
     };
   } catch (ex) {
     console.log('------------------------------------');

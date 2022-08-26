@@ -22,6 +22,7 @@ import SpaceSettings from '@/views/SpaceSettings.vue';
 import SpaceAbout from '@/views/SpaceAbout.vue';
 import SpaceTreasury from './views/SpaceTreasury.vue';
 import GaugeBribes from '@/views/GaugeBribes.vue';
+import Rewards from '@/views/Rewards.vue';
 
 // The frontend shows all spaces or just a single one, when being accessed
 // through that space's custom domain.
@@ -112,7 +113,9 @@ if (domain) {
   // If accessed through localhost or snapshot.org, add all routes and
   // prefix space routes with space domain (/:key).
   routes.push(
-    { path: '/', name: 'home', component: GaugeBribes },
+    { path: '/', name: 'home', component: ExploreView },
+    { path: '/gauge-bribes', name: 'gaugebribes', component: GaugeBribes },
+    { path: '/rewards', name: 'rewards', component: Rewards },
     { path: '/about', name: 'about', component: AboutView },
     {
       path: '/setup/:ens?',

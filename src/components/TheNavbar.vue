@@ -23,10 +23,24 @@ const { web3Account } = useWeb3();
           </ButtonSidebar>
           <router-link
             :to="{ path: '/' }"
-            class="-ml-3 hidden items-center sm:block"
+            class="menuItem -ml-3 hidden items-center sm:block"
             style="font-size: 24px"
           >
             quicksnap
+          </router-link>
+          <router-link
+            :to="{ path: '/gauge-bribes' }"
+            class="menuItem -ml-3 hidden items-center sm:block"
+            style="font-size: 18px"
+          >
+            gauge bribes
+          </router-link>
+          <router-link
+            :to="{ path: '/rewards' }"
+            class="menuItem -ml-3 hidden items-center sm:block"
+            style="font-size: 18px"
+          >
+            rewards
           </router-link>
         </div>
         <div :key="web3Account" class="flex space-x-2">
@@ -47,3 +61,9 @@ const { web3Account } = useWeb3();
     {{ $tc('delegate.pendingTransaction', pendingCount) }}
   </div>
 </template>
+
+<style scoped lang="scss">
+.menuItem {
+  margin-right: 50px;
+}
+</style>

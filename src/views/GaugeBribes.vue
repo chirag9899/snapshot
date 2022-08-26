@@ -12,7 +12,7 @@ import Projects from '../../config/Projects.json';
 import ignoredGauges from '../../config/ignoredGauges.json';
 import { ethers } from 'ethers';
 import gaugeController from '../abi/gaugeController.json';
-import { commify } from '@/helpers/utils';
+import { commify, shorten } from '@/helpers/utils';
 
 import { getGaugeInfo, addRewardAmount } from '@/helpers/bribeContracts';
 
@@ -57,40 +57,50 @@ async function loadGauges(skip = 0) {
       const count = await gaugeControllerContract.n_gauges();
       console.log('count', count.toString());
 
-      let numGauges = 5;
+      let numGauges = 20;
 
       if (skip == 0) {
         state.gauges = [];
         state.ignoredGauges = 0;
       } else {
-        if (count >= state.gauges.length + numGauges) {
-          numGauges = state.gauges.length - 1 + numGauges;
+        skip += state.ignoredGauges;
+        if (count >= state.gauges.length + numGauges + state.ignoredGauges) {
+          numGauges = state.gauges.length - 1 + numGauges + state.ignoredGauges;
         } else {
           numGauges = count;
         }
       }
 
-      for (let i = skip; i < numGauges - state.ignoredGauges; i++) {
+      for (let i = skip; i < numGauges; i++) {
         const gaugeAddress = await gaugeControllerContract.gauges(i);
         console.log(gaugeAddress);
         if (!ignoredGauges.includes(gaugeAddress)) {
-          const { gaugeName, gaugeWeight, totalRewards, dollarsPerVote } =
-            await getGaugeInfo(
-              state.selectedProject.name,
-              state.selectedProject.bribeAddress,
-              gaugeAddress,
-              gaugeControllerContract,
-              i
-            );
-          let newGauge = {
-            id: i,
-            address: gaugeAddress,
-            name: gaugeName,
+          const {
+            gaugeName,
             gaugeWeight,
             totalRewards,
-            dollarsPerVote
-          };
-          gauges.push(newGauge);
+            dollarsPerVote,
+            gaugeType
+          } = await getGaugeInfo(
+            state.selectedProject.name,
+            state.selectedProject.bribeAddress,
+            gaugeAddress,
+            gaugeControllerContract,
+            i
+          );
+          if (!(state.selectedProject.name === 'ANGLE' && gaugeType != 0)) {
+            let newGauge = {
+              id: i,
+              address: gaugeAddress,
+              name: gaugeName,
+              gaugeWeight,
+              totalRewards,
+              dollarsPerVote
+            };
+            gauges.push(newGauge);
+          } else {
+            state.ignoredGauges++;
+          }
         } else {
           state.ignoredGauges++;
         }
@@ -137,7 +147,7 @@ async function addBribe() {
   try {
     await addRewardAmount(
       state.selectedProject.bribeAddress,
-      state.selectedGauge,
+      state.selectedGauge.address,
       state.bribeAmount,
       state.bribeToken
     );
@@ -155,23 +165,24 @@ async function addBribe() {
 
 <template>
   <div>
-    <div id="content" class="flex h-full min-h-screen pt-[40px]">
+    <div id="content" class="flex h-full min-h-screen">
       <BaseContainer class="w-full">
-        <p>
-          {{ state.selectedProject.name }}:
-          <a target="_blank" :href="state.selectedProject.voteUrl">vote</a>
-        </p>
+        <div class="mt-4 text-[20px]">
+          {{ state.selectedProject.displayName }}
+          <BaseLink :link="state.selectedProject.voteUrl"> </BaseLink>
+        </div>
 
         <ProjectsListbox
           v-model="state.selectedProject"
           :items="Projects"
+          class="mt-4"
           @update:modelValue="loadGauges(0)"
         />
 
-        <table v-if="state.showTable" class="mb-10px w-full table-auto">
+        <table v-if="state.showTable" class="mt-4 w-full table-auto">
           <thead>
             <tr>
-              <th>Title</th>
+              <th>Gauge name</th>
               <th>Total votes</th>
               <th>$/QI</th>
               <th>Total rewards</th>
@@ -181,7 +192,7 @@ async function addBribe() {
           <tbody>
             <template v-for="gauge in state.gauges" :key="gauge.title">
               <tr>
-                <td>{{ gauge.name }}</td>
+                <td>{{ shorten(gauge.name, 70) }}</td>
                 <td class="table-number">{{ commify(gauge.gaugeWeight) }}</td>
                 <td class="table-number">
                   $ {{ commify(gauge.dollarsPerVote) }}
@@ -202,9 +213,9 @@ async function addBribe() {
           </tbody>
         </table>
 
-        <LoadingSpinner v-if="state.gaugesLoading" />
+        <LoadingRow v-if="state.gaugesLoading" :block="true" />
         <BaseButton
-          class="z-10 !bg-skin-bg"
+          class="mt-4 w-full"
           :disabled="state.gaugesLoading"
           @click="loadGauges(state.gauges.length)"
           >Show more
@@ -232,23 +243,6 @@ async function addBribe() {
         </BaseContainer>
       </template>
     </BaseModal>
-
-    <!--    <footer-->
-    <!--      class="space-x-3 bg-skin-bg pb-[50px] pl-[50px] md:fixed md:right-0 md:bottom-0 md:bg-transparent md:p-4 2xl:pr-6"-->
-    <!--    >-->
-    <!--      <BaseLink-->
-    <!--        v-for="social in socials"-->
-    <!--        :key="social"-->
-    <!--        :link="social.link"-->
-    <!--        hide-external-icon-->
-    <!--      >-->
-    <!--        <BaseIcon-->
-    <!--          size="28"-->
-    <!--          class="text-skin-text opacity-40 transition-opacity hover:opacity-80"-->
-    <!--          :name="social.icon"-->
-    <!--        />-->
-    <!--      </BaseLink>-->
-    <!--    </footer>-->
   </div>
 </template>
 
