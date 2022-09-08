@@ -13,56 +13,63 @@ const { ethereum } = window;
 const provider = new ethers.providers.Web3Provider(ethereum);
 const signer = provider.getSigner();
 const { web3Account } = useWeb3();
-const account = web3Account.value;
 const MERKLE_ADDRESS = import.meta.env.VITE_MERKLE_ADDRESS;
 
 export async function getRewards() {
   try {
-    const client = new ApolloClient({
-      uri: `${import.meta.env.VITE_API_ENDPOINT}/graphql`,
-      cache: new InMemoryCache()
-    });
-
-    const claimsQuery = gql`
-      query BribeRewards($account: String!) {
-        claims(account: $account) {
-          token
-          index
-          amount
-          merkleProof
-        }
-      }
-    `;
-    const { data } = await client.query({
-      query: claimsQuery,
-      variables: { account }
-    });
     const claims = [];
-    for (let i = 0; i < data.claims.length; i++) {
-      const token = await getTokenInfo(data.claims[i].token);
-      const tokenData = await tokenPriceLogo(data.claims[i].token);
-      if (token) {
-        const claim = {
-          version: 3,
-          claimable: parseFloat(
-            ethers.utils.formatUnits(data.claims[i].amount, token.decimals)
-          ),
-          claimableRaw: BigNumber.from(data.claims[i].amount),
-          canClaim: true,
-          hasClaimed: false,
-          rewardToken: token,
-          claimData: data.claims[i],
-          rewardTokenPrice: tokenData.price,
-          rewardTokenLogo: tokenData.logo
-        };
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        claims.push(claim);
+
+    if (!web3Account) {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const account = web3Account.value;
+      const client = new ApolloClient({
+        uri: `${import.meta.env.VITE_API_ENDPOINT}/graphql`,
+        cache: new InMemoryCache()
+      });
+
+      const claimsQuery = gql`
+        query BribeRewards($account: String!) {
+          claims(account: $account) {
+            token
+            index
+            amount
+            merkleProof
+          }
+        }
+      `;
+      const { data } = await client.query({
+        query: claimsQuery,
+        variables: { account }
+      });
+
+      for (let i = 0; i < data.claims.length; i++) {
+        const token = await getTokenInfo(data.claims[i].token);
+        const tokenData = await tokenPriceLogo(data.claims[i].token);
+        if (token) {
+          const claim = {
+            version: 3,
+            claimable: parseFloat(
+              ethers.utils.formatUnits(data.claims[i].amount, token.decimals)
+            ),
+            claimableRaw: BigNumber.from(data.claims[i].amount),
+            canClaim: true,
+            hasClaimed: false,
+            rewardToken: token,
+            claimData: data.claims[i],
+            rewardTokenPrice: tokenData.price,
+            rewardTokenLogo: tokenData.logo
+          };
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          claims.push(claim);
+        }
       }
     }
     return claims;
   } catch (e) {
     console.log(e);
+    return [];
   }
 }
 

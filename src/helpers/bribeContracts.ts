@@ -3,16 +3,20 @@ import bribeV3 from '@/abi/bribev3.json';
 import erc20 from '@/abi/erc20.json';
 import fraxGauge from '@/abi/fraxGauge.json';
 import gauge from '@/abi/gauge.json';
+import { useWeb3 } from '@/composables';
 import { getContractName } from '@/helpers/etherscan';
 import { BigNumber } from '@ethersproject/bignumber';
 import { ethers } from 'ethers';
 import GaugeNames from '../../config/GaugeNames.json';
 
+const { web3Account } = useWeb3();
+
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 const { ethereum } = window;
-const provider = new ethers.providers.Web3Provider(ethereum);
-const signer = provider.getSigner();
+const provider = web3Account
+  ? new ethers.providers.Web3Provider(ethereum)
+  : new ethers.providers.Web3Provider(import.meta.env.VITE_WEB3_ENDPOINT);
 
 export async function getGaugeInfo(
   projectName,
@@ -25,7 +29,7 @@ export async function getGaugeInfo(
     const bribeContract = new ethers.Contract(
       bribeAddress,
       bribeV3.abi,
-      signer
+      provider
     );
     // eslint-disable-next-line prefer-const
     let [gaugeType, gaugeWeight, rewards] = await Promise.all([
@@ -42,7 +46,7 @@ export async function getGaugeInfo(
     const period = getActivePeriod();
     let totalRewards = 0;
     for (let i = 0; i < rewards.length; i++) {
-      const token = new ethers.Contract(rewards[i], erc20.abi, signer);
+      const token = new ethers.Contract(rewards[i], erc20.abi, provider);
       const decimals = BigNumber.from(await token.decimals()).toNumber();
       const bribeAmount = ethers.utils.formatUnits(
         await bribeContract._reward_per_gauge(period, gaugeAddress, rewards[i]),
@@ -75,10 +79,14 @@ export async function getGaugeInfo(
           const gaugeContract = new ethers.Contract(
             gaugeAddress,
             angleGauge.abi,
-            signer
+            provider
           );
           tokenAddress = await gaugeContract.staking_token();
-          const lpToken = new ethers.Contract(tokenAddress, erc20.abi, signer);
+          const lpToken = new ethers.Contract(
+            tokenAddress,
+            erc20.abi,
+            provider
+          );
           name = await lpToken.name();
           break;
         }
@@ -88,10 +96,14 @@ export async function getGaugeInfo(
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
             gauge.abi,
-            signer
+            provider
           );
           tokenAddress = await gaugeContract.lp_token();
-          const lpToken = new ethers.Contract(tokenAddress, erc20.abi, signer);
+          const lpToken = new ethers.Contract(
+            tokenAddress,
+            erc20.abi,
+            provider
+          );
           name = await lpToken.name();
           break;
         }
@@ -151,6 +163,7 @@ export async function addRewardAmount(
   bribeToken
 ) {
   if (ethereum) {
+    const signer = provider.getSigner();
     const token = new ethers.Contract(bribeToken, erc20.abi, signer);
     const decimals = await token.decimals();
     const amount = ethers.utils.parseUnits(bribeAmount.toString(), decimals);

@@ -14,12 +14,15 @@ import gaugeController from '../abi/gaugeController.json';
 import { commify, shorten } from '@/helpers/utils';
 
 import { getGaugeInfo, addRewardAmount } from '@/helpers/bribeContracts';
+import { useWeb3 } from '@/composables';
 
 const { setPageTitle } = useI18n();
 const { userTheme } = useSkin();
 const { env } = useApp();
 
 const themeBefore = userTheme.value;
+
+const { web3, login } = useWeb3();
 
 const state = reactive({
   selectedProject: Projects[0],
@@ -38,8 +41,6 @@ const state = reactive({
 loadGauges();
 
 async function loadGauges(skip = 0) {
-  //ToDo: support some special cases for frax and angle or just add them to the json
-  //ToDo: show claimable rewards for all Projects
   state.gaugesLoading = true;
   state.showTable = skip > 0 ? true : false;
   let gauges = [];
@@ -47,11 +48,10 @@ async function loadGauges(skip = 0) {
     const { ethereum } = window;
     if (ethereum) {
       const provider = new ethers.providers.Web3Provider(ethereum);
-      const signer = provider.getSigner();
       const gaugeControllerContract = new ethers.Contract(
         state.selectedProject.gaugeControllerAddress,
         gaugeController.abi,
-        signer
+        provider
       );
       const count = await gaugeControllerContract.n_gauges();
       console.log('count', count.toString());
@@ -123,7 +123,10 @@ onUnmounted(() => {
   userTheme.value = themeBefore;
 });
 
-function openModal(gauge) {
+async function openModal(gauge) {
+  if (!web3.account) {
+    await login();
+  }
   state.modalOpen = true;
   state.selectedGauge = gauge;
 }
@@ -168,7 +171,7 @@ async function addBribe() {
       <BaseContainer class="w-full">
         <div class="mt-4 text-[20px]">
           {{ state.selectedProject.displayName }}
-          <BaseLink :link="state.selectedProject.voteUrl"> </BaseLink>
+          <BaseLink :link="state.selectedProject.voteUrl"></BaseLink>
         </div>
 
         <ProjectsListbox

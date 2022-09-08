@@ -6,10 +6,13 @@ import { useApp } from '@/composables/useApp';
 import { commify, shorten } from '@/helpers/utils';
 import { getRewards, claimReward, claimAllRewards } from '@/helpers/rewards';
 import { ethers } from 'ethers';
+import { useWeb3 } from '@/composables';
 
 const { setPageTitle } = useI18n();
 const { userTheme } = useSkin();
 const { env } = useApp();
+
+const { web3, login } = useWeb3();
 
 const themeBefore = userTheme.value;
 
@@ -97,13 +100,22 @@ onUnmounted(() => {
                   }}
                 </div>
                 <BaseButton class="!mb-0" @click="claimReward(reward)"
-                  >claim</BaseButton
-                >
+                  >claim
+                </BaseButton>
               </BaseBlock>
             </div>
           </TransitionGroup>
           <ExploreSkeletonLoading v-if="state.rewardsLoading" is-spaces />
-          <BaseNoResults v-else-if="state.rewards.length < 1" use-block />
+          <BaseNoResults
+            v-else-if="!web3.account"
+            custom-text="Please connect your wallet"
+            use-block
+          />
+          <BaseNoResults
+            v-else-if="state.rewards.length < 1"
+            custom-text="No Rewards found"
+            use-block
+          />
         </BaseContainer>
       </BaseContainer>
     </div>
