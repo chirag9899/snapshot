@@ -1,7 +1,6 @@
 import angleGauge from '@/abi/angleGauge.json';
 import bribeV3 from '@/abi/bribev3.json';
 import erc20 from '@/abi/erc20.json';
-import fraxGauge from '@/abi/fraxGauge.json';
 import gauge from '@/abi/gauge.json';
 import { useWeb3 } from '@/composables';
 import { getContractName } from '@/helpers/etherscan';
@@ -9,7 +8,7 @@ import { BigNumber } from '@ethersproject/bignumber';
 import { ethers } from 'ethers';
 import GaugeNames from '../../config/GaugeNames.json';
 
-const { web3Account, getProvider } = useWeb3();
+const { getProvider } = useWeb3();
 
 export async function getGaugeInfo(
   projectName,
