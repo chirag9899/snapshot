@@ -23,7 +23,7 @@ const route = useRoute();
 
 const themeBefore = userTheme.value;
 
-const { web3, login } = useWeb3();
+const { web3, login, getProvider } = useWeb3();
 
 const state = reactive({
   selectedProject: getProject(),
@@ -51,64 +51,62 @@ async function loadGauges(skip = 0) {
   state.showTable = skip > 0 ? true : false;
   let gauges = [];
   try {
-    const { ethereum } = window;
-    if (ethereum) {
-      const provider = new ethers.providers.Web3Provider(ethereum);
-      const gaugeControllerContract = new ethers.Contract(
-        state.selectedProject.gaugeControllerAddress,
-        gaugeController.abi,
-        provider
-      );
-      const count = await gaugeControllerContract.n_gauges();
-      console.log('count', count.toString());
+    const provider = await getProvider();
 
-      let numGauges = 20;
+    const gaugeControllerContract = new ethers.Contract(
+      state.selectedProject.gaugeControllerAddress,
+      gaugeController.abi,
+      provider
+    );
+    const count = await gaugeControllerContract.n_gauges();
+    console.log('count', count.toString());
 
-      if (skip == 0) {
-        state.gauges = [];
-        state.ignoredGauges = 0;
+    let numGauges = 20;
+
+    if (skip == 0) {
+      state.gauges = [];
+      state.ignoredGauges = 0;
+    } else {
+      skip += state.ignoredGauges;
+      if (count >= state.gauges.length + numGauges + state.ignoredGauges) {
+        numGauges = state.gauges.length - 1 + numGauges + state.ignoredGauges;
       } else {
-        skip += state.ignoredGauges;
-        if (count >= state.gauges.length + numGauges + state.ignoredGauges) {
-          numGauges = state.gauges.length - 1 + numGauges + state.ignoredGauges;
-        } else {
-          numGauges = count;
-        }
+        numGauges = count;
       }
+    }
 
-      for (let i = skip; i < numGauges; i++) {
-        const gaugeAddress = await gaugeControllerContract.gauges(i);
-        console.log(gaugeAddress);
-        if (!ignoredGauges.includes(gaugeAddress)) {
-          const {
-            gaugeName,
+    for (let i = skip; i < numGauges; i++) {
+      const gaugeAddress = await gaugeControllerContract.gauges(i);
+      console.log(gaugeAddress);
+      if (!ignoredGauges.includes(gaugeAddress)) {
+        const {
+          gaugeName,
+          gaugeWeight,
+          totalRewards,
+          dollarsPerVote,
+          gaugeType
+        } = await getGaugeInfo(
+          state.selectedProject.name,
+          state.selectedProject.bribeAddress,
+          gaugeAddress,
+          gaugeControllerContract,
+          i
+        );
+        if (!(state.selectedProject.name === 'ANGLE' && gaugeType != 0)) {
+          let newGauge = {
+            id: i,
+            address: gaugeAddress,
+            name: gaugeName,
             gaugeWeight,
             totalRewards,
-            dollarsPerVote,
-            gaugeType
-          } = await getGaugeInfo(
-            state.selectedProject.name,
-            state.selectedProject.bribeAddress,
-            gaugeAddress,
-            gaugeControllerContract,
-            i
-          );
-          if (!(state.selectedProject.name === 'ANGLE' && gaugeType != 0)) {
-            let newGauge = {
-              id: i,
-              address: gaugeAddress,
-              name: gaugeName,
-              gaugeWeight,
-              totalRewards,
-              dollarsPerVote
-            };
-            gauges.push(newGauge);
-          } else {
-            state.ignoredGauges++;
-          }
+            dollarsPerVote
+          };
+          gauges.push(newGauge);
         } else {
           state.ignoredGauges++;
         }
+      } else {
+        state.ignoredGauges++;
       }
     }
   } catch (e) {

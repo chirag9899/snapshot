@@ -1,3 +1,4 @@
+import { ethers } from 'ethers';
 import { computed, reactive } from 'vue';
 import { Web3Provider } from '@ethersproject/providers';
 import { getInstance } from '@snapshot-labs/lock/plugins/vue3';
@@ -36,6 +37,13 @@ export function useWeb3() {
     auth = getInstance();
     auth.logout();
     state.account = '';
+  }
+
+  function getProvider() {
+    const { ethereum } = window;
+    return ethereum
+      ? new ethers.providers.Web3Provider(ethereum)
+      : ethers.getDefaultProvider(import.meta.env.VITE_WEB3_ENDPOINT);
   }
 
   async function loadProvider() {
@@ -88,21 +96,21 @@ export function useWeb3() {
   }
 
   function handleChainChanged(chainId) {
-    if (!networks[chainId]) {
-      networks[chainId] = {
-        ...networks[defaultNetwork],
-        chainId,
-        name: 'Unknown',
-        network: 'unknown',
-        unknown: true
-      };
+    if (chainId === 1) {
+      state.network = networks[chainId];
+    } else {
+      if (import.meta.env.VITE_ENV === 'develop') {
+        alert('Please connect to the local blockchain');
+      } else {
+        alert('Please connect to mainnet');
+      }
     }
-    state.network = networks[chainId];
   }
 
   return {
     login,
     logout,
+    getProvider,
     loadProvider,
     handleChainChanged,
     web3: computed(() => state),

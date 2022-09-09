@@ -9,20 +9,15 @@ import merkle from '@/abi/merkle.json';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-const { ethereum } = window;
-const provider = new ethers.providers.Web3Provider(ethereum);
-const signer = provider.getSigner();
-const { web3Account } = useWeb3();
+const { web3Account, getProvider } = useWeb3();
+const account = web3Account.value;
 const MERKLE_ADDRESS = import.meta.env.VITE_MERKLE_ADDRESS;
 
 export async function getRewards() {
   try {
     const claims = [];
 
-    if (!web3Account) {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      const account = web3Account.value;
+    if (web3Account) {
       const client = new ApolloClient({
         uri: `${import.meta.env.VITE_API_ENDPOINT}/graphql`,
         cache: new InMemoryCache()
@@ -77,7 +72,8 @@ export async function getTokenInfo(
   tokenAddress
 ): Promise<{ address: string; symbol: string; decimals: number } | undefined> {
   try {
-    const token = new ethers.Contract(tokenAddress, erc20.abi, signer);
+    const provider = await getProvider();
+    const token = new ethers.Contract(tokenAddress, erc20.abi, provider);
 
     const [symbol, decimals] = await Promise.all([
       token.symbol(),
@@ -98,6 +94,10 @@ export async function getTokenInfo(
 }
 
 export async function claimReward(reward) {
+  const provider = await getProvider();
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  const signer = provider.getSigner();
   const merkleContract = await new ethers.Contract(
     MERKLE_ADDRESS,
     merkle.abi,
@@ -116,6 +116,10 @@ export async function claimReward(reward) {
 export async function claimAllRewards(rewards) {
   //prepare array
   const claims = [];
+  const provider = await getProvider();
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  const signer = provider.getSigner();
   for (let i = 0; i < rewards.length; i++) {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore

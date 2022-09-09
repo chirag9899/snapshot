@@ -9,14 +9,7 @@ import { BigNumber } from '@ethersproject/bignumber';
 import { ethers } from 'ethers';
 import GaugeNames from '../../config/GaugeNames.json';
 
-const { web3Account } = useWeb3();
-
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-const { ethereum } = window;
-const provider = web3Account
-  ? new ethers.providers.Web3Provider(ethereum)
-  : new ethers.providers.Web3Provider(import.meta.env.VITE_WEB3_ENDPOINT);
+const { web3Account, getProvider } = useWeb3();
 
 export async function getGaugeInfo(
   projectName,
@@ -26,6 +19,7 @@ export async function getGaugeInfo(
   index
 ) {
   try {
+    const provider = await getProvider();
     const bribeContract = new ethers.Contract(
       bribeAddress,
       bribeV3.abi,
@@ -162,25 +156,22 @@ export async function addRewardAmount(
   bribeAmount,
   bribeToken
 ) {
-  if (ethereum) {
-    const signer = provider.getSigner();
-    const token = new ethers.Contract(bribeToken, erc20.abi, signer);
-    const decimals = await token.decimals();
-    const amount = ethers.utils.parseUnits(bribeAmount.toString(), decimals);
+  const provider = await getProvider();
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  const signer = provider.getSigner();
+  const token = new ethers.Contract(bribeToken, erc20.abi, signer);
+  const decimals = await token.decimals();
+  const amount = ethers.utils.parseUnits(bribeAmount.toString(), decimals);
 
-    const approveTx = await token.approve(bribeAddress, amount);
-    console.log(approveTx);
+  const approveTx = await token.approve(bribeAddress, amount);
+  console.log(approveTx);
 
-    const bribeContract = new ethers.Contract(
-      bribeAddress,
-      bribeV3.abi,
-      signer
-    );
-    const tx = await bribeContract.add_reward_amount(
-      gaugeAddress,
-      bribeToken,
-      amount
-    );
-    console.log(tx);
-  }
+  const bribeContract = new ethers.Contract(bribeAddress, bribeV3.abi, signer);
+  const tx = await bribeContract.add_reward_amount(
+    gaugeAddress,
+    bribeToken,
+    amount
+  );
+  console.log(tx);
 }
