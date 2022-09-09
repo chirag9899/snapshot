@@ -3,7 +3,6 @@ import { onMounted, onUnmounted, reactive } from 'vue';
 import { useI18n } from '@/composables/useI18n';
 import { useSkin, DARK } from '@/composables/useSkin';
 import { useApp } from '@/composables/useApp';
-import ProjectsListbox from '../components/ProjectsListbox.vue';
 import BaseModal from '../components/BaseModal.vue';
 import InputString from '../components/InputString.vue';
 import InputNumber from '../components/InputNumber.vue';
@@ -15,17 +14,19 @@ import { commify, shorten } from '@/helpers/utils';
 
 import { getGaugeInfo, addRewardAmount } from '@/helpers/bribeContracts';
 import { useWeb3 } from '@/composables';
+import { useRoute } from 'vue-router';
 
 const { setPageTitle } = useI18n();
 const { userTheme } = useSkin();
 const { env } = useApp();
+const route = useRoute();
 
 const themeBefore = userTheme.value;
 
 const { web3, login } = useWeb3();
 
 const state = reactive({
-  selectedProject: Projects[0],
+  selectedProject: getProject(),
   gaugesLoading: true,
   gauges: [],
   showTable: false,
@@ -35,10 +36,15 @@ const state = reactive({
   bribeAmount: 0,
   tokenError: {},
   amountError: {},
-  ignoredGauges: 0
+  ignoredGauges: 0,
+  search: ''
 });
 
 loadGauges();
+
+function getProject() {
+  return Projects.find(item => item.name === route.params.name);
+}
 
 async function loadGauges(skip = 0) {
   state.gaugesLoading = true;
@@ -169,16 +175,29 @@ async function addBribe() {
   <div>
     <div id="content" class="flex h-full min-h-screen">
       <BaseContainer class="w-full">
-        <div class="mt-4 text-[20px]">
-          {{ state.selectedProject.displayName }}
-          <BaseLink :link="state.selectedProject.voteUrl"></BaseLink>
-        </div>
+        <!--        <div class="mt-4 text-[20px]">-->
+        <!--          {{ state.selectedProject.displayName }}-->
+        <!--          <BaseLink :link="state.selectedProject.voteUrl"></BaseLink>-->
+        <!--        </div>-->
+        <BaseContainer
+          class="flex flex-col flex-wrap items-center px-0 xs:flex-row md:flex-nowrap"
+        >
+          <AvatarToken
+            :src="state.selectedProject.logo"
+            size="82"
+            class="mr-2"
+          />
+          <div class="ml-2 text-[30px]">
+            {{ state.selectedProject.displayName }}
+            <BaseLink :link="state.selectedProject.voteUrl"></BaseLink>
+          </div>
+        </BaseContainer>
 
-        <ProjectsListbox
-          v-model="state.selectedProject"
-          :items="Projects"
+        <BaseSearch
           class="mt-4"
-          @update:modelValue="loadGauges(0)"
+          :model-value="state.search"
+          :modal="true"
+          placeholder="Search Gauges"
         />
 
         <table v-if="state.showTable" class="mt-4 w-full table-auto">

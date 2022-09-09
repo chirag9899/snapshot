@@ -29,13 +29,6 @@ const { web3Account } = useWeb3();
             quicksnap
           </router-link>
           <router-link
-            :to="{ path: '/gauge-bribes' }"
-            class="menuItem -ml-3 hidden items-center sm:block"
-            style="font-size: 18px"
-          >
-            gauge bribes
-          </router-link>
-          <router-link
             :to="{ path: '/rewards' }"
             class="menuItem -ml-3 hidden items-center sm:block"
             style="font-size: 18px"

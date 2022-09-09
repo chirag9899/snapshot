@@ -2,7 +2,7 @@ import { createRouter, createWebHashHistory, RouteLocation } from 'vue-router';
 import { useApp } from '@/composables/useApp';
 
 import DelegateView from '@/views/DelegateView.vue';
-import ExploreView from '@/views/ExploreView.vue';
+import ExploreProjects from '@/views/GaugeProjects.vue';
 import AboutView from '@/views/AboutView.vue';
 import PlaygroundView from '@/views/PlaygroundView.vue';
 import SetupView from '@/views/SetupView.vue';
@@ -113,8 +113,8 @@ if (domain) {
   // If accessed through localhost or snapshot.org, add all routes and
   // prefix space routes with space domain (/:key).
   routes.push(
-    { path: '/', name: 'home', component: ExploreView },
-    { path: '/gauge-bribes', name: 'gaugebribes', component: GaugeBribes },
+    { path: '/', name: 'home', component: ExploreProjects },
+    { path: '/project/:name', name: 'project', component: GaugeBribes },
     { path: '/rewards', name: 'rewards', component: Rewards },
     { path: '/about', name: 'about', component: AboutView },
     {
