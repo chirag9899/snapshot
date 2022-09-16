@@ -19,6 +19,7 @@ const themeBefore = userTheme.value;
 const state = reactive({
   rewardsLoading: true,
   rewards: [],
+  totalRewards: 0,
   showRewards: false
 });
 
@@ -29,6 +30,11 @@ async function loadRewards() {
   state.rewardsLoading = true;
   const rewards = await getRewards();
   console.log(rewards);
+  let totalRewards = 0;
+  for (let i = 0; i < rewards.length; i++) {
+    totalRewards += rewards[i].claimable * rewards[i].rewardTokenPrice;
+  }
+  state.totalRewards = totalRewards;
   state.rewards = rewards;
   state.rewardsLoading = false;
 }
@@ -58,12 +64,25 @@ onUnmounted(() => {
     <div id="content" class="flex h-full min-h-screen pt-[40px]">
       <BaseContainer class="w-full">
         <div>
-          <h2>
-            Rewards
-            <BaseButton v-if="state.rewards.length > 1" @click="claimAll()"
-              >claim all
-            </BaseButton>
-          </h2>
+          <BaseBlock>
+            <BaseContainer
+              class="flex flex-col flex-wrap items-center text-[24px] xs:flex-row md:flex-nowrap"
+            >
+              Total claimable rewards:
+              <div class="pl-1 text-white">
+                ${{ commify(state.totalRewards) }}
+              </div>
+              <div
+                class="mt-2 whitespace-nowrap text-right text-skin-text xs:mt-0 xs:ml-auto"
+              >
+                <BaseButton
+                  :disabled="state.rewards.length < 2"
+                  @click="claimAll()"
+                  >claim all
+                </BaseButton>
+              </div>
+            </BaseContainer>
+          </BaseBlock>
         </div>
 
         <BaseContainer class="mt-4" :slim="true">
@@ -77,8 +96,8 @@ onUnmounted(() => {
               :key="reward.rewardToken.address"
             >
               <BaseBlock
-                class="mb-0 flex items-center justify-center text-center transition-all hover:border-skin-text"
-                style="height: 266px"
+                class="mb-0 flex justify-center text-center transition-all hover:border-skin-text"
+                style="height: 350px"
               >
                 <div class="relative mb-2 inline-block">
                   <BaseAvatar
@@ -87,18 +106,21 @@ onUnmounted(() => {
                     class="mb-1"
                   />
                 </div>
-                <h2
-                  class="mb-0 mt-0 !h-[32px] overflow-hidden pb-0 text-[22px]"
-                  v-text="shorten(reward.rewardToken.symbol, 16)"
-                />
-                <div class="mb-[12px] text-skin-text">
-                  {{ ethers.utils.commify(reward.claimable) }}
+
+                <div class="mb-3 mt-4 grid grid-cols-2 gap-1 text-[16px]">
+                  <div class="text-left">Token amount</div>
+                  <div class="text-right">
+                    {{ commify(reward.claimable, 3) }}
+                    {{ shorten(reward.rewardToken.symbol, 5) }}
+                  </div>
+                  <div class="text-left">USD amount</div>
+                  <div class="text-right">
+                    {{
+                      '$' + commify(reward.claimable * reward.rewardTokenPrice)
+                    }}
+                  </div>
                 </div>
-                <div class="mb-[12px] text-[12px] text-skin-text">
-                  {{
-                    '$' + commify(reward.claimable * reward.rewardTokenPrice)
-                  }}
-                </div>
+
                 <BaseButton class="!mb-0" @click="claimReward(reward)"
                   >claim
                 </BaseButton>

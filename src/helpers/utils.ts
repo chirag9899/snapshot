@@ -141,9 +141,9 @@ export async function clearStampCache(id: string, type = 'space') {
     return await fetch(`https://cdn.stamp.fyi/clear/avatar/eth:${id}`);
 }
 
-export function commify(number: any) {
+export function commify(number: any, decimals = 2) {
   return number
-    .toFixed(2)
+    .toFixed(decimals)
     .toString()
     .replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
