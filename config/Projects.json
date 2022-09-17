@@ -4,8 +4,9 @@
     "name": "CRV",
     "displayName": "Curve Finance",
     "gaugeControllerAddress": "0x2F50D538606Fa9EDD2B11E2446BEb18C9D5846bB",
+    "tokenAddress": "0xD533a949740bb3306d119CC777fa900bA034cd52",
     "veAddress": "0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2",
-    "bribeAddress": "0xA9e6Bfa2BF53dE88FEb19761D9b2eE2e821bF1Bf",
+    "bribeAddress": "0xb868Cc77A95a65F42611724AF05Aa2d3B6Ec05F2",
     "voteUrl": "https://dao.curve.fi/gaugeweight",
     "logo": "https://cdn.stamp.fyi/space/curve.eth?s=164"
   },
@@ -14,8 +15,9 @@
     "name": "FRAX",
     "displayName": "Frax Finance",
     "gaugeControllerAddress": "0x3669C421b77340B2979d1A00a792CC2ee0FcE737",
+    "tokenAddress": "0x3432B6A60D23Ca0dFCa7761B7ab56459D9C964D0",
     "veAddress": "0xc8418aF6358FFddA74e09Ca9CC3Fe03Ca6aDC5b0",
-    "bribeAddress": "0x1E3b98102e19D3a164d239BdD190913C2F02E756",
+    "bribeAddress": "0x70E5370b8981Abc6e14C91F4AcE823954EFC8eA3",
     "voteUrl": "https://app.frax.finance/gauge",
     "logo": "https://cdn.stamp.fyi/space/frax.eth?s=164"
   },
@@ -24,8 +26,9 @@
     "name": "ANGLE",
     "displayName": "Angle Finance",
     "gaugeControllerAddress": "0x9aD7e7b0877582E14c17702EecF49018DD6f2367",
+    "tokenAddress": "0x31429d1856aD1377A8A0079410B297e1a9e214c2",
     "veAddress": "0x0C462Dbb9EC8cD1630f1728B2CFD2769d09f0dd5",
-    "bribeAddress": "0x3fdc08D815cc4ED3B7F69Ee246716f2C8bCD6b07",
+    "bribeAddress": "0x4000F8820522AC96C4221b299876e3e53bCc8525",
     "voteUrl": "https://app.angle.money/#/gauge",
     "logo": "https://cdn.stamp.fyi/space/anglegovernance.eth?s=164"
   },
@@ -34,8 +37,9 @@
     "name": "IDLE",
     "displayName": "Idle Finance",
     "gaugeControllerAddress": "0xaC69078141f76A1e257Ee889920d02Cc547d632f",
+    "tokenAddress": "0x875773784Af8135eA0ef43b5a374AaD105c5D39e",
     "veAddress": "0xaAC13a116eA7016689993193FcE4BadC8038136f",
-    "bribeAddress": "0x286B8DecD5ED79c962b2d8F4346CD97FF0E2C352",
+    "bribeAddress": "0x9338CA7d556248055f5751d85cDA7aD6eF254433",
     "voteUrl": "https://app.idle.finance/#/gauges",
     "logo": "https://cdn.stamp.fyi/space/idlefinance.eth?s=164"
   }

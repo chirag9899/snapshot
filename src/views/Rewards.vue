@@ -5,7 +5,6 @@ import { useSkin, DARK } from '@/composables/useSkin';
 import { useApp } from '@/composables/useApp';
 import { commify, shorten } from '@/helpers/utils';
 import { getRewards, claimReward, claimAllRewards } from '@/helpers/rewards';
-import { ethers } from 'ethers';
 import { useWeb3 } from '@/composables';
 
 const { setPageTitle } = useI18n();
@@ -97,7 +96,7 @@ onUnmounted(() => {
             >
               <BaseBlock
                 class="mb-0 flex justify-center text-center transition-all hover:border-skin-text"
-                style="height: 350px"
+                style="height: 300px"
               >
                 <div class="relative mb-2 inline-block">
                   <BaseAvatar
@@ -107,13 +106,13 @@ onUnmounted(() => {
                   />
                 </div>
 
-                <div class="mb-3 mt-4 grid grid-cols-2 gap-1 text-[16px]">
-                  <div class="text-left">Token amount</div>
+                <div class="mb-4 mt-4 grid grid-cols-2 gap-1 text-[16px]">
+                  <div class="text-left">Reward</div>
                   <div class="text-right">
                     {{ commify(reward.claimable, 3) }}
                     {{ shorten(reward.rewardToken.symbol, 5) }}
                   </div>
-                  <div class="text-left">USD amount</div>
+                  <div class="text-left">USD value</div>
                   <div class="text-right">
                     {{
                       '$' + commify(reward.claimable * reward.rewardTokenPrice)

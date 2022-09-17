@@ -93,6 +93,33 @@ export async function getTokenInfo(
   }
 }
 
+export async function getTokenNameBalance(
+  tokenAddress
+): Promise<{ name: string; symbol: string; balance: number } | undefined> {
+  try {
+    const provider = await getProvider();
+    const token = new ethers.Contract(tokenAddress, erc20.abi, provider);
+
+    const [name, symbol, balance, decimals] = await Promise.all([
+      token.name(),
+      token.symbol(),
+      token.balanceOf(account),
+      token.decimals()
+    ]);
+
+    return {
+      name,
+      symbol,
+      balance: parseFloat(ethers.utils.formatUnits(balance, parseInt(decimals)))
+    };
+  } catch (ex) {
+    console.log('------------------------------------');
+    console.log(`exception thrown in _getTokenInfo(${tokenAddress})`);
+    console.log(ex);
+    console.log('------------------------------------');
+  }
+}
+
 export async function claimReward(reward) {
   const provider = await getProvider();
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment

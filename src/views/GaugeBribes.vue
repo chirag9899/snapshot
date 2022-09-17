@@ -12,7 +12,12 @@ import { ethers } from 'ethers';
 import gaugeController from '../abi/gaugeController.json';
 import { commify, shorten } from '@/helpers/utils';
 
-import { getGaugeInfo, addRewardAmount } from '@/helpers/bribeContracts';
+import {
+  getGaugeInfo,
+  addRewardAmount,
+  getActivePeriod
+} from '@/helpers/bribeContracts';
+import { getTokenNameBalance } from '@/helpers/rewards';
 import { useWeb3 } from '@/composables';
 import { useRoute } from 'vue-router';
 
@@ -23,7 +28,10 @@ const route = useRoute();
 
 const themeBefore = userTheme.value;
 
-const { web3, login, getProvider } = useWeb3();
+const { web3, web3Account, login, getProvider } = useWeb3();
+
+let epochEnd = new Date(getActivePeriod() * 1000);
+epochEnd.setDate(epochEnd.getDate() + 7);
 
 const state = reactive({
   selectedProject: getProject(),
@@ -37,7 +45,9 @@ const state = reactive({
   tokenError: {},
   amountError: {},
   ignoredGauges: 0,
-  search: ''
+  search: '',
+  tokenInfo: { name: 'token', symbol: '', balance: 0 },
+  governanceTokenInfo: { name: 'governance token', symbol: '', balance: 0 }
 });
 
 loadGauges();
@@ -58,10 +68,22 @@ async function loadGauges(skip = 0) {
       gaugeController.abi,
       provider
     );
+
+    try {
+      state.tokenInfo = await getTokenNameBalance(
+        state.selectedProject.tokenAddress
+      );
+      state.governanceTokenInfo = await getTokenNameBalance(
+        state.selectedProject.veAddress
+      );
+    } catch (e) {
+      console.log(e);
+    }
+
     const count = await gaugeControllerContract.n_gauges();
     console.log('count', count.toString());
 
-    let numGauges = 20;
+    let numGauges = 1;
 
     if (skip == 0) {
       state.gauges = [];
@@ -173,21 +195,53 @@ async function addBribe() {
   <div>
     <div id="content" class="flex h-full min-h-screen">
       <BaseContainer class="w-full">
-        <!--        <div class="mt-4 text-[20px]">-->
-        <!--          {{ state.selectedProject.displayName }}-->
-        <!--          <BaseLink :link="state.selectedProject.voteUrl"></BaseLink>-->
-        <!--        </div>-->
-        <BaseContainer
-          class="flex flex-col flex-wrap items-center px-0 xs:flex-row md:flex-nowrap"
-        >
-          <AvatarToken
-            :src="state.selectedProject.logo"
-            size="82"
-            class="mr-2"
-          />
-          <div class="ml-2 text-[30px]">
-            {{ state.selectedProject.displayName }}
-            <BaseLink :link="state.selectedProject.voteUrl"></BaseLink>
+        <BaseContainer>
+          <BaseContainer
+            class="flex flex-col flex-wrap items-center px-0 pt-2 xs:flex-row md:flex-nowrap"
+          >
+            <AvatarToken
+              :src="state.selectedProject.logo"
+              size="82"
+              class="mr-2"
+            />
+            <div class="ml-2 text-[30px]">
+              {{ state.selectedProject.displayName }}
+              <BaseLink :link="state.selectedProject.voteUrl"></BaseLink>
+            </div>
+          </BaseContainer>
+
+          <div
+            class="space-content-between mb-6 mt-6 grid w-full grid-cols-3 text-[20px]"
+            style="width: 100%"
+          >
+            <div class="text-left">
+              <p>{{ state.tokenInfo.name }} balance</p>
+              <p>
+                {{ commify(state.tokenInfo.balance, 3) }}
+                {{ state.tokenInfo.symbol }}
+              </p>
+            </div>
+            <div class="text-left">
+              <p>{{ state.governanceTokenInfo.name }} balance</p>
+              <p>
+                {{ commify(state.governanceTokenInfo.balance, 3) }}
+                {{ state.governanceTokenInfo.symbol }}
+              </p>
+            </div>
+            <div class="text-right">
+              <p>
+                Epoch ends on
+                <br />
+                {{
+                  epochEnd.toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })
+                }}
+              </p>
+            </div>
           </div>
         </BaseContainer>
 
