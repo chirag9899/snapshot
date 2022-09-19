@@ -298,19 +298,21 @@ async function addBribe() {
 
     <BaseModal :open="state.modalOpen" @close="state.modalOpen = false">
       <template #header>
-        <h4>Add bribe for {{ state.selectedGauge.name }}</h4>
-        <BaseContainer>
+        <h4>Add bribe for {{ shorten(state.selectedGauge.name, 20) }}</h4>
+        <BaseContainer class="p-6">
           <InputString
             v-model="state.bribeToken"
+            class="mb-2"
             :definition="{ title: 'token address' }"
             :error="state.tokenError"
           />
           <inputNumber
             v-model="state.bribeAmount"
+            class="mb-2"
             :definition="{ title: 'bribe amount' }"
             :error="state.amountError"
           />
-          <BaseButton class="primary" @click="addBribe()"
+          <BaseButton class="primary mt-2" @click="addBribe()"
             >Add Bribe
           </BaseButton>
         </BaseContainer>
