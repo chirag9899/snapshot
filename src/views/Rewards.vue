@@ -19,7 +19,8 @@ const state = reactive({
   rewardsLoading: true,
   rewards: [],
   totalRewards: 0,
-  showRewards: false
+  showRewards: false,
+  claimData: { totalBalance: 0, totalClaimed: 0 }
 });
 
 loadRewards();
@@ -27,13 +28,15 @@ loadRewards();
 async function loadRewards() {
   console.log('loadRewards');
   state.rewardsLoading = true;
-  const rewards = await getRewards();
+  const data = await getRewards();
+  const { rewards, claimInfo } = data;
   console.log(rewards);
   let totalRewards = 0;
   for (let i = 0; i < rewards.length; i++) {
     totalRewards += rewards[i].claimable * rewards[i].rewardTokenPrice;
   }
   state.totalRewards = totalRewards;
+  state.claimData = claimInfo;
   state.rewards = rewards;
   state.rewardsLoading = false;
 }
@@ -60,14 +63,37 @@ onUnmounted(() => {
 
 <template>
   <div>
-    <div id="content" class="flex h-full min-h-screen pt-[40px]">
+    <div id="content" class="flex h-full">
       <BaseContainer class="w-full">
+        <div class="">
+          <h2>Claim rewards</h2>
+          <p>
+            These rewards are claimed automatically for you so you can claim
+            when you're ready without time restrictions. You can choose to claim
+            them all at once or claim them separately though we advice to claim
+            them all together to save on gas costs.
+          </p>
+        </div>
+        <div
+          class="space-content-between grid w-full gap-4 pt-4 pb-4 text-[20px] md:grid-cols-2 lg:grid-cols-3"
+          style="width: 100%"
+        >
+          <div class="text-left">
+            <p>Total unclaimed rewards</p>
+            <p>$ {{ commify(state.claimData.totalBalance, 2) }}</p>
+          </div>
+          <div class="text-left">
+            <p>Total claimed rewards</p>
+            <p>$ {{ commify(state.claimData.totalClaimed, 2) }}</p>
+          </div>
+        </div>
+
         <div>
-          <BaseBlock>
+          <BaseBlock class="p-2" :slim="true">
             <BaseContainer
               class="flex flex-col flex-wrap items-center text-[24px] xs:flex-row md:flex-nowrap"
             >
-              Total claimable rewards:
+              Yours to claim:
               <div class="pl-1 text-white">
                 ${{ commify(state.totalRewards) }}
               </div>

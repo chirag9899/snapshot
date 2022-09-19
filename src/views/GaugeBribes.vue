@@ -83,7 +83,7 @@ async function loadGauges(skip = 0) {
     const count = await gaugeControllerContract.n_gauges();
     console.log('count', count.toString());
 
-    let numGauges = 1;
+    let numGauges = 20;
 
     if (skip == 0) {
       state.gauges = [];

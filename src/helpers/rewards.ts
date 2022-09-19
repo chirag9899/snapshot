@@ -16,6 +16,7 @@ const MERKLE_ADDRESS = import.meta.env.VITE_MERKLE_ADDRESS;
 export async function getRewards() {
   try {
     const claims = [];
+    let claimInfo = { totalBalance: 0, totalClaimed: 0 };
 
     if (web3Account) {
       const client = new ApolloClient({
@@ -31,12 +32,17 @@ export async function getRewards() {
             amount
             merkleProof
           }
+          claimInfo {
+            totalBalance
+            totalClaimed
+          }
         }
       `;
       const { data } = await client.query({
         query: claimsQuery,
         variables: { account }
       });
+      claimInfo = data.claimInfo;
 
       for (let i = 0; i < data.claims.length; i++) {
         const token = await getTokenInfo(data.claims[i].token);
@@ -61,7 +67,7 @@ export async function getRewards() {
         }
       }
     }
-    return claims;
+    return { rewards: claims, claimInfo };
   } catch (e) {
     console.log(e);
     return [];
