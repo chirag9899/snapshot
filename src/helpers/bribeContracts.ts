@@ -1,5 +1,6 @@
 import angleGauge from '@/abi/angleGauge.json';
 import bribeV3 from '@/abi/bribev3.json';
+import bribeV3Snapshot from '@/abi/bribev3snapshot.json';
 import erc20 from '@/abi/erc20.json';
 import gauge from '@/abi/gauge.json';
 import { useWeb3 } from '@/composables';
@@ -173,4 +174,74 @@ export async function addRewardAmount(
     amount
   );
   console.log(tx);
+}
+
+export async function addSnapshotRewardAmount(
+  proposal,
+  option,
+  deadline,
+  bribeAmount,
+  bribeToken
+) {
+  const provider = await getProvider();
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  const signer = provider.getSigner();
+  const token = new ethers.Contract(bribeToken, erc20.abi, signer);
+  const decimals = await token.decimals();
+  const amount = ethers.utils.parseUnits(bribeAmount.toString(), decimals);
+  const bribeAddress = import.meta.env.VITE_BRIBE_SNAPSHOT_ADDRESS;
+
+  const approveTx = await token.approve(bribeAddress, amount);
+  console.log(approveTx);
+
+  const bribeContract = new ethers.Contract(
+    bribeAddress,
+    bribeV3Snapshot.abi,
+    signer
+  );
+  const tx = await bribeContract.add_reward_amount(
+    proposal,
+    option,
+    deadline,
+    bribeToken,
+    amount
+  );
+  console.log(tx);
+}
+
+export async function getBribesForProposal(proposal, choices) {
+  const bribedChoices = [];
+  const provider = await getProvider();
+  //ToDo: get options for proposal and combine them with bribes
+  const bribeAddress = import.meta.env.VITE_BRIBE_SNAPSHOT_ADDRESS;
+  const bribeContract = new ethers.Contract(
+    bribeAddress,
+    bribeV3Snapshot.abi,
+    provider
+  );
+
+  const bribes = await bribeContract.rewards_per_proposal(proposal);
+
+  console.log(bribes, choices);
+
+  for (let i = 0; i < bribes.length; i++) {
+    const { amount, option, token } = bribes[i];
+    const tokenContract = new ethers.Contract(token, erc20.abi, provider);
+    const [decimals, symbol] = await Promise.all([
+      tokenContract.decimals(),
+      tokenContract.symbol()
+    ]);
+    const formattedAmount = parseFloat(
+      ethers.utils.formatUnits(amount, decimals)
+    );
+    bribedChoices.push({
+      amount: formattedAmount,
+      symbol,
+      option: choices[parseInt(option) - 1]
+    });
+  }
+
+  console.log(bribedChoices);
+  return bribedChoices;
 }

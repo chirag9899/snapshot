@@ -1,4 +1,9 @@
 <script setup lang="ts">
+import {
+  addSnapshotRewardAmount,
+  getBribesForProposal
+} from '@/helpers/bribeContracts';
+import { ethers } from 'ethers';
 import { ref, computed, watch, onMounted, watchEffect } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { getProposal, getResults, getProposalVotes } from '@/helpers/snapshot';
@@ -10,7 +15,6 @@ import {
   useModal,
   useTerms,
   useProfiles,
-  useApp,
   useSharing,
   useWeb3,
   useClient,
@@ -20,6 +24,7 @@ import {
   useSpaceCreateForm,
   useFlashNotification
 } from '@/composables';
+import { commify, shorten } from '@/helpers/utils';
 
 const props = defineProps<{
   space: ExtendedSpace;
@@ -27,7 +32,6 @@ const props = defineProps<{
 
 const route = useRoute();
 const router = useRouter();
-const { domain } = useApp();
 const { t, setPageTitle } = useI18n();
 const { web3, web3Account } = useWeb3();
 const { send, isSending } = useClient();
@@ -49,6 +53,14 @@ const votes = ref([]);
 const userVote = ref([]);
 const results = ref<Results | null>(null);
 const modalStrategiesOpen = ref(false);
+let modalBribeOpen = ref(false);
+let bribeToken = ref('');
+let bribeAmount = ref(0);
+let bribeOption = ref(1);
+let tokenError = ref({});
+let amountError = ref({});
+let currentBribes = ref([]);
+let bribesLoading = ref(false);
 
 const isCreator = computed(() => proposal.value?.author === web3Account.value);
 const isAdmin = computed(() => {
@@ -109,6 +121,7 @@ function formatProposalVotes(votes) {
 
 async function loadResults() {
   if (!proposal.value) return;
+  await getBribes();
   loadingResultsFailed.value = false;
   const spaceShowPending = pending;
   const showPending =
@@ -179,6 +192,49 @@ async function deleteProposal() {
     notify(['green', t('notify.proposalDeleted')]);
     router.push({ name: 'spaceProposals' });
   }
+}
+
+async function addBribe() {
+  console.log(bribeToken.value, bribeAmount.value, bribeOption.value);
+  tokenError.value = {};
+  amountError.value = {};
+
+  if (!ethers.utils.isAddress(bribeToken.value)) {
+    tokenError.value.message = 'Please enter a valid token address';
+    return;
+  }
+
+  if (bribeAmount.value < 0) {
+    amountError.value.message = 'Please enter a valid token amount';
+    return;
+  }
+
+  try {
+    await addSnapshotRewardAmount(
+      proposal.value.id,
+      bribeOption.value,
+      proposal.value.end,
+      bribeAmount.value,
+      bribeToken.value
+    );
+    bribeAmount.value = 0;
+    bribeToken.value = '';
+    bribeOption.value = 1;
+  } catch (e) {
+    console.log(e);
+  }
+
+  await getBribes();
+  modalBribeOpen.value = false;
+}
+
+async function getBribes() {
+  bribesLoading.value = true;
+  currentBribes.value = await getBribesForProposal(
+    proposal.value.id,
+    proposal.value.choices
+  );
+  bribesLoading.value = false;
 }
 
 const {
@@ -503,6 +559,34 @@ const truncateMarkdownBody = computed(() => {
             </div>
           </div>
         </BaseBlock>
+        <BaseBlock
+          v-if="proposal.state === 'active'"
+          :loading="bribesLoading"
+          title="Bribe"
+        >
+          <p class="mb-4">
+            You can add a reward for voters that choose the desired option
+          </p>
+          <div v-if="currentBribes.length > 0" class="mb-4">
+            <h6>Current Bribes</h6>
+            <div v-for="bribe in currentBribes" :key="bribe">
+              <b>{{ bribe.option }}</b>
+              <span class="float-right"
+                >{{ commify(bribe.amount) }} {{ bribe.symbol }}</span
+              >
+            </div>
+          </div>
+          <BaseButton
+            class="block w-full"
+            primary
+            @click="modalBribeOpen = true"
+            >Add Bribe</BaseButton
+          >
+          <br />
+          <router-link :to="{ name: 'rewards' }">
+            <BaseButton class="block w-full" primary>Check rewards</BaseButton>
+          </router-link>
+        </BaseBlock>
         <SpaceProposalResultsError
           v-if="loadingResultsFailed"
           :is-admin="isAdmin"
@@ -529,6 +613,33 @@ const truncateMarkdownBody = computed(() => {
           :strategies="strategies"
         />
       </div>
+      <BaseModal :open="modalBribeOpen" @close="modalBribeOpen = false">
+        <template #header>
+          <h4>Add bribe for {{ shorten(proposal.title, 20) }}</h4>
+          <BaseContainer class="p-6">
+            <InputString
+              v-model="bribeToken"
+              class="mb-2"
+              :definition="{ title: 'token address' }"
+              :error="tokenError"
+            />
+            <inputNumber
+              v-model="bribeAmount"
+              class="mb-2"
+              :definition="{ title: 'bribe amount' }"
+              :error="amountError"
+            />
+            <ChoicesListbox
+              v-model="bribeOption"
+              :items="proposal.choices"
+              label="bribe option"
+            />
+            <BaseButton class="primary mt-2" @click="addBribe()"
+              >Add Bribe
+            </BaseButton>
+          </BaseContainer>
+        </template>
+      </BaseModal>
     </template>
   </TheLayout>
   <teleport v-if="proposal" to="#modal">

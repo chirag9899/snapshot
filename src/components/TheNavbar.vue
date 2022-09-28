@@ -2,7 +2,7 @@
 import { useApp, useWeb3, useTxStatus } from '@/composables';
 
 const { pendingCount } = useTxStatus();
-const { env, showSidebar, domain } = useApp();
+const { env, showSidebar } = useApp();
 const { web3Account } = useWeb3();
 </script>
 
@@ -27,6 +27,13 @@ const { web3Account } = useWeb3();
             style="font-size: 24px"
           >
             quicksnap
+          </router-link>
+          <router-link
+            :to="{ path: '/projects' }"
+            class="menuItem -ml-3 hidden items-center sm:block"
+            style="font-size: 18px"
+          >
+            projects
           </router-link>
           <router-link
             :to="{ path: '/rewards' }"

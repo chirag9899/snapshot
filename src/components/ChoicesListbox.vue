@@ -8,14 +8,8 @@ import {
   ListboxLabel
 } from '@headlessui/vue';
 
-type ListboxItem = {
-  id: any;
-  name: string;
-  extras?: Record<string, any>;
-};
-
 const props = defineProps<{
-  items: ListboxItem[];
+  items: string[];
   modelValue: any;
   label?: string;
   disableInput?: boolean;
@@ -25,7 +19,9 @@ const emit = defineEmits(['update:modelValue']);
 
 const selectedItem = computed({
   get: () =>
-    props.items.find(item => item.id === props.modelValue.id) || props.items[0],
+    props.items.find(
+      item => props.items.indexOf(item) + 1 === props.modelValue
+    ) || props.items[0],
   set: newVal => emit('update:modelValue', newVal)
 });
 </script>
@@ -47,7 +43,7 @@ const selectedItem = computed({
         />
 
         <span v-else-if="selectedItem">
-          {{ selectedItem.name }}
+          {{ selectedItem }}
         </span>
         <span
           class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-[12px]"
@@ -69,10 +65,10 @@ const selectedItem = computed({
           <div class="max-h-[180px] overflow-y-scroll">
             <ListboxOption
               v-for="item in items"
-              :key="item"
+              :key="items.indexOf(item) + 1"
               v-slot="{ active, selected, disabled }"
               as="template"
-              :value="item"
+              :value="items.indexOf(item) + 1"
             >
               <li
                 :class="[
@@ -89,7 +85,7 @@ const selectedItem = computed({
                 >
                   <slot v-if="$slots.item" name="item" :item="item" />
                   <span v-else>
-                    {{ item.name }}
+                    {{ item }}
                   </span>
                 </span>
 
