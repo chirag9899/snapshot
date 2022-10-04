@@ -44,9 +44,9 @@
         },
         {
           "indexed": false,
-          "internalType": "bytes32",
+          "internalType": "string",
           "name": "proposal",
-          "type": "bytes32"
+          "type": "string"
         },
         {
           "indexed": false,
@@ -92,9 +92,9 @@
     {
       "inputs": [
         {
-          "internalType": "bytes32",
+          "internalType": "string",
           "name": "proposal",
-          "type": "bytes32"
+          "type": "string"
         },
         {
           "internalType": "uint256",
@@ -221,9 +221,9 @@
     {
       "inputs": [
         {
-          "internalType": "bytes32",
+          "internalType": "string",
           "name": "",
-          "type": "bytes32"
+          "type": "string"
         },
         {
           "internalType": "uint256",
@@ -288,9 +288,9 @@
     {
       "inputs": [
         {
-          "internalType": "bytes32",
+          "internalType": "string",
           "name": "proposal",
-          "type": "bytes32"
+          "type": "string"
         }
       ],
       "name": "rewards_per_proposal",
@@ -324,9 +324,9 @@
     {
       "inputs": [
         {
-          "internalType": "bytes32",
+          "internalType": "string",
           "name": "proposal",
-          "type": "bytes32"
+          "type": "string"
         },
         {
           "internalType": "uint256",
