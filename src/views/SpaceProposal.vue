@@ -616,7 +616,7 @@ const truncateMarkdownBody = computed(() => {
       <BaseModal :open="modalBribeOpen" @close="modalBribeOpen = false">
         <template #header>
           <h4>Add bribe for {{ shorten(proposal.title, 20) }}</h4>
-          <BaseContainer class="p-6">
+          <BaseContainer :style="{ height: '400px' }" class="p-6">
             <InputString
               v-model="bribeToken"
               class="mb-2"
@@ -634,7 +634,7 @@ const truncateMarkdownBody = computed(() => {
               :items="proposal.choices"
               label="bribe option"
             />
-            <BaseButton class="primary mt-2" @click="addBribe()"
+            <BaseButton class="primary mt-4" @click="addBribe()"
               >Add Bribe
             </BaseButton>
           </BaseContainer>

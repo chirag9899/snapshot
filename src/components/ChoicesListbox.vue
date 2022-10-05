@@ -60,9 +60,9 @@ const selectedItem = computed({
         leave-to-class="transform scale-95 opacity-0"
       >
         <ListboxOptions
-          class="absolute z-40 mt-1 w-full overflow-hidden rounded-md border border-skin-border bg-skin-bg text-base shadow-lg focus:outline-none sm:text-sm"
+          class="absolute z-40 mt-1 mb-4 w-full overflow-hidden rounded-md border border-skin-border bg-skin-bg text-base shadow-lg focus:outline-none sm:text-sm"
         >
-          <div class="max-h-[180px] overflow-y-scroll">
+          <div class="max-h-[180px] overflow-y-auto">
             <ListboxOption
               v-for="item in items"
               :key="items.indexOf(item) + 1"
