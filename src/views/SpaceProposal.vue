@@ -559,11 +559,7 @@ const truncateMarkdownBody = computed(() => {
             </div>
           </div>
         </BaseBlock>
-        <BaseBlock
-          v-if="proposal.state === 'active'"
-          :loading="bribesLoading"
-          title="Bribe"
-        >
+        <BaseBlock :loading="bribesLoading" title="Bribe">
           <p class="mb-4">
             You can add a reward for voters that choose the desired option
           </p>
@@ -578,6 +574,7 @@ const truncateMarkdownBody = computed(() => {
           </div>
           <BaseButton
             class="block w-full"
+            :disabled="proposal.state !== 'active'"
             primary
             @click="modalBribeOpen = true"
             >Add Bribe</BaseButton

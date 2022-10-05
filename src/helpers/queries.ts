@@ -81,6 +81,7 @@ export const PROPOSALS_QUERY = gql`
         state: $state
         space_in: $space_in
         author_in: $author_in
+        type_in: ["single-choice", "basic"]
       }
     ) {
       id
