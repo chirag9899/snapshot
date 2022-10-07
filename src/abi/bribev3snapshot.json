@@ -31,12 +31,6 @@
           "type": "uint256"
         },
         {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "deadline",
-          "type": "uint256"
-        },
-        {
           "indexed": true,
           "internalType": "address",
           "name": "briber",
@@ -99,11 +93,6 @@
         {
           "internalType": "uint256",
           "name": "option",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "deadline",
           "type": "uint256"
         },
         {
@@ -294,47 +283,6 @@
         }
       ],
       "name": "rewards_per_proposal",
-      "outputs": [
-        {
-          "components": [
-            {
-              "internalType": "uint256",
-              "name": "option",
-              "type": "uint256"
-            },
-            {
-              "internalType": "address",
-              "name": "token",
-              "type": "address"
-            },
-            {
-              "internalType": "uint256",
-              "name": "amount",
-              "type": "uint256"
-            }
-          ],
-          "internalType": "struct BribeV3Snapshot.optionBribe[]",
-          "name": "",
-          "type": "tuple[]"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "string",
-          "name": "proposal",
-          "type": "string"
-        },
-        {
-          "internalType": "uint256",
-          "name": "option",
-          "type": "uint256"
-        }
-      ],
-      "name": "rewards_per_proposal_option",
       "outputs": [
         {
           "components": [

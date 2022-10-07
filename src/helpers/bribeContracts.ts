@@ -179,7 +179,6 @@ export async function addRewardAmount(
 export async function addSnapshotRewardAmount(
   proposal,
   option,
-  deadline,
   bribeAmount,
   bribeToken
 ) {
@@ -203,7 +202,6 @@ export async function addSnapshotRewardAmount(
   const tx = await bribeContract.add_reward_amount(
     proposal,
     option,
-    deadline,
     bribeToken,
     amount
   );
@@ -213,7 +211,6 @@ export async function addSnapshotRewardAmount(
 export async function getBribesForProposal(proposal, choices) {
   const bribedChoices = [];
   const provider = await getProvider();
-  //ToDo: get options for proposal and combine them with bribes
   const bribeAddress = import.meta.env.VITE_BRIBE_SNAPSHOT_ADDRESS;
   const bribeContract = new ethers.Contract(
     bribeAddress,

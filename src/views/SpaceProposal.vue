@@ -213,7 +213,6 @@ async function addBribe() {
     await addSnapshotRewardAmount(
       proposal.value.id,
       bribeOption.value,
-      proposal.value.end,
       bribeAmount.value,
       bribeToken.value
     );
