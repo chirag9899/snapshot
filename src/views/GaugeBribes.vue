@@ -18,7 +18,7 @@ import {
   getActivePeriod
 } from '@/helpers/bribeContracts';
 import { getTokenNameBalance } from '@/helpers/rewards';
-import { useWeb3 } from '@/composables';
+import { useModal, useWeb3 } from '@/composables';
 import { useRoute } from 'vue-router';
 
 const { setPageTitle } = useI18n();
@@ -29,6 +29,7 @@ const route = useRoute();
 const themeBefore = userTheme.value;
 
 const { web3, web3Account, login, getProvider } = useWeb3();
+const { modalAccountOpen } = useModal();
 
 let epochEnd = new Date(getActivePeriod() * 1000);
 epochEnd.setDate(epochEnd.getDate() + 7);
@@ -150,11 +151,12 @@ onUnmounted(() => {
 });
 
 async function openModal(gauge) {
-  if (!web3.account) {
-    await login();
+  if (web3Account.value === '') {
+    modalAccountOpen.value = true;
+  } else {
+    state.modalOpen = true;
+    state.selectedGauge = gauge;
   }
-  state.modalOpen = true;
-  state.selectedGauge = gauge;
 }
 
 async function addBribe() {

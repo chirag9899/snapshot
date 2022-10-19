@@ -194,6 +194,14 @@ async function deleteProposal() {
   }
 }
 
+async function openBribeModal() {
+  if (web3Account.value === '') {
+    modalAccountOpen.value = true;
+  } else {
+    modalBribeOpen.value = true;
+  }
+}
+
 async function addBribe() {
   console.log(bribeToken.value, bribeAmount.value, bribeOption.value);
   tokenError.value = {};
@@ -575,7 +583,7 @@ const truncateMarkdownBody = computed(() => {
             class="block w-full"
             :disabled="proposal.state !== 'active'"
             primary
-            @click="modalBribeOpen = true"
+            @click="openBribeModal()"
             >Add Bribe</BaseButton
           >
           <br />

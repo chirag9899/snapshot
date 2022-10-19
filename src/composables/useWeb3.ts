@@ -41,7 +41,7 @@ export function useWeb3() {
 
   function getProvider() {
     const { ethereum } = window;
-    return ethereum
+    return state.account
       ? new ethers.providers.Web3Provider(ethereum)
       : ethers.getDefaultProvider(import.meta.env.VITE_WEB3_ENDPOINT);
   }

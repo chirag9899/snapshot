@@ -210,35 +210,40 @@ export async function addSnapshotRewardAmount(
 
 export async function getBribesForProposal(proposal, choices) {
   const bribedChoices = [];
-  const provider = await getProvider();
-  const bribeAddress = import.meta.env.VITE_BRIBE_SNAPSHOT_ADDRESS;
-  const bribeContract = new ethers.Contract(
-    bribeAddress,
-    bribeV3Snapshot.abi,
-    provider
-  );
-
-  const bribes = await bribeContract.rewards_per_proposal(proposal);
-
-  console.log(bribes, choices);
-
-  for (let i = 0; i < bribes.length; i++) {
-    const { amount, option, token } = bribes[i];
-    const tokenContract = new ethers.Contract(token, erc20.abi, provider);
-    const [decimals, symbol] = await Promise.all([
-      tokenContract.decimals(),
-      tokenContract.symbol()
-    ]);
-    const formattedAmount = parseFloat(
-      ethers.utils.formatUnits(amount, decimals)
+  try {
+    const provider = await getProvider();
+    const bribeAddress = import.meta.env.VITE_BRIBE_SNAPSHOT_ADDRESS;
+    const bribeContract = new ethers.Contract(
+      bribeAddress,
+      bribeV3Snapshot.abi,
+      provider
     );
-    bribedChoices.push({
-      amount: formattedAmount,
-      symbol,
-      option: choices[parseInt(option) - 1]
-    });
-  }
 
-  console.log(bribedChoices);
-  return bribedChoices;
+    const bribes = await bribeContract.rewards_per_proposal(proposal);
+
+    console.log(bribes, choices);
+
+    for (let i = 0; i < bribes.length; i++) {
+      const { amount, option, token } = bribes[i];
+      const tokenContract = new ethers.Contract(token, erc20.abi, provider);
+      const [decimals, symbol] = await Promise.all([
+        tokenContract.decimals(),
+        tokenContract.symbol()
+      ]);
+      const formattedAmount = parseFloat(
+        ethers.utils.formatUnits(amount, decimals)
+      );
+      bribedChoices.push({
+        amount: formattedAmount,
+        symbol,
+        option: choices[parseInt(option) - 1]
+      });
+    }
+
+    console.log(bribedChoices);
+    return bribedChoices;
+  } catch (e) {
+    console.log(e);
+    return bribedChoices;
+  }
 }
