@@ -115,8 +115,8 @@ if (domain) {
   // prefix space routes with space domain (/:key).
   routes.push(
     { path: '/', name: 'home', component: ExploreView },
-    { path: '/projects', name: 'projects', component: ExploreProjects },
-    { path: '/project/:name', name: 'project', component: GaugeBribes },
+    { path: '/veprojects', name: 'veprojects', component: ExploreProjects },
+    { path: '/veproject/:name', name: 'veproject', component: GaugeBribes },
     { path: '/rewards', name: 'rewards', component: Rewards },
     { path: '/about', name: 'about', component: AboutView },
     {

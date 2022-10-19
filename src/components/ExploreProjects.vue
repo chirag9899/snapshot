@@ -42,7 +42,7 @@ onMounted(() => {
       >
         <div v-for="project in Projects.slice(0, limit)" :key="project.id">
           <router-link
-            :to="{ name: 'project', params: { name: project.name } }"
+            :to="{ name: 'veproject', params: { name: project.name } }"
           >
             <BaseBlock
               class="mb-0 flex items-center justify-center text-center transition-all hover:border-skin-text"

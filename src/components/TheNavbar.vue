@@ -29,11 +29,11 @@ const { web3Account } = useWeb3();
             quicksnap
           </router-link>
           <router-link
-            :to="{ path: '/projects' }"
+            :to="{ path: '/veprojects' }"
             class="menuItem -ml-3 hidden items-center sm:block"
             style="font-size: 18px"
           >
-            projects
+            ve projects
           </router-link>
           <router-link
             :to="{ path: '/rewards' }"

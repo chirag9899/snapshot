@@ -13,8 +13,8 @@ const socials = [
     link: 'https://t.me/snapshotlabs'
   },
   {
-    icon: 'youtube',
-    link: `https://www.youtube.com/channel/UCKiOLUMQNj77m_zhQnfdzsg`
+    icon: 'github',
+    link: `https://github.com/quicksnap-io`
   }
 ];
 </script>
@@ -25,8 +25,8 @@ const socials = [
   >
     <span v-for="social in socials" :key="social.icon">
       <BaseLink :link="social.link" hide-external-icon>
-        <FooterSocialsItem v-if="social.icon === 'youtube'">
-          <i-s-youtube class="text-[25px]" />
+        <FooterSocialsItem v-if="social.icon === 'github'">
+          <i-s-github class="text-[25px]" />
         </FooterSocialsItem>
         <FooterSocialsItem v-else-if="social.icon === 'twitter'">
           <i-s-twitter class="text-[24px]" />
