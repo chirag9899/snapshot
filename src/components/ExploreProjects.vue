@@ -18,15 +18,22 @@ onMounted(() => {
 
 <template>
   <div class="relative">
+    <BaseContainer>
+      <BaseBlock
+        class="mb-4 justify-center transition-all hover:border-skin-text"
+      >
+        <p>
+          We only support a few projects for now, in order to support your
+          project you can follow the instructions in our
+          <a href="https://github.com/quicksnap-io/snapshot" target="_blank"
+            >readme on github</a
+          >.
+        </p>
+      </BaseBlock>
+    </BaseContainer>
     <BaseContainer
       class="mb-4 flex flex-col flex-wrap items-center xs:flex-row md:flex-nowrap"
     >
-      <!--      <BaseButton-->
-      <!--        class="w-full pl-3 pr-0 focus-within:!border-skin-link md:max-w-[420px]"-->
-      <!--      >-->
-      <!--        <TheSearchBar />-->
-      <!--      </BaseButton>-->
-
       <div
         class="mt-2 whitespace-nowrap text-right text-skin-text xs:mt-0 xs:ml-auto"
       >
