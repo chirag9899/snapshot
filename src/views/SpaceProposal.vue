@@ -61,6 +61,7 @@ let tokenError = ref({});
 let amountError = ref({});
 let currentBribes = ref([]);
 let bribesLoading = ref(false);
+let showBribeAddedMessage = ref(false);
 
 const isCreator = computed(() => proposal.value?.author === web3Account.value);
 const isAdmin = computed(() => {
@@ -224,15 +225,17 @@ async function addBribe() {
       bribeAmount.value,
       bribeToken.value
     );
+    modalBribeOpen.value = false;
+
     bribeAmount.value = 0;
     bribeToken.value = '';
     bribeOption.value = 1;
+
+    showBribeAddedMessage.value = true;
   } catch (e) {
+    modalBribeOpen.value = false;
     console.log(e);
   }
-
-  await getBribes();
-  modalBribeOpen.value = false;
 }
 
 async function getBribes() {
@@ -677,5 +680,15 @@ const truncateMarkdownBody = computed(() => {
       :selected-choices="selectedChoices"
       @close="isModalPostVoteOpen = false"
     />
+    <ModalNotice
+      :open="showBribeAddedMessage"
+      title="Bribed!"
+      @close="showBribeAddedMessage = false"
+    >
+      <p>
+        Your bribe will be added in a few minutes when confirmed by the
+        blockchain
+      </p>
+    </ModalNotice>
   </teleport>
 </template>

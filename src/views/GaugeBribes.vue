@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, onUnmounted, reactive } from 'vue';
+import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { useI18n } from '@/composables/useI18n';
 import { useSkin, DARK } from '@/composables/useSkin';
 import { useApp } from '@/composables/useApp';
@@ -50,6 +50,7 @@ const state = reactive({
   tokenInfo: { name: 'token', symbol: '', balance: 0 },
   governanceTokenInfo: { name: 'governance token', symbol: '', balance: 0 }
 });
+let showBribeAddedMessage = ref(false);
 
 loadGauges();
 
@@ -181,15 +182,16 @@ async function addBribe() {
       state.bribeAmount,
       state.bribeToken
     );
+
+    state.modalOpen = false;
     state.bribeAmount = 0;
     state.bribeToken = '';
 
-    loadGauges();
+    showBribeAddedMessage.value = true;
   } catch (e) {
     console.log(e);
+    state.modalOpen = false;
   }
-
-  state.modalOpen = false;
 }
 </script>
 
@@ -320,6 +322,16 @@ async function addBribe() {
         </BaseContainer>
       </template>
     </BaseModal>
+    <ModalNotice
+      :open="showBribeAddedMessage"
+      title="Bribed!"
+      @close="showBribeAddedMessage = false"
+    >
+      <p>
+        Your bribe will be added in a few minutes when confirmed by the
+        blockchain
+      </p>
+    </ModalNotice>
   </div>
 </template>
 
