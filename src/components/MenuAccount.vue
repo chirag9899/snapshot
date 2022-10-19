@@ -35,16 +35,16 @@ function handleAction(e) {
   <div>
     <BaseMenu
       :items="[
-        {
-          text: 'View profile',
-          action: 'viewProfile',
-          extras: { icon: 'profile' }
-        },
-        {
-          text: 'Delegate',
-          action: 'delegate',
-          extras: { icon: 'user-add' }
-        },
+        // {
+        //   text: 'View profile',
+        //   action: 'viewProfile',
+        //   extras: { icon: 'profile' }
+        // },
+        // {
+        //   text: 'Delegate',
+        //   action: 'delegate',
+        //   extras: { icon: 'user-add' }
+        // },
         {
           text: 'Switch wallet',
           action: 'switchWallet',

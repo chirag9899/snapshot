@@ -13,24 +13,24 @@ defineProps<{
         {{ $t('proposals.header') }}
       </BaseSidebarNavigationItem>
     </router-link>
-    <router-link
-      v-slot="{ isExactActive }"
-      :to="{ name: 'spaceCreate', params: { step: 1 } }"
-      data-testid="create-proposal-button"
-    >
-      <BaseSidebarNavigationItem :is-active="isExactActive">
-        {{ $t('proposals.new') }}
-      </BaseSidebarNavigationItem>
-    </router-link>
-    <router-link
-      v-if="space.strategies?.find(strategy => strategy.name === 'delegation')"
-      v-slot="{ isExactActive }"
-      :to="{ name: 'delegate', params: { key: space.id } }"
-    >
-      <BaseSidebarNavigationItem :is-active="isExactActive">
-        {{ $t('delegate.header') }}
-      </BaseSidebarNavigationItem>
-    </router-link>
+    <!--    <router-link-->
+    <!--      v-slot="{ isExactActive }"-->
+    <!--      :to="{ name: 'spaceCreate', params: { step: 1 } }"-->
+    <!--      data-testid="create-proposal-button"-->
+    <!--    >-->
+    <!--      <BaseSidebarNavigationItem :is-active="isExactActive">-->
+    <!--        {{ $t('proposals.new') }}-->
+    <!--      </BaseSidebarNavigationItem>-->
+    <!--    </router-link>-->
+    <!--    <router-link-->
+    <!--      v-if="space.strategies?.find(strategy => strategy.name === 'delegation')"-->
+    <!--      v-slot="{ isExactActive }"-->
+    <!--      :to="{ name: 'delegate', params: { key: space.id } }"-->
+    <!--    >-->
+    <!--      <BaseSidebarNavigationItem :is-active="isExactActive">-->
+    <!--        {{ $t('delegate.header') }}-->
+    <!--      </BaseSidebarNavigationItem>-->
+    <!--    </router-link>-->
     <router-link v-slot="{ isActive }" :to="{ name: 'spaceTreasury' }">
       <BaseSidebarNavigationItem :is-active="isActive">
         {{ $t('treasury.title') }}
@@ -41,10 +41,10 @@ defineProps<{
         {{ $t('about') }}
       </BaseSidebarNavigationItem>
     </router-link>
-    <router-link v-slot="{ isExactActive }" :to="{ name: 'spaceSettings' }">
-      <BaseSidebarNavigationItem :is-active="isExactActive">
-        {{ $t('settings.header') }}
-      </BaseSidebarNavigationItem>
-    </router-link>
+    <!--    <router-link v-slot="{ isExactActive }" :to="{ name: 'spaceSettings' }">-->
+    <!--      <BaseSidebarNavigationItem :is-active="isExactActive">-->
+    <!--        {{ $t('settings.header') }}-->
+    <!--      </BaseSidebarNavigationItem>-->
+    <!--    </router-link>-->
   </div>
 </template>

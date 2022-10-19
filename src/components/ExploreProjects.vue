@@ -19,9 +19,7 @@ onMounted(() => {
 <template>
   <div class="relative">
     <BaseContainer>
-      <BaseBlock
-        class="mb-4 justify-center transition-all hover:border-skin-text"
-      >
+      <BaseBlock class="mb-4 justify-center transition-all">
         <p>
           We only support a few projects for now, in order to support your
           project you can follow the instructions in our

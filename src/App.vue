@@ -42,7 +42,7 @@ onMounted(async () => init());
         <div id="content" class="pb-6 pt-4">
           <router-view :key="$route.path" />
         </div>
-        <footer v-if="route.name === 'home'" class="mt-auto">
+        <footer class="mt-auto">
           <TheFooter />
         </footer>
       </div>

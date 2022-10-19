@@ -68,23 +68,23 @@ watchEffect(() => {
       </div>
     </div>
 
-    <div
-      class="flex flex-grow items-start justify-end gap-x-2 lg:mb-4 lg:justify-center"
-    >
-      <ButtonFollow :space="space" :primary="!isFollowing" />
-      <ButtonSidebar
-        v-if="isFollowing"
-        class="inline"
-        @click="toggleSubscription()"
-      >
-        <LoadingSpinner v-if="loading" />
-        <BaseIcon
-          v-else
-          size="20"
-          class="text-skin-link"
-          :name="notificationIcon"
-        />
-      </ButtonSidebar>
-    </div>
+    <!--    <div-->
+    <!--      class="flex flex-grow items-start justify-end gap-x-2 lg:mb-4 lg:justify-center"-->
+    <!--    >-->
+    <!--      <ButtonFollow :space="space" :primary="!isFollowing" />-->
+    <!--      <ButtonSidebar-->
+    <!--        v-if="isFollowing"-->
+    <!--        class="inline"-->
+    <!--        @click="toggleSubscription()"-->
+    <!--      >-->
+    <!--        <LoadingSpinner v-if="loading" />-->
+    <!--        <BaseIcon-->
+    <!--          v-else-->
+    <!--          size="20"-->
+    <!--          class="text-skin-link"-->
+    <!--          :name="notificationIcon"-->
+    <!--        />-->
+    <!--      </ButtonSidebar>-->
+    <!--    </div>-->
   </div>
 </template>
