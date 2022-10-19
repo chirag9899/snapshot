@@ -42,10 +42,12 @@ export async function getGaugeInfo(
     for (let i = 0; i < rewards.length; i++) {
       const token = new ethers.Contract(rewards[i], erc20.abi, provider);
       const decimals = BigNumber.from(await token.decimals()).toNumber();
-      const bribeAmount = ethers.utils.formatUnits(
+      const rawBribeAmount = ethers.utils.formatUnits(
         await bribeContract._reward_per_gauge(period, gaugeAddress, rewards[i]),
         decimals
       );
+      // include fee in amount
+      const bribeAmount = (parseFloat(rawBribeAmount) / 95) * 100;
       console.log(rewards[i], bribeAmount);
       const { price } = await tokenPriceLogo(rewards[i]);
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -234,7 +236,8 @@ export async function getBribesForProposal(proposal, choices) {
         ethers.utils.formatUnits(amount, decimals)
       );
       bribedChoices.push({
-        amount: formattedAmount,
+        // include fee in amount
+        amount: (formattedAmount / 95) * 100,
         symbol,
         option: choices[parseInt(option) - 1]
       });
