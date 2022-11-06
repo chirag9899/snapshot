@@ -78,6 +78,7 @@ const loading = computed(() => {
 
 const loadBy = 15;
 const limit = ref(loadBy);
+const showActiveBribes = ref(true);
 
 const { endElement } = useScrollMonitor(() => (limit.value += loadBy));
 
@@ -88,7 +89,24 @@ onMounted(() => {
 
 <template>
   <div v-if="isSpaces">
-    <ExploreSpaces />
+    <BaseContainer class="mb-4 xs:flex-row md:flex-nowrap">
+      <BaseButton
+        :primary="showActiveBribes"
+        @click="() => (showActiveBribes = true)"
+        >Active Bribes</BaseButton
+      >
+      <BaseButton
+        :primary="!showActiveBribes"
+        @click="() => (showActiveBribes = false)"
+        >Browse projects</BaseButton
+      >
+    </BaseContainer>
+    <div v-if="showActiveBribes">
+      <ExploreActiveBribes />
+    </div>
+    <div v-if="!showActiveBribes">
+      <ExploreSpaces />
+    </div>
   </div>
   <div v-else>
     <BaseContainer class="mb-4 flex items-center">

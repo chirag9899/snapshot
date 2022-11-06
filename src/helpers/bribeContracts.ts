@@ -5,11 +5,28 @@ import erc20 from '@/abi/erc20.json';
 import gauge from '@/abi/gauge.json';
 import { useWeb3 } from '@/composables';
 import { getContractName } from '@/helpers/etherscan';
+import { getTokenInfo } from '@/helpers/rewards';
+import { ApolloClient, InMemoryCache } from '@apollo/client/core';
 import { BigNumber } from '@ethersproject/bignumber';
 import { ethers } from 'ethers';
 import GaugeNames from '../../config/GaugeNames.json';
+import { ADD_SNAPSHOT_BRIBE_MUTATION } from '@/helpers/mutations';
+import {
+  CURRENT_SNAPSHOT_BRIBES,
+  PROPOSAL_REDUCED_QUERY
+} from '@/helpers/queries';
 
 const { getProvider } = useWeb3();
+
+const client = new ApolloClient({
+  uri: `${import.meta.env.VITE_API_ENDPOINT}/graphql`,
+  cache: new InMemoryCache()
+});
+
+const snapshotClient = new ApolloClient({
+  uri: `${import.meta.env.VITE_HUB_URL}/graphql`,
+  cache: new InMemoryCache()
+});
 
 export async function getGaugeInfo(
   projectName,
@@ -179,10 +196,13 @@ export async function addRewardAmount(
 }
 
 export async function addSnapshotRewardAmount(
+  space,
   proposal,
   option,
   bribeAmount,
-  bribeToken
+  bribeToken,
+  start,
+  end
 ) {
   const provider = await getProvider();
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -208,6 +228,55 @@ export async function addSnapshotRewardAmount(
     amount
   );
   console.log(tx);
+
+  // add bribe to the db for easier querying later
+  const request = await client.mutate({
+    mutation: ADD_SNAPSHOT_BRIBE_MUTATION,
+    variables: {
+      tx: tx.hash,
+      space,
+      proposal,
+      option,
+      token: bribeToken,
+      amount: parseFloat(bribeAmount),
+      start,
+      end
+    }
+  });
+  console.log(request);
+}
+
+export async function getActiveSnapshotBribes() {
+  const activeSnapshotBribes = [];
+  try {
+    const { data } = await client.query({
+      query: CURRENT_SNAPSHOT_BRIBES
+    });
+    const { snapshotBribes } = data;
+
+    for (let i = 0; i < snapshotBribes.length; i++) {
+      // get proposal info
+      const proposalData = await snapshotClient.query({
+        query: PROPOSAL_REDUCED_QUERY,
+        variables: { id: snapshotBribes[i].proposal }
+      });
+      const { proposal } = proposalData.data;
+
+      // get token info
+      const { price, logo } = await tokenPriceLogo(snapshotBribes[i].token);
+      const tokenInfo = await getTokenInfo(snapshotBribes[i].token);
+      const tokenData = { price, logo, symbol: tokenInfo.symbol };
+      activeSnapshotBribes.push({
+        ...snapshotBribes[i],
+        ...proposal,
+        ...tokenData
+      });
+    }
+  } catch (e) {
+    console.log(e);
+  }
+
+  return activeSnapshotBribes;
 }
 
 export async function getBribesForProposal(proposal, choices) {

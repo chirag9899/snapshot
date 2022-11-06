@@ -220,10 +220,13 @@ async function addBribe() {
 
   try {
     await addSnapshotRewardAmount(
+      proposal.value.space.id,
       proposal.value.id,
       bribeOption.value,
       bribeAmount.value,
-      bribeToken.value
+      bribeToken.value,
+      proposal.value.start,
+      proposal.value.end
     );
     modalBribeOpen.value = false;
 
@@ -582,11 +585,7 @@ const truncateMarkdownBody = computed(() => {
               >
             </div>
           </div>
-          <BaseButton
-            class="block w-full"
-            :disabled="proposal.state !== 'active'"
-            primary
-            @click="openBribeModal()"
+          <BaseButton class="block w-full" primary @click="openBribeModal()"
             >Add Bribe</BaseButton
           >
           <br />

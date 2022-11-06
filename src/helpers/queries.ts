@@ -64,6 +64,21 @@ export const PROPOSAL_QUERY = gql`
   }
 `;
 
+export const PROPOSAL_REDUCED_QUERY = gql`
+  query Proposal($id: String!) {
+    proposal(id: $id) {
+      title
+      choices
+      network
+      type
+      space {
+        id
+        name
+      }
+    }
+  }
+`;
+
 export const PROPOSALS_QUERY = gql`
   query Proposals(
     $first: Int!
@@ -396,6 +411,18 @@ export const USER_VOTED_PROPOSAL_IDS_QUERY = gql`
       proposal {
         id
       }
+    }
+  }
+`;
+
+export const CURRENT_SNAPSHOT_BRIBES = gql`
+  query SnapshotBribes {
+    snapshotBribes {
+      space
+      proposal
+      option
+      token
+      amount
     }
   }
 `;
