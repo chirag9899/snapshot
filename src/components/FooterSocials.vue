@@ -2,19 +2,19 @@
 const socials = [
   {
     icon: 'twitter',
-    link: 'https://twitter.com/SnapshotLabs'
+    link: 'https://twitter.com/QuicksnapFi'
   },
-  {
-    icon: 'discord',
-    link: 'https://discord.gg/snapshot'
-  },
+  // {
+  //   icon: 'discord',
+  //   link: 'https://discord.gg/snapshot'
+  // },
   {
     icon: 'telegram',
-    link: 'https://t.me/snapshotlabs'
+    link: 'https://t.me/+6Q42CsOZFn5hNzBh'
   },
   {
     icon: 'github',
-    link: `https://github.com/quicksnap-io`
+    link: `https://github.com/quicksnap-finance`
   }
 ];
 </script>
