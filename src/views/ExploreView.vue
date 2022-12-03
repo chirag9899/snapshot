@@ -83,7 +83,7 @@ const showActiveBribes = ref(true);
 const { endElement } = useScrollMonitor(() => (limit.value += loadBy));
 
 onMounted(() => {
-  setPageTitle('page.title.explore');
+  setPageTitle('Explore bribes');
 });
 </script>
 

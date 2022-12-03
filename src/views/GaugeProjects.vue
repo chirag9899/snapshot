@@ -9,7 +9,7 @@ const { formatCompactNumber } = useIntl();
 const route = useRoute();
 
 onMounted(() => {
-  setPageTitle('page.title.explore');
+  setPageTitle('ve projects');
 });
 </script>
 

@@ -15,6 +15,10 @@ const state = reactive({
   bribes: []
 });
 
+onMounted(() => {
+  setPageTitle('Active bribes');
+});
+
 getActiveBribes();
 
 async function getActiveBribes() {
