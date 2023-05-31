@@ -1,7 +1,7 @@
 {
-  "short_name": "Snapshot",
-  "name": "Snapshot",
-  "description": "Where decisions get made",
+  "short_name": "Quicksnap",
+  "name": "Quicksnap",
+  "description": "",
   "iconPath": "icon.svg",
   "icons": [
     {

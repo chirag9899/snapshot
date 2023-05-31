@@ -25,7 +25,7 @@ const { endElement } = useScrollMonitor(() => {
 });
 
 onMounted(() => {
-  setPageTitle('Explore bribes');
+  setPageTitle('Quicksnap');
 });
 </script>
 
