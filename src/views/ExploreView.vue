@@ -78,7 +78,7 @@ const loading = computed(() => {
 
 const loadBy = 15;
 const limit = ref(loadBy);
-const showActiveBribes = ref(true);
+const showActiveBribes = ref(false);
 
 const { endElement } = useScrollMonitor(() => (limit.value += loadBy));
 
@@ -99,6 +99,11 @@ onMounted(() => {
         :primary="!showActiveBribes"
         @click="() => (showActiveBribes = false)"
         >Browse projects</BaseButton
+      >
+      <BaseButton
+        :primary="showActiveBribes"
+        @click="() => (showActiveBribes = true)"
+        >Active Bribes</BaseButton
       >
     </BaseContainer>
     <div v-if="showActiveBribes">
