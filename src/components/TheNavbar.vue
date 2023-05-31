@@ -24,23 +24,30 @@ const { web3Account } = useWeb3();
           <router-link
             :to="{ path: '/' }"
             class="menuItem -ml-3 hidden items-center sm:block"
-            style="font-size: 24px"
+            style="font-size: 28px"
           >
             quicksnap
           </router-link>
           <router-link
-            :to="{ path: '/veprojects' }"
+            :to="{ path: '/' }"
             class="menuItem -ml-3 hidden items-center sm:block"
             style="font-size: 18px"
           >
-            ve projects
+            Snapshot Voters
+          </router-link>
+          <router-link
+            :to="{ path: '/vevoters' }"
+            class="menuItem -ml-3 hidden items-center sm:block"
+            style="font-size: 18px"
+          >
+            VE Voters
           </router-link>
           <router-link
             :to="{ path: '/rewards' }"
             class="menuItem -ml-3 hidden items-center sm:block"
             style="font-size: 18px"
           >
-            rewards
+            Rewards
           </router-link>
         </div>
         <div :key="web3Account" class="flex space-x-2">
