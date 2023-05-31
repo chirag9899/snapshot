@@ -91,11 +91,6 @@ onMounted(() => {
   <div v-if="isSpaces">
     <BaseContainer class="mb-4 xs:flex-row md:flex-nowrap">
       <BaseButton
-        :primary="showActiveBribes"
-        @click="() => (showActiveBribes = true)"
-        >Active Bribes</BaseButton
-      >
-      <BaseButton
         :primary="!showActiveBribes"
         @click="() => (showActiveBribes = false)"
         >Browse projects</BaseButton
