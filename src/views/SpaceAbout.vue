@@ -1,16 +1,26 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue';
-import networks from '@snapshot-labs/snapshot.js/src/networks.json';
 import { getUrl } from '@snapshot-labs/snapshot.js/src/utils';
 import { ExtendedSpace } from '@/helpers/interfaces';
-
-import { useProfiles, useI18n } from '@/composables';
 
 const props = defineProps<{
   space: ExtendedSpace;
 }>();
 
-const { setPageTitle } = useI18n();
+useMeta({
+  title: {
+    key: 'metaInfo.space.about.title',
+    params: {
+      space: props.space.name
+    }
+  },
+  description: {
+    key: 'metaInfo.space.about.description',
+    params: {
+      about: props.space.about.slice(0, 160)
+    }
+  }
+});
+
 const { profiles, loadProfiles } = useProfiles();
 
 type Moderator = {
@@ -18,11 +28,20 @@ type Moderator = {
   roles: string[];
 };
 
-const moderators = computed(() => {
+const isModalStrategiesOpen = ref(false);
+
+const spaceMembers = computed(() => {
   const authors = props.space.members.map(member => {
     return {
       id: member,
       roles: ['author']
+    };
+  });
+
+  const moderators = props.space.moderators.map(moderator => {
+    return {
+      id: moderator,
+      roles: ['moderator']
     };
   });
 
@@ -33,27 +52,30 @@ const moderators = computed(() => {
     };
   });
 
-  return authors.concat(admins).reduce<Moderator[]>((acc, curr) => {
-    const existing = acc.find(member => member.id === curr.id);
-    if (existing) {
-      existing.roles = existing.roles.concat(curr.roles);
-    } else {
-      acc.push(curr);
-    }
-    return acc;
-  }, [] as Moderator[]);
+  return authors
+    .concat(moderators)
+    .concat(admins)
+    .reduce<Moderator[]>((acc, curr) => {
+      const existing = acc.find(member => member.id === curr.id);
+      if (existing) {
+        if (curr.roles[0] === 'admin') {
+          existing.roles = curr.roles;
+        }
+      } else {
+        acc.push(curr);
+      }
+      return acc;
+    }, [] as Moderator[]);
 });
 
 onMounted(() => {
   if (props.space?.admins)
     loadProfiles(props.space.admins.concat(props.space.members));
-  if (props.space?.name)
-    setPageTitle('page.title.space.about', { space: props.space.name });
 });
 </script>
 
 <template>
-  <TheLayout>
+  <TheLayout v-bind="$attrs">
     <template #sidebar-left>
       <SpaceSidebar :space="space" />
     </template>
@@ -87,61 +109,66 @@ onMounted(() => {
       <BaseBlock
         v-if="space.strategies"
         :title="$t('settings.strategies.label')"
-        class="mt-3"
+        :counter="space.strategies.length"
+        :show-more-button="space.strategies.length > 2"
+        show-more-button-label="seeAll"
         slim
+        class="mt-3"
+        @show-more="isModalStrategiesOpen = true"
       >
-        <div
-          v-for="(strategy, i) in space.strategies"
-          :key="i"
-          class="flex items-center justify-between border-b p-4 last:border-b-0"
-        >
-          <div>
-            <div class="flex items-center">
-              <h3>
-                {{ strategy.name }}
-              </h3>
-              <ButtonPlayground
-                :name="strategy.name"
-                :network="strategy.network"
-                :params="strategy.params"
-              />
-            </div>
-
-            <div>{{ networks[strategy.network].name }}</div>
-          </div>
-          <div>
-            <BasePill v-if="strategy.params.symbol" class="py-1">
-              ${{ strategy.params.symbol }}
-            </BasePill>
-          </div>
+        <div class="grid grid-cols-1 gap-4 p-4 px-0 md:px-4">
+          <StrategiesListItem
+            v-for="(strategy, i) in space.strategies.slice(0, 2)"
+            :key="i"
+            :strategy="strategy"
+            class="!mb-0"
+          />
         </div>
       </BaseBlock>
+
       <BaseBlock
-        v-if="space?.admins?.length"
+        v-if="spaceMembers.length"
         :title="$t('spaceMembers')"
+        :counter="spaceMembers.length"
         class="mt-3"
         slim
       >
-        <AboutModeratorsListItem v-for="(mod, i) in moderators" :key="i">
+        <AboutMembersListItem v-for="(mod, i) in spaceMembers" :key="i">
           <BaseUser :address="mod.id" :profile="profiles[mod.id]" />
           <div class="space-x-2">
             <BasePill
               v-if="mod.roles.includes('admin')"
-              v-tippy="{ content: $t('settings.admins.information') }"
+              v-tippy="{ content: $t('settings.members.admin.description') }"
               class="cursor-help py-1"
             >
               admin
             </BasePill>
             <BasePill
+              v-if="mod.roles.includes('moderator')"
+              v-tippy="{
+                content: $t('settings.members.moderator.description')
+              }"
+              class="cursor-help py-1"
+            >
+              moderator
+            </BasePill>
+            <BasePill
               v-if="mod.roles.includes('author')"
-              v-tippy="{ content: $t('settings.authors.information') }"
+              v-tippy="{ content: $t('settings.members.author.description') }"
               class="cursor-help py-1"
             >
               author
             </BasePill>
           </div>
-        </AboutModeratorsListItem>
+        </AboutMembersListItem>
       </BaseBlock>
     </template>
   </TheLayout>
+  <teleport to="#modal">
+    <ModalStrategies
+      :open="isModalStrategiesOpen"
+      :strategies="space.strategies"
+      @close="isModalStrategiesOpen = false"
+    />
+  </teleport>
 </template>

@@ -10,10 +10,64 @@ import { getIpfsUrl, shorten } from '@/helpers/utils';
 
 import SafeSnapTooltip from './Tooltip.vue';
 import SafeSnapHandleOutcome from './HandleOutcome.vue';
+import SafeSnapHandleOutcomeUma from './HandleOutcomeUma.vue';
 import SafeSnapFormImportTransactionsButton from './Form/ImportTransactionsButton.vue';
 import SafeSnapFormTransactionBatch from './Form/TransactionBatch.vue';
+import { getInstance } from '@snapshot-labs/lock/plugins/vue3';
+import { sleep } from '@snapshot-labs/snapshot.js/src/utils';
 
 const plugin = new Plugin();
+
+export const ensureRightNetwork = async chainId => {
+  const chainIdInt = parseInt(chainId);
+  const connectedToChainId = getInstance().provider.value?.chainId;
+  if (connectedToChainId === chainIdInt) return; // already on right chain
+
+  if (!window.ethereum || !getInstance().provider.value?.isMetaMask) {
+    // we cannot switch automatically
+    throw new Error(
+      `Connected to wrong chain #${connectedToChainId}, required: #${chainId}`
+    );
+  }
+
+  const network = networks[chainId];
+  const chainIdHex = `0x${chainIdInt.toString(16)}`;
+
+  try {
+    // check if the chain to connect to is installed
+    await window.ethereum.request({
+      method: 'wallet_switchEthereumChain',
+      params: [{ chainId: chainIdHex }] // chainId must be in hexadecimal numbers
+    });
+  } catch (error) {
+    // This error code indicates that the chain has not been added to MetaMask. Let's add it.
+    if (error.code === 4902) {
+      try {
+        await window.ethereum.request({
+          method: 'wallet_addEthereumChain',
+          params: [
+            {
+              chainId: chainIdHex,
+              chainName: network.name,
+              rpcUrls: network.rpc,
+              blockExplorerUrls: [network.explorer.url]
+            }
+          ]
+        });
+      } catch (addError) {
+        console.error(addError);
+      }
+    }
+    console.error(error);
+  }
+
+  await sleep(1e3); // somehow the switch does not take immediate effect :/
+  if (window.ethereum.chainId !== chainIdHex) {
+    throw new Error(
+      `Could not switch to the right chain on MetaMask (required: ${chainIdHex}, active: ${window.ethereum.chainId})`
+    );
+  }
+};
 
 async function fetchBalances(network, gnosisSafeAddress) {
   if (gnosisSafeAddress) {
@@ -43,13 +97,13 @@ async function fetchCollectibles(network, gnosisSafeAddress) {
   return [];
 }
 
-function formatBatches(network, realityModule, batches, multiSend) {
+function formatBatches(network, module, batches, multiSend) {
   if (batches.length) {
     const batchSample = batches[0];
     if (Array.isArray(batchSample)) {
       const chainId = parseInt(network);
       return batches.map((txs, index) =>
-        createBatch(realityModule, chainId, index, txs, multiSend)
+        createBatch(module, chainId, index, txs, multiSend)
       );
     }
   }
@@ -61,13 +115,17 @@ export default {
     SafeSnapTooltip,
     SafeSnapFormImportTransactionsButton,
     SafeSnapHandleOutcome,
+    SafeSnapHandleOutcomeUma,
     SafeSnapFormTransactionBatch
   },
   props: [
     'modelValue',
     'proposal',
+    'space',
+    'results',
     'network',
     'realityAddress',
+    'umaAddress',
     'multiSendAddress',
     'preview',
     'hash'
@@ -85,11 +143,15 @@ export default {
         this.multiSendAddress
       ),
       gnosisSafeAddress: undefined,
+      moduleType: undefined,
+      moduleAddress: undefined,
+      moduleTypeReady: false,
       showHash: false,
       transactionConfig: {
         preview: this.preview,
         gnosisSafeAddress: undefined,
         realityAddress: this.realityAddress,
+        umaAddress: this.umaAddress,
         network: this.network,
         multiSendAddress: this.multiSendAddress,
         tokens: [],
@@ -118,10 +180,25 @@ export default {
   },
   async mounted() {
     try {
-      const { dao } = await plugin.getModuleDetails(
+      const moduleType = await plugin.validateUmaModule(
         this.network,
-        this.realityAddress
+        this.umaAddress
       );
+
+      const { dao } =
+        moduleType === 'reality'
+          ? await plugin.getModuleDetailsReality(
+              this.network,
+              this.realityAddress
+            )
+          : await plugin.getModuleDetailsUma(this.network, this.umaAddress);
+
+      const moduleAddress =
+        moduleType === 'reality' ? this.realityAddress : this.umaAddress;
+
+      this.moduleType = moduleType;
+      this.moduleAddress = moduleAddress;
+      this.moduleTypeReady = true;
       this.gnosisSafeAddress = dao;
       this.transactionConfig = {
         ...this.transactionConfig,
@@ -140,7 +217,7 @@ export default {
     addTransactionBatch() {
       this.input.push(
         createBatch(
-          this.realityAddress,
+          this.moduleAddress,
           parseInt(this.network),
           this.input.length,
           [],
@@ -160,7 +237,7 @@ export default {
     handleImport(txs) {
       this.input.push(
         createBatch(
-          this.realityAddress,
+          this.moduleAddress,
           parseInt(this.network),
           this.input.length,
           txs,
@@ -176,7 +253,7 @@ export default {
 <template>
   <div>
     <h4
-      class="flex rounded-t-none border-b px-4 pt-3 pb-[12px] md:rounded-t-md"
+      class="flex rounded-t-none border-b px-4 pb-[12px] pt-3 md:rounded-t-md"
     >
       <BaseAvatar class="float-left mr-2" :src="networkIcon" size="28" />
       {{ networkName }} Safe
@@ -191,21 +268,22 @@ export default {
       </a>
       <div class="flex-grow"></div>
       <SafeSnapTooltip
-        :reality-address="realityAddress"
+        v-if="moduleTypeReady"
+        :module-address="moduleAddress"
         :multi-send-address="multiSendAddress"
+        :module-type="moduleType"
       />
     </h4>
     <UiCollapsibleText
       v-if="hash"
       :show-arrow="true"
       :open="showHash"
+      :text="hash"
       class="border-b"
       style="border-width: 0 0 1px 0 !important"
       title="Complete Transaction Hash"
       @toggle="showHash = !showHash"
-    >
-      {{ hash }}
-    </UiCollapsibleText>
+    />
     <div class="text-center">
       <div
         v-for="(batch, index) in input"
@@ -233,10 +311,31 @@ export default {
         />
 
         <SafeSnapHandleOutcome
-          v-if="preview && proposalResolved"
+          v-if="
+            preview &&
+            proposalResolved &&
+            moduleType === 'reality' &&
+            moduleTypeReady
+          "
           :batches="input"
           :proposal="proposal"
-          :reality-address="realityAddress"
+          :reality-address="transactionConfig.realityAddress"
+          :multi-send-address="transactionConfig.multiSendAddress"
+          :network="transactionConfig.network"
+        />
+
+        <SafeSnapHandleOutcomeUma
+          v-if="
+            preview &&
+            proposalResolved &&
+            moduleType === 'uma' &&
+            moduleTypeReady
+          "
+          :batches="input"
+          :proposal="proposal"
+          :space="space"
+          :results="results"
+          :uma-address="transactionConfig.umaAddress"
           :multi-send-address="transactionConfig.multiSendAddress"
           :network="transactionConfig.network"
         />

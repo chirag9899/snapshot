@@ -1,8 +1,5 @@
 <script setup lang="ts">
 import { getInstance } from '@snapshot-labs/lock/plugins/vue3';
-import { computed, ref } from 'vue';
-import { useI18n } from '@/composables/useI18n';
-import { useFlashNotification } from '@/composables/useFlashNotification';
 import { sleep } from '@snapshot-labs/snapshot.js/src/utils';
 
 defineProps<{
@@ -12,12 +9,12 @@ const emit = defineEmits(['close', 'networkChanged']);
 const defaultNetwork = import.meta.env.VITE_DEFAULT_NETWORK;
 const networkData = {
   '1': {
-    name: 'Mainnet',
+    name: 'Ethereum Mainnet',
     chainId: '0x1'
   },
-  '4': {
-    name: 'Rinkeby',
-    chainId: '0x4'
+  '5': {
+    name: 'Goerli Testnet',
+    chainId: '0x5'
   }
 };
 
@@ -65,14 +62,14 @@ const switchToDefaultNetwork = async () => {
       <BaseMessageBlock v-if="defaultNetwork === '1'" level="warning">
         {{
           $t('unsupportedNetwork.switchNetworkToNetwork', {
-            network: 'Ethereum Mainnet'
+            network: networkData[defaultNetwork].name
           })
         }}
       </BaseMessageBlock>
-      <BaseMessageBlock v-if="defaultNetwork === '4'" level="warning">
+      <BaseMessageBlock v-if="defaultNetwork === '5'" level="warning">
         {{
           $t('unsupportedNetwork.switchNetworkToNetwork', {
-            network: 'Rinkeby Network'
+            network: networkData[defaultNetwork].name
           })
         }}
       </BaseMessageBlock>
@@ -93,7 +90,7 @@ const switchToDefaultNetwork = async () => {
       </BaseButton>
       <div v-if="defaultNetwork === '1'">
         <BaseLink link="https://demo.snapshot.org" hide-external-icon>
-          <BaseButton class="w-full">
+          <BaseButton tabindex="-1" class="w-full">
             {{ $t('unsupportedNetwork.goToDemoSite') }}
           </BaseButton>
         </BaseLink>

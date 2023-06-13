@@ -1,52 +1,33 @@
-<script>
-import chevronIcon from '@/assets/icons/chevron.svg';
-import { useCopy } from '@/composables/useCopy';
+<script setup lang="ts">
+const { copyToClipboard } = useCopy();
 
-export default {
-  props: [
-    'open',
-    'title',
-    'number',
-    'hideRemove',
-    'showArrow',
-    'borderless',
-    'pre'
-  ],
-  emits: ['toggle'],
-  setup() {
-    const { copyToClipboard } = useCopy();
-    return { copyToClipboard };
-  },
-  data() {
-    return { chevronIcon };
-  },
-  methods: {
-    copy() {
-      const text = this.$slots.default()[0].children;
-      this.copyToClipboard(text);
-    }
-  }
-};
+defineProps<{
+  open: boolean;
+  title: string;
+  text: string;
+  hideRemove?: boolean;
+  showArrow: boolean;
+  pre?: boolean;
+}>();
+
+defineEmits(['toggle']);
 </script>
 
 <template>
   <UiCollapsibleContent
     :open="open"
     :title="title"
-    :number="number"
-    :hide-remove="hideRemove"
     :show-arrow="showArrow"
-    :borderless="borderless"
     @toggle="$emit('toggle')"
   >
     <template #icons>
-      <div
+      <button
         v-if="!hideRemove"
         class="mr-2 flex cursor-pointer items-center"
-        @click="copy"
+        @click="copyToClipboard(text)"
       >
         <BaseIcon style="color: #b2b5b2" name="copy" size="20" />
-      </div>
+      </button>
     </template>
     <div
       :class="{ pre }"
@@ -59,7 +40,7 @@ export default {
         padding: 12px;
       "
     >
-      <slot />
+      {{ text }}
     </div>
   </UiCollapsibleContent>
 </template>

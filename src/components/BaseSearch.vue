@@ -1,55 +1,61 @@
 <script setup lang="ts">
-import { useRouter } from 'vue-router';
-import debounce from 'lodash/debounce';
-
 const props = defineProps<{
   modelValue: string;
   placeholder?: string;
   modal?: boolean;
+  focusOnMount?: boolean;
 }>();
+
 const emit = defineEmits(['update:modelValue']);
 
-const router = useRouter();
+const input = ref(props.modelValue || '');
+const BaseInputEL = ref<HTMLDivElement | undefined>(undefined);
 
 function handleInput(e) {
-  const input = e.target.value;
-  if (!props.modal) {
-    const { query } = router.currentRoute.value;
-    router.push({
-      query: input ? { ...query, q: input } : { ...query, q: undefined }
-    });
-  }
-  emit('update:modelValue', input);
+  input.value = e.target.value;
+  emit('update:modelValue', e.target.value);
 }
-
-const handleInputDebounce = debounce(handleInput, 100);
 
 function clearInput() {
-  if (!props.modal) {
-    const { query } = router.currentRoute.value;
-    router.push({ query: { ...query, q: undefined } });
-  }
+  input.value = '';
   emit('update:modelValue', '');
 }
+
+onMounted(() => {
+  if (props.focusOnMount) {
+    BaseInputEL?.value?.focus();
+  }
+});
+
+watch(
+  () => props.modelValue,
+  () => {
+    input.value = props.modelValue;
+  }
+);
 </script>
 
 <template>
   <div
     class="flex items-center"
-    :class="{ 'border-b bg-skin-bg py-3 px-4': modal }"
+    :class="{ 'border-b bg-skin-bg py-3 pl-4': modal }"
   >
-    <i-ho-search class="mr-2 text-[19px]" />
+    <i-ho-search class="mr-2 flex-shrink-0 text-[19px] text-skin-link" />
     <input
-      :value="modelValue"
+      ref="BaseInputEL"
+      :value="input"
       :placeholder="placeholder"
       type="text"
       autocorrect="off"
       autocapitalize="none"
-      class="input w-full flex-auto border-none"
-      @input="handleInputDebounce"
+      class="input w-full border-none"
+      @input="handleInput"
     />
-    <a @click="clearInput">
-      <BaseIcon v-if="modelValue" name="close" size="12" class="mb-1" />
-    </a>
+    <i-ho-x
+      v-if="modelValue"
+      class="mr-2 flex-shrink-0 cursor-pointer text-[16px]"
+      @click="clearInput"
+    />
+    <slot name="after" class="flex-shrink-0" />
   </div>
 </template>

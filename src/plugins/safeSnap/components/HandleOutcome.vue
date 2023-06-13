@@ -1,20 +1,11 @@
 <script setup>
-import { onMounted, ref, computed } from 'vue';
 import Plugin from '../index';
 import networks from '@snapshot-labs/snapshot.js/src/networks.json';
 import { getInstance } from '@snapshot-labs/lock/plugins/vue3';
 import { sleep } from '@snapshot-labs/snapshot.js/src/utils';
 import { BigNumber } from '@ethersproject/bignumber';
 import { formatUnits } from '@ethersproject/units';
-
-import {
-  useWeb3,
-  useI18n,
-  useIntl,
-  useFlashNotification,
-  useTxStatus,
-  useSafe
-} from '@/composables';
+import { ensureRightNetwork } from './SafeTransactions.vue';
 
 import SafeSnapModalOptionApproval from './Modal/OptionApproval.vue';
 
@@ -23,7 +14,11 @@ const { t } = useI18n();
 
 const { clearBatchError, setBatchError } = useSafe();
 const { web3 } = useWeb3();
-const { pendingCount } = useTxStatus();
+const {
+  createPendingTransaction,
+  updatePendingTransaction,
+  removePendingTransaction
+} = useTxStatus();
 const { notify } = useFlashNotification();
 
 const props = defineProps([
@@ -50,57 +45,6 @@ const QuestionStates = {
   timeExpired: 9
 };
 Object.freeze(QuestionStates);
-
-const ensureRightNetwork = async chainId => {
-  const chainIdInt = parseInt(chainId);
-  const connectedToChainId = getInstance().provider.value?.chainId;
-  if (connectedToChainId === chainIdInt) return; // already on right chain
-
-  if (!window.ethereum || !getInstance().provider.value?.isMetaMask) {
-    // we cannot switch automatically
-    throw new Error(
-      `Connected to wrong chain #${connectedToChainId}, required: #${chainId}`
-    );
-  }
-
-  const network = networks[chainId];
-  const chainIdHex = `0x${chainIdInt.toString(16)}`;
-
-  try {
-    // check if the chain to connect to is installed
-    await window.ethereum.request({
-      method: 'wallet_switchEthereumChain',
-      params: [{ chainId: chainIdHex }] // chainId must be in hexadecimal numbers
-    });
-  } catch (error) {
-    // This error code indicates that the chain has not been added to MetaMask. Let's add it.
-    if (error.code === 4902) {
-      try {
-        await window.ethereum.request({
-          method: 'wallet_addEthereumChain',
-          params: [
-            {
-              chainId: chainIdHex,
-              chainName: network.name,
-              rpcUrls: network.rpc,
-              blockExplorerUrls: [network.explorer]
-            }
-          ]
-        });
-      } catch (addError) {
-        console.error(addError);
-      }
-    }
-    console.error(error);
-  }
-
-  await sleep(1e3); // somehow the switch does not take immediate effect :/
-  if (window.ethereum.chainId !== chainIdHex) {
-    throw new Error(
-      `Could not switch to the right chain on MetaMask (required: ${chainIdHex}, active: ${window.ethereum.chainId})`
-    );
-  }
-};
 
 const loading = ref(true);
 const questionStates = ref(QuestionStates);
@@ -145,6 +89,7 @@ const updateDetails = async () => {
 
 const claimBond = async () => {
   if (!questionDetails.value.oracle) return;
+  const txPendingId = createPendingTransaction();
   try {
     actionInProgress.value = 'claim-bond';
 
@@ -159,23 +104,26 @@ const claimBond = async () => {
       questionDetails.value.questionId,
       params
     );
-    await clamingBond.next();
+    const step = await clamingBond.next();
+    if (step.value)
+      updatePendingTransaction(txPendingId, { hash: step.value.hash });
     actionInProgress.value = null;
-    pendingCount.value++;
     await clamingBond.next();
     notify(t('notify.youDidIt'));
-    pendingCount.value--;
     await sleep(3e3);
     await updateDetails();
   } catch (e) {
     console.error(e);
     actionInProgress.value = null;
+  } finally {
+    removePendingTransaction(txPendingId);
   }
 };
 
 const submitProposal = async () => {
   if (!getInstance().isAuthenticated.value) return;
   actionInProgress.value = 'submit-proposal';
+  const txPendingId = createPendingTransaction();
   try {
     await ensureRightNetwork(props.network);
     const proposalSubmission = plugin.submitProposalWithHashes(
@@ -184,23 +132,25 @@ const submitProposal = async () => {
       questionDetails.value.proposalId,
       getTxHashes()
     );
-    await proposalSubmission.next();
+    const step = await proposalSubmission.next();
+    if (step.value)
+      updatePendingTransaction(txPendingId, { hash: step.value.hash });
     actionInProgress.value = null;
-    pendingCount.value++;
     await proposalSubmission.next();
     notify(t('notify.youDidIt'));
-    pendingCount.value--;
     await sleep(3e3);
     await updateDetails();
   } catch (e) {
     console.error(e);
   } finally {
     actionInProgress.value = null;
+    removePendingTransaction(txPendingId);
   }
 };
 
 const voteOnQuestion = async option => {
   if (!getInstance().isAuthenticated.value) return;
+  const txPendingId = createPendingTransaction();
   try {
     await ensureRightNetwork(props.network);
     const voting = plugin.voteForQuestion(
@@ -214,20 +164,19 @@ const voteOnQuestion = async option => {
     const step = await voting.next();
     if (step.value === 'erc20-approval') {
       actionInProgress.value = null;
-      pendingCount.value++;
-      await voting.next();
-      pendingCount.value--;
       await voting.next();
     }
     actionInProgress.value = null;
-    pendingCount.value++;
-    await voting.next();
-    pendingCount.value--;
+    const stepTx = await voting.next();
+    if (stepTx.value)
+      updatePendingTransaction(txPendingId, { hash: stepTx.value.hash });
     await sleep(3e3);
     await updateDetails();
   } catch (e) {
     console.error(e);
     actionInProgress.value = null;
+  } finally {
+    removePendingTransaction(txPendingId);
   }
 };
 
@@ -241,7 +190,7 @@ const executeProposal = async () => {
     action2InProgress.value = null;
     return;
   }
-
+  const txPendingId = createPendingTransaction();
   try {
     clearBatchError();
     const transaction =
@@ -254,18 +203,19 @@ const executeProposal = async () => {
       transaction,
       questionDetails.value.nextTxIndex
     );
-    await executingProposal.next();
+    const step = await executingProposal.next();
+    if (step.value)
+      updatePendingTransaction(txPendingId, { hash: step.value.hash });
     action2InProgress.value = null;
-    pendingCount.value++;
     await executingProposal.next();
     notify(t('notify.youDidIt'));
-    pendingCount.value--;
     await sleep(3e3);
     await updateDetails();
   } catch (err) {
-    pendingCount.value--;
     action2InProgress.value = null;
     setBatchError(questionDetails.value.nextTxIndex, err.reason);
+  } finally {
+    removePendingTransaction(txPendingId);
   }
 };
 

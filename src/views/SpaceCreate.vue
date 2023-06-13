@@ -1,24 +1,15 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
 import { clone } from '@snapshot-labs/snapshot.js/src/utils';
 import { getInstance } from '@snapshot-labs/lock/plugins/vue3';
 import { PROPOSAL_QUERY } from '@/helpers/queries';
-import validations from '@snapshot-labs/snapshot.js/src/validations';
+import { proposalValidation } from '@/helpers/snapshot';
 import { ExtendedSpace } from '@/helpers/interfaces';
-import {
-  useFlashNotification,
-  useSpaceCreateForm,
-  useProposals,
-  usePlugins,
-  useI18n,
-  useModal,
-  useTerms,
-  useApp,
-  useApolloQuery,
-  useWeb3,
-  useClient
-} from '@/composables';
+
+enum Step {
+  CONTENT,
+  VOTING,
+  PLUGINS
+}
 
 const BODY_LIMIT_CHARACTERS = 14400;
 
@@ -26,10 +17,21 @@ const props = defineProps<{
   space: ExtendedSpace;
 }>();
 
+useMeta({
+  title: {
+    key: 'metaInfo.space.create.title',
+    params: {
+      space: props.space.name
+    }
+  },
+  description: {
+    key: 'metaInfo.space.create.description'
+  }
+});
+
 const { notify } = useFlashNotification();
 const router = useRouter();
-const route = useRoute();
-const { t, setPageTitle } = useI18n();
+const { t } = useI18n();
 const auth = getInstance();
 const { domain } = useApp();
 const { web3, web3Account } = useWeb3();
@@ -37,18 +39,28 @@ const { send, isSending } = useClient();
 const { pluginIndex } = usePlugins();
 const { modalAccountOpen } = useModal();
 const { modalTermsOpen, termsAccepted, acceptTerms } = useTerms(props.space.id);
+const { isGnosisAndNotSpaceNetwork } = useGnosis(props.space);
+const { isSnapshotLoading } = useSnapshot();
+const { apolloQuery, queryLoading } = useApolloQuery();
+const { containsShortUrl } = useShortUrls();
+
 const {
   form,
+  formDraft,
   userSelectedDateEnd,
   sourceProposalLoaded,
   sourceProposal,
-  resetForm,
-  getValidation
-} = useSpaceCreateForm();
+  validationErrors,
+  isValid,
+  resetForm
+} = useFormSpaceProposal();
 
-const passValidation = ref([false, '']);
+const isValidAuthor = ref(false);
 const validationLoading = ref(false);
+const preview = ref(false);
+const hasAuthorValidationFailed = ref(false);
 const timeSeconds = ref(Number((Date.now() / 1e3).toFixed()));
+const currentStep = ref(Step.CONTENT);
 
 const proposal = computed(() =>
   Object.assign(form.value, { choices: form.value.choices })
@@ -69,7 +81,7 @@ const dateEnd = computed(() => {
     : dateStart.value + threeDays;
 });
 
-const isValid = computed(() => {
+const isFormValid = computed(() => {
   const isSafeSnapPluginValid = form.value.metadata.plugins?.safeSnap
     ? form.value.metadata.plugins.safeSnap.valid
     : true;
@@ -82,26 +94,36 @@ const isValid = computed(() => {
     form.value.snapshot &&
     form.value.choices.length >= 1 &&
     !form.value.choices.some((a, i) => a.text === '' && i === 0) &&
-    passValidation.value[0] &&
+    isValidAuthor.value &&
     isSafeSnapPluginValid &&
     !web3.value.authLoading
   );
 });
 
-const currentStep = computed(() => Number(route.params.step));
+const formContainsShortUrl = computed(() => {
+  const { body, name, discussion } = form.value;
+
+  return (
+    containsShortUrl(body) ||
+    containsShortUrl(name) ||
+    containsShortUrl(discussion)
+  );
+});
 
 const stepIsValid = computed(() => {
   if (
-    currentStep.value === 1 &&
+    currentStep.value === Step.CONTENT &&
     form.value.name &&
     form.value.body.length <= BODY_LIMIT_CHARACTERS &&
-    passValidation.value[0] &&
-    !getValidation('name').message &&
-    !getValidation('discussion').message
+    isValidAuthor.value &&
+    !validationErrors.value.name &&
+    !validationErrors.value.body &&
+    !validationErrors.value.discussion &&
+    !formContainsShortUrl.value
   )
     return true;
   else if (
-    currentStep.value === 2 &&
+    currentStep.value === Step.VOTING &&
     dateEnd.value &&
     dateEnd.value > dateStart.value &&
     form.value.snapshot &&
@@ -111,12 +133,25 @@ const stepIsValid = computed(() => {
   else return false;
 });
 
-// Check if has plugins that can be confirgured on proposal creation
+const isMember = computed(() => {
+  function findAccount(object: string[], account: string) {
+    return object.map(a => a.toLowerCase()).includes(account.toLowerCase());
+  }
+  return (
+    findAccount(props.space.members, web3Account.value) ||
+    findAccount(props.space.admins, web3Account.value) ||
+    findAccount(props.space.moderators, web3Account.value) ||
+    false
+  );
+});
+
 const needsPluginConfigs = computed(() =>
   Object.keys(props.space?.plugins ?? {}).some(
     pluginKey => pluginIndex[pluginKey]?.defaults?.proposal
   )
 );
+
+const validationName = computed(() => props.space.validation?.name ?? 'basic');
 
 function getFormattedForm() {
   const clonedForm = clone(form.value);
@@ -170,7 +205,6 @@ function setSourceProposal(proposal) {
   }));
 }
 
-const { apolloQuery, queryLoading } = useApolloQuery();
 async function loadSourceProposal() {
   const proposal = await apolloQuery(
     {
@@ -187,134 +221,155 @@ async function loadSourceProposal() {
 }
 
 function nextStep() {
-  router.push({
-    params: { step: currentStep.value + 1 },
-    query: route.query.snapshot ? { snapshot: route.query.snapshot } : {}
-  });
+  if (formContainsShortUrl.value) return;
+  currentStep.value++;
 }
 
-function previosStep() {
-  router.push({
-    params: { step: currentStep.value - 1 },
-    query: route.query.snapshot ? { snapshot: route.query.snapshot } : {}
-  });
+function previousStep() {
+  currentStep.value--;
 }
 
 function updateTime() {
   timeSeconds.value = Number((Date.now() / 1e3).toFixed());
 }
 
-// Check if account passes space validation
-// (catch errors to show confiuration error message)
-const executingValidationFailed = ref(false);
+async function validateAuthor() {
+  isValidAuthor.value = false;
+  if (web3Account.value && auth.isAuthenticated.value) {
+    if (isMember.value) {
+      isValidAuthor.value = true;
+      return;
+    }
+
+    if (props.space.filters.onlyMembers) {
+      isValidAuthor.value = false;
+      return;
+    }
+
+    if (
+      props.space.validation.name === 'any' ||
+      (props.space.validation.name === 'basic' &&
+        !props.space.filters.minScore &&
+        !props.space.validation.params?.minScore)
+    ) {
+      isValidAuthor.value = true;
+      return;
+    }
+
+    try {
+      validationLoading.value = true;
+      const validationRes = await proposalValidation(
+        props.space,
+        web3Account.value
+      );
+
+      isValidAuthor.value = validationRes;
+      console.log('Pass validation?', validationRes, validationName.value);
+    } catch (e) {
+      hasAuthorValidationFailed.value = true;
+      console.log(e);
+    } finally {
+      validationLoading.value = false;
+    }
+  }
+}
+
 watch(
   () => web3Account.value,
-  async () => {
-    if (passValidation.value[0] === true) return;
-    if (web3Account.value && auth.isAuthenticated.value) {
-      validationLoading.value = true;
-      try {
-        const validationName = props.space.validation?.name ?? 'basic';
-        const validationParams = props.space.validation?.params ?? {};
-        const isValid = await validations[validationName](
-          web3Account.value,
-          clone(props.space),
-          '',
-          clone(validationParams)
-        );
-
-        passValidation.value = [isValid, validationName];
-        console.log('Pass validation?', isValid, validationName);
-        validationLoading.value = false;
-      } catch (e) {
-        executingValidationFailed.value = true;
-        console.log(e);
-      }
-    }
+  () => {
+    validateAuthor();
   },
   { immediate: true }
 );
 
-const preview = ref(false);
-
-watch(preview, () => {
-  window.scrollTo(0, 0);
-});
-
 onMounted(async () => {
   if (sourceProposal.value && !sourceProposalLoaded.value)
     await loadSourceProposal();
-});
 
-onMounted(() =>
-  setPageTitle('page.title.space.create', { space: props.space.name })
-);
+  if (!sourceProposal.value) {
+    form.value.name = formDraft.value.name;
+    form.value.body = formDraft.value.body;
+  }
+
+  if (
+    !!props.space?.template &&
+    !sourceProposal.value &&
+    !formDraft.value.isBodySet
+  ) {
+    form.value.body = props.space.template;
+  }
+});
 </script>
 
 <template>
   <TheLayout v-bind="$attrs">
     <template #content-left>
-      <div v-if="currentStep === 1" class="mb-3 overflow-hidden px-4 md:px-0">
-        <router-link :to="domain ? { path: '/' } : { name: 'spaceProposals' }">
-          <ButtonBack />
-        </router-link>
+      <div
+        v-if="currentStep === Step.CONTENT"
+        class="mb-3 overflow-hidden px-4 md:px-0"
+      >
+        <ButtonBack
+          @click="
+            router.push(domain ? { path: '/' } : { name: 'spaceProposals' })
+          "
+        />
       </div>
-
       <SpaceCreateWarnings
         v-if="!validationLoading"
         :space="space"
-        :executing-validation-failed="executingValidationFailed"
-        :pass-validation="passValidation"
+        :validation-failed="hasAuthorValidationFailed"
+        :is-valid-author="isValidAuthor"
+        :validation-name="validationName"
+        :contains-short-url="formContainsShortUrl"
         data-testid="create-proposal-connect-wallet-warning"
       />
 
       <!-- Step 1 -->
       <SpaceCreateContent
-        v-if="currentStep === 1"
+        v-if="currentStep === Step.CONTENT"
+        :space="space"
         :preview="preview"
         :body-limit="BODY_LIMIT_CHARACTERS"
       />
 
       <!-- Step 2 -->
       <SpaceCreateVoting
-        v-else-if="currentStep === 2"
+        v-else-if="currentStep === Step.VOTING"
         :space="space"
         :date-start="dateStart"
         :date-end="dateEnd"
-        @userSelectedDate="userSelectedDateEnd = true"
       />
 
       <!-- Step 3 (only when plugins) -->
-      <div
-        v-else-if="space?.plugins && (!sourceProposal || sourceProposalLoaded)"
-        class="space-y-3"
-      >
-        <PluginCreate
-          v-model="form.metadata.plugins"
-          :proposal="proposal"
-          :space="space"
-        />
-      </div>
+      <SpaceCreatePlugins
+        v-else
+        v-model="form.metadata.plugins"
+        :proposal="proposal"
+        :space="space"
+      />
     </template>
     <template #sidebar-right>
       <BaseBlock class="lg:fixed lg:w-[320px]">
         <BaseButton
-          v-if="currentStep === 1"
+          v-if="currentStep === Step.CONTENT"
           class="mb-2 block w-full"
           @click="preview = !preview"
         >
           {{ preview ? $t('create.edit') : $t('create.preview') }}
         </BaseButton>
-        <BaseButton v-else class="mb-2 block w-full" @click="previosStep">
+        <BaseButton v-else class="mb-2 block w-full" @click="previousStep">
           {{ $t('back') }}
         </BaseButton>
-
         <BaseButton
-          v-if="currentStep === 3 || (!needsPluginConfigs && currentStep === 2)"
-          :disabled="!isValid"
-          :loading="isSending || queryLoading"
+          v-if="
+            currentStep === Step.PLUGINS ||
+            (!needsPluginConfigs && currentStep === Step.VOTING)
+          "
+          :disabled="!isFormValid"
+          :loading="isSending || queryLoading || isSnapshotLoading"
           class="block w-full"
           primary
+          data-testid="create-proposal-publish-button"
           @click="
             !termsAccepted && space.terms
               ? (modalTermsOpen = true)
@@ -326,12 +381,13 @@ onMounted(() =>
         <BaseButton
           v-else
           class="block w-full"
-          :loading="validationLoading"
+          :loading="validationLoading || isSnapshotLoading"
           :disabled="
             (!stepIsValid && !!web3Account) ||
             web3.authLoading ||
-            executingValidationFailed ||
-            validationLoading
+            hasAuthorValidationFailed ||
+            validationLoading ||
+            isGnosisAndNotSpaceNetwork
           "
           primary
           :data-testid="
@@ -350,6 +406,7 @@ onMounted(() =>
     <ModalTerms
       :open="modalTermsOpen"
       :space="space"
+      :action="$t('modalTerms.actionCreate')"
       @close="modalTermsOpen = false"
       @accept="acceptTerms(), handleSubmit()"
     />

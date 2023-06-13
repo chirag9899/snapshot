@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { useClient } from '@/composables';
-
 const { isGnosisSafe } = useClient();
 
 defineProps<{
@@ -12,10 +10,9 @@ const emit = defineEmits(['changeStep']);
 const steps = [
   { name: 'Getting started' },
   { name: 'ENS' },
-  { name: 'Controller' },
   { name: 'Profile' },
   { name: 'Strategy' },
-  { name: isGnosisSafe.value ? 'Extras' : 'Moderation' }
+  { name: isGnosisSafe.value ? 'Extras' : 'Members' }
 ];
 </script>
 

@@ -1,12 +1,10 @@
 <script setup>
 import { ref, onMounted, reactive } from 'vue';
 import { shorten } from '@/helpers/utils';
-
-import { useIntl, useI18n } from '@/composables';
 import { getActiveSnapshotBribes } from '@/helpers/bribeContracts';
+import { useHead } from '@vueuse/head';
 
 const { formatCompactNumber } = useIntl();
-const { setPageTitle } = useI18n();
 
 const limit = ref(12);
 
@@ -15,11 +13,8 @@ const state = reactive({
   bribes: []
 });
 
-onMounted(() => {
-  setPageTitle('Active bribes');
-});
-
 getActiveBribes();
+useHead({ title: 'Active bribes' });
 
 async function getActiveBribes() {
   state.bribesLoading = true;
@@ -27,10 +22,6 @@ async function getActiveBribes() {
 
   state.bribesLoading = false;
 }
-
-onMounted(() => {
-  setPageTitle('page.title.home');
-});
 </script>
 
 <template>
@@ -39,7 +30,7 @@ onMounted(() => {
       class="mb-4 flex flex-col flex-wrap items-center xs:flex-row md:flex-nowrap"
     >
       <div
-        class="mt-2 whitespace-nowrap text-right text-skin-text xs:mt-0 xs:ml-auto"
+        class="mt-2 whitespace-nowrap text-right text-skin-text xs:ml-auto xs:mt-0"
       >
         {{ formatCompactNumber(state.bribes.length) }} bribed proposals
       </div>

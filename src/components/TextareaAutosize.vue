@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { ref, computed, nextTick, toRefs, watch, onMounted } from 'vue';
-
 const props = withDefaults(
   defineProps<{
     modelValue?: string | number;
@@ -9,11 +7,22 @@ const props = withDefaults(
     maxHeight?: number;
     maxLength?: number;
     placeholder?: string;
+    title?: string;
+    information?: string;
+    definition?: any;
+    isDisabled?: boolean;
   }>(),
   {
     modelValue: '',
     autosize: true,
-    placeholder: ''
+    placeholder: '',
+    title: '',
+    information: '',
+    definition: null,
+    minHeight: 0,
+    maxHeight: 0,
+    maxLength: undefined,
+    isDisabled: false
   }
 );
 
@@ -76,13 +85,21 @@ onMounted(() => resize());
 </script>
 
 <template>
+  <LabelInput v-if="title || definition?.title" :information="information">
+    {{ title ?? definition.title }}
+  </LabelInput>
   <textarea
+    v-bind="$attrs"
     ref="textarea"
     v-model="val"
-    class="!mt-1 h-auto w-full rounded-3xl border border-skin-border py-3 px-4 focus-within:!border-skin-text hover:border-skin-text"
+    class="!mt-1 h-auto w-full rounded-3xl border border-skin-border px-4 py-3 focus-within:!border-skin-text"
+    :class="{
+      'cursor-not-allowed': isDisabled
+    }"
     :style="computedStyles"
     :maxlength="maxLength"
     :placeholder="placeholder"
+    :disabled="isDisabled"
     @focus="resize"
   />
 </template>

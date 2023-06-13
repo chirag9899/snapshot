@@ -4,6 +4,7 @@ import { BigNumber } from '@ethersproject/bignumber';
 import networks from '@snapshot-labs/snapshot.js/src/networks.json';
 import voting from '@snapshot-labs/snapshot.js/src/voting';
 import { getUrl } from '@snapshot-labs/snapshot.js/src/utils';
+import getProvider from '@snapshot-labs/snapshot.js/src/utils/provider';
 
 export function shortenAddress(str = '') {
   return `${str.slice(0, 6)}...${str.slice(str.length - 4)}`;
@@ -112,7 +113,7 @@ export function getNumberWithOrdinal(n) {
 }
 
 export function explorerUrl(network, str: string, type = 'address'): string {
-  return `${networks[network].explorer}/${type}/${str}`;
+  return `${networks[network].explorer.url}/${type}/${str}`;
 }
 
 export function calcFromSeconds(value, unit) {
@@ -146,4 +147,56 @@ export function commify(number: any, decimals = 2) {
     .toFixed(decimals)
     .toString()
     .replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+export function urlify(text: string, target = '_blank') {
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  return text.replace(
+    urlRegex,
+    `<a href="$1" target="${target}" rel="noopener">$1</a>`
+  );
+}
+
+export async function resolveEns(handle: string) {
+  try {
+    const provider = getProvider('1');
+    const addressResolved = await provider.resolveName(handle);
+    if (!addressResolved) throw new Error('Invalid ENS name');
+    return addressResolved;
+  } catch (error) {
+    console.error('Error in resolveEns:', error);
+    return null;
+  }
+}
+
+export async function resolveLens(handle: string) {
+  try {
+    const response = await fetch('https://api.lens.dev/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        query: `
+          query Profiles {
+            profiles(request: { handles: ["${handle}"], limit: 1 }) {
+              items {
+                ownedBy
+              }
+            }
+          }
+        `
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error ${response.status}`);
+    }
+
+    const result = await response.json();
+    return result.data?.profiles?.items?.[0]?.ownedBy;
+  } catch (error) {
+    console.error('Error in resolveLens:', error);
+    return null;
+  }
 }

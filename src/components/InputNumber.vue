@@ -1,8 +1,10 @@
 <script setup lang="ts">
-const props = defineProps<{
+import { FormError } from '@/helpers/interfaces';
+
+defineProps<{
   modelValue?: number | string;
   definition?: any;
-  error?: { message: string; push?: boolean };
+  error?: FormError;
   placeholder?: string;
   information?: string;
 }>();
@@ -12,7 +14,7 @@ const emit = defineEmits(['update:modelValue']);
 
 <template>
   <BaseInput
-    :model-value="props.modelValue || props.definition?.default"
+    :model-value="modelValue || definition?.default"
     :definition="definition"
     :error="error"
     :placeholder="placeholder"

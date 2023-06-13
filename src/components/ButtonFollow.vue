@@ -1,10 +1,8 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-import { useFollowSpace, useTerms, useClient } from '@/composables';
-import { ExtendedSpace } from '@/helpers/interfaces';
+import { Space, RankedSpace, ExtendedSpace } from '@/helpers/interfaces';
 
 const props = defineProps<{
-  space: ExtendedSpace;
+  space: Space | RankedSpace | ExtendedSpace;
 }>();
 
 const { isGnosisSafe } = useClient();
@@ -57,6 +55,7 @@ const canFollow = computed(() =>
       v-if="space"
       :open="modalTermsOpen"
       :space="space"
+      :action="$t('modalTerms.actionJoin')"
       @close="modalTermsOpen = false"
       @accept="acceptTerms(), clickFollow(space.id)"
     />

@@ -1,16 +1,22 @@
 <script setup>
-import { onMounted } from 'vue';
-import { useRoute } from 'vue-router';
-import { useI18n } from '@/composables/useI18n';
-import { useStrategies } from '@/composables/useStrategies';
-
 const route = useRoute();
-const { setPageTitle } = useI18n();
+
 const { getExtendedStrategy, extendedStrategy: strategy } = useStrategies();
 
+useMeta({
+  title: {
+    key: 'metaInfo.strategy.title',
+    params: {
+      strategy: route.params.name
+    }
+  },
+  description: {
+    key: 'metaInfo.strategy.description'
+  }
+});
+
 onMounted(async () => {
-  setPageTitle('page.title.strategy', { key: route.params.name });
-  getExtendedStrategy(route.params.name);
+  await getExtendedStrategy(route.params.name);
 });
 </script>
 
@@ -63,7 +69,9 @@ onMounted(async () => {
           </div>
         </div>
         <router-link :to="`/playground/${$route.params.name}`">
-          <BaseButton class="mt-2 w-full">{{ $t('playground') }}</BaseButton>
+          <BaseButton tabindex="-1" class="mt-2 w-full">{{
+            $t('playground')
+          }}</BaseButton>
         </router-link>
       </BaseBlock>
     </template>

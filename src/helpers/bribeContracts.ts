@@ -3,7 +3,6 @@ import bribeV3 from '@/abi/bribev3.json';
 import bribeV3Snapshot from '@/abi/bribev3snapshot.json';
 import erc20 from '@/abi/erc20.json';
 import gauge from '@/abi/gauge.json';
-import { useWeb3 } from '@/composables';
 import { getContractName } from '@/helpers/etherscan';
 import { getTokenInfo } from '@/helpers/rewards';
 import { ApolloClient, InMemoryCache } from '@apollo/client/core';

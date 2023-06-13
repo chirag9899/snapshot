@@ -34,9 +34,9 @@ const socials = [
         <FooterSocialsItem v-else-if="social.icon === 'discord'">
           <i-s-discord class="text-[23px]" />
         </FooterSocialsItem>
-        <FooterSocialsItem v-else-if="social.icon === 'telegram'">
-          <i-s-telegram class="text-[21px]" />
-        </FooterSocialsItem>
+        <!--        <FooterSocialsItem v-else-if="social.icon === 'telegram'">-->
+        <!--          <i-s-telegram class="text-[21px]" />-->
+        <!--        </FooterSocialsItem>-->
       </BaseLink>
     </span>
   </div>

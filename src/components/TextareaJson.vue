@@ -1,10 +1,8 @@
-<script setup>
-import { ref, watch } from 'vue';
-
-const props = defineProps({
-  modelValue: Object,
-  isValid: Boolean
-});
+<script setup lang="ts">
+const props = defineProps<{
+  modelValue: Record<string, unknown>;
+  isValid: boolean;
+}>();
 
 const emit = defineEmits(['update:modelValue', 'update:isValid']);
 

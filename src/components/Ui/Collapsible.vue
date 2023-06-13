@@ -1,11 +1,11 @@
-<script setup>
-defineProps({
-  open: Boolean,
-  title: String,
-  number: Number,
-  hideRemove: Boolean,
-  borderless: Boolean
-});
+<script setup lang="ts">
+defineProps<{
+  open: boolean;
+  title: string;
+  number: number;
+  hideRemove: boolean;
+  borderless?: boolean;
+}>();
 
 defineEmits(['remove', 'toggle']);
 </script>
@@ -25,7 +25,7 @@ defineEmits(['remove', 'toggle']);
       </span>
       <span
         v-if="!hideRemove"
-        class="ml-1 -mr-2 cursor-pointer px-3"
+        class="-mr-2 ml-1 cursor-pointer px-3"
         @click="$emit('remove')"
       >
         <BaseIcon name="close" size="12" />

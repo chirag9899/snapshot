@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { computed } from 'vue';
 import {
   Listbox,
   ListboxButton,
@@ -8,38 +7,58 @@ import {
   ListboxLabel
 } from '@headlessui/vue';
 
+type ListboxItem = {
+  value: any;
+  title?: string;
+  extras?: Record<string, any>;
+};
+
 const props = defineProps<{
-  items: { id: number; name: string }[];
+  items: ListboxItem[];
   label?: string;
   placeholder?: string;
-  modelValue?: { id: number; name: string }[];
+  modelValue?: string[];
   limit?: number;
-  disableInput?: boolean;
+  isDisabled?: boolean;
+  definition?: any;
+  information?: string;
 }>();
 
 const emit = defineEmits(['update:modelValue']);
 
 const selectedItems = computed({
-  get: () => props.modelValue ?? [],
-  set: newVal => emit('update:modelValue', newVal)
+  get: () =>
+    props.items.filter(item => props.modelValue?.includes(item.value)) || [],
+  set: newVal =>
+    emit(
+      'update:modelValue',
+      newVal.map(item => item.value)
+    )
 });
 
-function isDisabled(item: { id: number; name: string }) {
+function isItemDisabled(item: string) {
   if (!props.limit) return false;
   if (selectedItems.value.length < props.limit) return false;
-  return !selectedItems.value.some(selectedItem => selectedItem.id === item.id);
+  return !selectedItems.value.some(selectedItem => selectedItem.value === item);
 }
 </script>
 
 <template>
-  <Listbox v-model="selectedItems" as="div" :disabled="disableInput" multiple>
+  <Listbox v-model="selectedItems" as="div" :disabled="isDisabled" multiple>
     <ListboxLabel>
-      <LabelInput>{{ label }}</LabelInput>
+      <LabelInput :information="information || definition?.description">
+        {{ label || definition?.title }}
+      </LabelInput>
     </ListboxLabel>
     <div class="relative">
       <ListboxButton
+        v-tippy="{
+          content: selectedItems
+            .map(item => item?.title || item.value)
+            .join(', ')
+        }"
         class="relative h-[42px] w-full truncate rounded-full border border-skin-border pl-3 pr-[40px] text-left text-skin-link hover:border-skin-text"
-        :class="{ 'cursor-not-allowed text-skin-border': disableInput }"
+        :class="{ 'cursor-not-allowed !border-skin-border': isDisabled }"
       >
         <span v-if="selectedItems.length < 1" class="text-skin-text opacity-60">
           {{ placeholder }}
@@ -52,7 +71,7 @@ function isDisabled(item: { id: number; name: string }) {
         />
 
         <span v-else>
-          {{ selectedItems.map(item => item.name).join(', ') }}
+          {{ selectedItems.map(item => item?.title || item.value).join(', ') }}
         </span>
         <span
           class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-[12px]"
@@ -73,17 +92,17 @@ function isDisabled(item: { id: number; name: string }) {
         >
           <div class="max-h-[180px] overflow-y-scroll">
             <ListboxOption
-              v-for="item in items"
-              :key="item.id"
+              v-for="(item, i) in items"
+              :key="i"
               v-slot="{ active, selected, disabled }"
               as="template"
               :value="item"
-              :disabled="isDisabled(item)"
+              :disabled="isItemDisabled(item.value)"
             >
               <li
                 :class="[
                   { 'bg-skin-border': active },
-                  'relative cursor-default select-none py-2 pr-[50px] pl-3'
+                  'relative cursor-default select-none py-2 pl-3 pr-[50px]'
                 ]"
               >
                 <span
@@ -95,7 +114,7 @@ function isDisabled(item: { id: number; name: string }) {
                 >
                   <slot v-if="$slots.item" name="item" :item="item" />
                   <span v-else>
-                    {{ item.name }}
+                    {{ item?.title || item.value }}
                   </span>
                 </span>
 

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { computed } from 'vue';
 import removeMd from 'remove-markdown';
 import { Proposal, ExtendedSpace, Profile } from '@/helpers/interfaces';
 
@@ -8,69 +7,78 @@ const props = defineProps<{
   profiles: { [key: string]: Profile };
   space: ExtendedSpace;
   voted: boolean;
+  to: Record<string, unknown>;
   hideSpaceAvatar?: boolean;
+  showVerifiedIcon?: boolean;
 }>();
 
+const { isMessageVisible, setMessageVisibility } = useFlaggedMessageStatus(
+  props.proposal.id
+);
+
 const body = computed(() => removeMd(props.proposal.body));
+
+onMounted(() => setMessageVisibility(props.proposal.flagged));
 </script>
 
 <template>
   <div>
-    <router-link
-      class="block p-3 text-skin-text sm:p-4"
-      :to="{
-        name: 'spaceProposal',
-        params: { key: proposal.space.id, id: proposal.id }
-      }"
-    >
+    <div class="block p-3 text-skin-text sm:p-4">
       <div>
-        <div class="mb-2 flex items-center justify-between">
-          <div class="flex items-center space-x-1">
-            <template v-if="!hideSpaceAvatar">
-              <router-link
-                class="text-skin-text"
-                :to="{
-                  name: 'spaceProposals',
-                  params: { key: proposal.space.id }
-                }"
-              >
-                <div class="flex items-center">
-                  <AvatarSpace :space="proposal.space" size="28" />
-                  <span
-                    class="ml-2 text-skin-link"
-                    v-text="proposal.space.name"
-                  />
-                </div>
-              </router-link>
-              <span v-text="$tc('proposalBy')" />
-            </template>
-            <BaseUser
-              :address="proposal.author"
-              :profile="profiles[proposal.author]"
-              :space="space"
-              :proposal="proposal"
-              :hide-avatar="!hideSpaceAvatar"
-            />
+        <MessageWarningFlagged
+          v-if="isMessageVisible"
+          type="proposal"
+          @forceShow="setMessageVisibility(false)"
+        />
+        <template v-else>
+          <div class="mb-2 flex items-center justify-between">
+            <div class="flex items-start gap-1 space-x-1">
+              <template v-if="!hideSpaceAvatar">
+                <LinkSpace class="text-skin-text" :space-id="proposal.space.id">
+                  <div class="flex items-center">
+                    <AvatarSpace :space="proposal.space" size="28" />
+                    <span
+                      class="ml-2 text-skin-link"
+                      v-text="proposal.space.name"
+                    />
+                    <IconVerifiedSpace
+                      v-if="showVerifiedIcon && space.verified"
+                      class="pl-[2px]"
+                      size="18"
+                    />
+                  </div>
+                </LinkSpace>
+                <span v-text="$tc('proposalBy')" />
+              </template>
+              <BaseUser
+                :address="proposal.author"
+                :profile="profiles[proposal.author]"
+                :space="space"
+                :proposal="proposal"
+                :hide-avatar="!hideSpaceAvatar"
+              />
+            </div>
+            <LabelProposalState :state="proposal.state" />
           </div>
-          <LabelProposalState :state="proposal.state" />
-        </div>
 
-        <ProposalsItemTitle :proposal="proposal" :voted="voted" />
+          <router-link :to="to">
+            <ProposalsItemTitle :proposal="proposal" :voted="voted" />
 
-        <ProposalsItemBody v-if="body">
-          {{ body }}
-        </ProposalsItemBody>
+            <ProposalsItemBody v-if="body">
+              {{ body }}
+            </ProposalsItemBody>
 
-        <ProposalsItemResults
-          v-if="proposal.scores_state === 'final' && proposal.scores_total > 0"
-          :proposal="proposal"
-        />
+            <ProposalsItemResults
+              v-if="
+                proposal.scores_state === 'final' && proposal.scores_total > 0
+              "
+              :proposal="proposal"
+            />
+          </router-link>
 
-        <ProposalsItemActive
-          v-if="proposal.scores_state !== 'final'"
-          :proposal="proposal"
-        />
+          <ProposalsItemFooter :proposal="proposal" />
+        </template>
       </div>
-    </router-link>
+    </div>
   </div>
 </template>

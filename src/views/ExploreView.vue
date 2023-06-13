@@ -1,26 +1,19 @@
 <script setup>
-import { computed, ref, onMounted, watch } from 'vue';
-import { useRoute } from 'vue-router';
+import { useInfiniteScroll } from '@vueuse/core';
+import { useHead } from '@vueuse/head';
 
-import {
-  usePlugins,
-  useStrategies,
-  useNetworksFilter,
-  useIntl,
-  useScrollMonitor,
-  useI18n
-} from '@/composables';
+useHead({ title: 'QuickSnap' });
 
-const { t, setPageTitle } = useI18n();
+const { t } = useI18n();
 const { formatCompactNumber } = useIntl();
 const route = useRoute();
 
 const isSpaces = computed(
-  () => !route.query.type || route.query.type === 'spaces'
+  () => !route.query.filter || route.query.filter === 'spaces'
 );
-const isStrategies = computed(() => route.query.type === 'strategies');
-const isNetworks = computed(() => route.query.type === 'networks');
-const isPlugins = computed(() => route.query.type === 'plugins');
+const isStrategies = computed(() => route.query.filter === 'strategies');
+const isNetworks = computed(() => route.query.filter === 'networks');
+const isPlugins = computed(() => route.query.filter === 'plugins');
 
 const buttonStr = computed(() => {
   if (isStrategies.value) return t('explore.createStrategy');
@@ -49,7 +42,8 @@ const { filterNetworks, getNetworksSpacesCount, loadingNetworksSpacesCount } =
 const { filterPlugins, getPluginsSpacesCount, loadingPluginsSpacesCount } =
   usePlugins();
 
-const { filterStrategies, getStrategies, loadingStrategies } = useStrategies();
+const { filterStrategies, getStrategies, isLoadingStrategies } =
+  useStrategies();
 
 const items = computed(() => {
   const q = route.query.q || '';
@@ -60,7 +54,7 @@ const items = computed(() => {
 });
 
 watch(
-  () => route.query.type,
+  () => route.query.filter,
   () => {
     if (isStrategies.value) getStrategies();
     if (isNetworks.value) getNetworksSpacesCount();
@@ -70,7 +64,7 @@ watch(
 );
 
 const loading = computed(() => {
-  if (isStrategies.value) return loadingStrategies.value;
+  if (isStrategies.value) return isLoadingStrategies.value;
   if (isNetworks.value) return loadingNetworksSpacesCount.value;
   if (isPlugins.value) return loadingPluginsSpacesCount.value;
   return false;
@@ -80,11 +74,13 @@ const loadBy = 15;
 const limit = ref(loadBy);
 const showActiveBribes = ref(false);
 
-const { endElement } = useScrollMonitor(() => (limit.value += loadBy));
-
-onMounted(() => {
-  setPageTitle('Quicksnap');
-});
+useInfiniteScroll(
+  document,
+  () => {
+    limit.value += loadBy;
+  },
+  { distance: 400 }
+);
 </script>
 
 <template>
@@ -110,15 +106,13 @@ onMounted(() => {
   </div>
   <div v-else>
     <BaseContainer class="mb-4 flex items-center">
-      <BaseButton
-        class="mr-auto w-full max-w-[420px] pl-3 pr-0 focus-within:!border-skin-link"
-      >
+      <div tabindex="-1" class="mr-auto w-full max-w-[420px]">
         <TheSearchBar />
-      </BaseButton>
+      </div>
       <div
         class="ml-3 hidden items-center whitespace-nowrap text-right sm:flex"
       >
-        <div class="flex flex-col">
+        <div v-if="items.length" class="flex flex-col">
           {{ formatCompactNumber(items.length) }} {{ resultsStr }}
         </div>
 
@@ -128,7 +122,7 @@ onMounted(() => {
           class="ml-3 hidden md:block"
           hide-external-icon
         >
-          <BaseButton>
+          <BaseButton tabindex="-1">
             {{ buttonStr }}
           </BaseButton>
         </BaseLink>
@@ -138,7 +132,7 @@ onMounted(() => {
       <div class="overflow-hidden">
         <ExploreSkeletonLoading
           v-if="
-            loadingStrategies ||
+            isLoadingStrategies ||
             loadingNetworksSpacesCount ||
             loadingPluginsSpacesCount
           "
@@ -156,13 +150,9 @@ onMounted(() => {
         </template>
         <template v-else-if="isNetworks">
           <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <router-link
-              v-for="item in items.slice(0, limit)"
-              :key="item.key"
-              :to="`/?network=${item.key}`"
-            >
+            <div v-for="item in items.slice(0, limit)" :key="item.key">
               <BaseNetworkItem :network="item" />
-            </router-link>
+            </div>
           </div>
         </template>
         <template v-else-if="isPlugins">
@@ -175,8 +165,5 @@ onMounted(() => {
         <BaseNoResults v-if="items.length < 1 && !loading" use-block />
       </div>
     </BaseContainer>
-  </div>
-  <div class="relative">
-    <div ref="endElement" class="absolute h-[10px] w-[10px]" />
   </div>
 </template>

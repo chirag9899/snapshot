@@ -1,10 +1,7 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-import { useApolloQuery } from '@/composables/useApolloQuery';
 import { ACTIVITY_VOTES_QUERY } from '@/helpers/queries';
 import { ProfileActivity } from '@/helpers/interfaces';
-import { useInfiniteLoader } from '@/composables/useInfiniteLoader';
-import { useScrollMonitor } from '@/composables/useScrollMonitor';
+import { useInfiniteScroll } from '@vueuse/core';
 
 const props = defineProps<{
   userAddress: string;
@@ -13,6 +10,7 @@ const props = defineProps<{
 const { apolloQuery } = useApolloQuery();
 
 const activities = ref<ProfileActivity[]>([]);
+const loadingActivities = ref(false);
 
 const activityToday = computed(() => {
   const oneDaySeconds = 24 * 60 * 60;
@@ -41,9 +39,6 @@ const activityOlder = computed(() => {
 
 const { loadBy, loadingMore, stopLoadingMore, loadMore } =
   useInfiniteLoader(20);
-const { endElement } = useScrollMonitor(() =>
-  loadMore(() => loadVotes(activities.value.length))
-);
 
 async function loadVotes(skip = 0) {
   const votes = await apolloQuery(
@@ -61,6 +56,10 @@ async function loadVotes(skip = 0) {
   stopLoadingMore.value = votes?.length < loadBy;
 
   votes.forEach(vote => {
+    const isVisibleChoice = ['basic', 'single-choice'].includes(
+      vote.proposal?.type ?? ''
+    );
+
     activities.value.push({
       id: vote.id,
       created: vote.created,
@@ -72,7 +71,9 @@ async function loadVotes(skip = 0) {
       },
       vote: {
         proposalId: vote.proposal.id,
-        choice: vote.proposal.choices[vote.choice - 1],
+        choice: isVisibleChoice
+          ? vote.proposal.choices?.[vote.choice - 1] ?? ''
+          : '',
         type: vote.proposal.type
       }
     });
@@ -80,11 +81,31 @@ async function loadVotes(skip = 0) {
 
   return votes;
 }
+
+useInfiniteScroll(
+  document,
+  () => {
+    loadMore(() => loadVotes(activities.value.length));
+  },
+  { distance: 400 }
+);
+
+onMounted(async () => {
+  loadingActivities.value = true;
+  await loadVotes();
+  loadingActivities.value = false;
+});
 </script>
 
 <template>
   <div>
-    <div class="space-y-3">
+    <LoadingRow v-if="loadingActivities" block />
+
+    <BaseBlock v-else-if="!activities.length" class="text-center">
+      {{ $t('profile.activity.noActivity') }}
+    </BaseBlock>
+
+    <div v-else class="space-y-3">
       <ProfileActivityList
         v-if="activityToday.length"
         :title="$t('profile.activity.today')"
@@ -109,7 +130,7 @@ async function loadVotes(skip = 0) {
 
       <ProfileActivityList
         v-if="activityOlder.length"
-        :title="$t('profile.activity.older')"
+        :title="$t('profile.activity.olderThanWeek')"
       >
         <ProfileActivityListItem
           v-for="activity in activityOlder"
@@ -119,13 +140,6 @@ async function loadVotes(skip = 0) {
       </ProfileActivityList>
 
       <LoadingRow v-if="loadingMore" block />
-
-      <BaseBlock v-else-if="!activities.length" class="text-center">
-        {{ $t('profile.activity.noActivity') }}
-      </BaseBlock>
-    </div>
-    <div class="relative">
-      <div ref="endElement" class="absolute h-[10px] w-[10px]" />
     </div>
   </div>
 </template>

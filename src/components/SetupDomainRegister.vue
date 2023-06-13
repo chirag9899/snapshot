@@ -1,23 +1,20 @@
-<script setup>
+<script setup lang="ts">
 /**
  * An input with ENS TLD validation and a register button, forwarding to app.ens.domains.
  * Emits waitForRegistration event when Register button is clicked, to trigger domain lookup in background.
  */
 
-import { computed } from 'vue';
-import { useEns } from '@/composables/useEns';
-
 const { validEnsTlds } = useEns();
 
-const props = defineProps({
-  modelValue: String
-});
+const props = defineProps<{
+  modelValue: string;
+}>();
 
 defineEmits(['update:modelValue', 'waitForRegistration']);
 
 const isValidDomain = computed(() => {
   if (!props.modelValue.includes('.')) return false;
-  return validEnsTlds.includes(props.modelValue.split('.').pop());
+  return validEnsTlds.includes(props.modelValue.split('.').pop() || '');
 });
 </script>
 
@@ -48,7 +45,12 @@ const isValidDomain = computed(() => {
       hide-external-icon
       @click="$emit('waitForRegistration')"
     >
-      <BaseButton :disabled="!isValidDomain" class="mt-2 w-full" primary>
+      <BaseButton
+        tabindex="-1"
+        :disabled="!isValidDomain"
+        class="mt-2 w-full"
+        primary
+      >
         {{ $t('setup.registerEnsButton') }}
       </BaseButton>
     </BaseLink>

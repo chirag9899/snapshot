@@ -4,9 +4,13 @@
   "createSpace": "Lumikha ng puwang",
   "backToHome": "Bahay",
   "actions": "Mga aksyon",
+  "poweredBy": "Powered by",
   "results": "Mga resulta",
   "resultsError": "Results could not be calculated. This is often due to a misconfigured strategy or an unresponsive RPC node involved in the strategy.",
-  "vpError": "Your voting power could not be calculated. This is often due to a misconfigured strategy or an unresponsive RPC node involved in the strategy.",
+  "resultsCalculating": "Final results are being calculated. If you still see this message after a few minutes contact the space admin.",
+  "votingPowerFailedMessage": "Your voting power could not be calculated. This is often due to a misconfigured strategy or an unresponsive RPC node involved in the strategy.",
+  "votingValidationFailedMessage": "There was an error on our side and we could not verify if you are eligible to vote. This is often due to a misconfigured voting validation or an unresponsive API involved in the validation.",
+  "notValidVoterMessage": "Oops, you don't seem to be eligible to vote on this proposal.",
   "getHelp": "Get help",
   "retry": "Retry",
   "currentResults": "Mga kasalukuyang resulta",
@@ -15,6 +19,7 @@
   "save": "I-save",
   "author": "May-akda",
   "next": "Susunod",
+  "choice": "Choice",
   "submit": "Ipadala",
   "plugins": "Mga plugin",
   "information": "Impormasyon",
@@ -25,7 +30,7 @@
   "space": "Silid",
   "spaces": "Mga silid",
   "verifiedSpace": "Verified space",
-  "warningSpace": "This is not an official space, proceed with caution!",
+  "warningSpace": "This space has been flagged as potentially malicious. Proceed with caution.",
   "version": "Bersyon",
   "timeline": "Timeline",
   "ended": "ended",
@@ -40,6 +45,7 @@
   "network": "Network",
   "networks": "Mga network",
   "skins": "Mga Skin",
+  "spaceMembers": "Members",
   "members": "Walang miyembro | {count} miyembro | {count} mga miyembro",
   "editStrategy": "Edit strategy",
   "invalidProposals": "Mga di-wastong panukala",
@@ -51,20 +57,24 @@
   "toggleSkin": "Toggle skin",
   "about": "Tungkol",
   "license": "Lisensya",
+  "showMore": "Show more",
   "voted": "Voted",
+  "reload": "Reload",
   "ipfsServer": "IPFS server",
   "hub": "Hub",
   "cancel": "Kanselahin",
-  "deleteProposal": "Tanggalin ang panukala",
+  "delete": "Delete",
   "demoSite": "Ito ay isang demo site, subukan!",
   "removeDelegation": "Tanggalin ang delegasyon",
   "confirmRemove": "Sigurado kaba na na gusto mo tanggalin ang iyong delegasyon sa",
   "removeSpace": "para sa puwang {0}",
-  "confirmVote": "Kumpirmahin ang boto",
-  "voteOverview": "Vote overview",
+  "noVotingPower": "Oops, it seems you don't have any voting power at block {blockNumber}.",
   "quorumReached": "quorum reached",
   "options": "Opsyon",
   "votingPower": "Ang lakas mo sa pagboto",
+  "comment": {
+    "placeholder": "Share your reason (optional)"
+  },
   "receipt": "Resibo",
   "relayer": "Taga relay",
   "verifyOnMycrypto": "I-verify ang receipt sa MyCrypto",
@@ -104,18 +114,16 @@
   "addFavorites": "Magdagdag ng mga paborito",
   "createdBy": "By {0}",
   "startIn": "simula {0}",
-  "endIn": "pagtatapos {1}",
+  "endIn": "pagtatapos {0}",
   "proposalTimeLeft": "{0} left",
   "endedAgo": "ended {0}",
   "proposalBy": "by {0}",
   "endDate": "pagtatapos {0}",
-  "contectHash": "Content hash",
   "defaultSkin": "Default skin",
   "select": "Piliin",
   "language": "Lingwahe",
   "agree": "Sang-ayon ako",
   "moderators": "Moderators",
-  "mustAgreeToTerms": "Bago mo makumpleto ang pagkilos na ito, dapat kang sumang-ayon sa {0} mga tuntunin ng serbisyo dito:",
   "playground": "Palaruan",
   "strategyParams": "Param ng estratehiya",
   "addresses": "Mga address",
@@ -127,7 +135,7 @@
   "subspaces": "Sub-spaces",
   "mainspace": "Main space",
   "copyLink": "Kopyahin ang link",
-  "duplicateProposal": "Duplicate na proposal",
+  "duplicate": "Duplicate",
   "joinedSpaces": "Pinagsamang mga puwang",
   "joinSpaces": "Sumali sa mga puwang",
   "setDelegationToSpace": "Limit delegation to a specific space",
@@ -138,6 +146,7 @@
   "or": "or",
   "share": "Share",
   "shareOnTwitter": "Share on Twitter",
+  "shareOnLenster": "Share on Lenster",
   "createButton": "Create",
   "discussion": "Discussion",
   "changeWallet": "Change wallet",
@@ -156,6 +165,7 @@
     "maxLength": "Ang maximum na haba ay {0}",
     "pattern": "Di-wastong character",
     "minItems": "Kinakailangan ang minimum na {0} (mga) item",
+    "maxItems": "Maximum {0} item(s) allowed",
     "minStrategy": "Hindi bababa sa isang diskarte ang kinakailangan.",
     "website": "URL should be in the format https://www.example.com",
     "format": "Di-wastong format",
@@ -191,6 +201,7 @@
     "delayEnforced": "The space enforces a delay until voting can start",
     "periodEnforced": "The space enforces the duration of the voting period",
     "typeEnforced": "{type} is enforced by the space",
+    "privacyEnforced": "{type} is enforced by the space",
     "edit": "Edit",
     "continue": "Continue",
     "now": "Now",
@@ -205,7 +216,8 @@
       },
       "customValidation": "Kailangan mong ipasa ang pagpapatunay ng panukala upang makapagsumite ng isang panukala.",
       "executionError": "Verifying your eligibility to create proposals in this space has failed. This is likely due to a misconfigured strategy."
-    }
+    },
+    "errorGettingSnapshot": "We encountered an error while fetching the snapshot block number which is needed to calculate your voting power. Please try again later."
   },
   "delegate": {
     "header": "Delegasyon",
@@ -232,6 +244,8 @@
     "startDate": "Simula ng petsa",
     "endDate": "Pagtatapos ng petsa",
     "votingSystem": "Sistema ng pagboto",
+    "privacy": "Privacy",
+    "invalidChoice": "Invalid choice",
     "postVoteModal": {
       "defaultTitle": "Your vote is in!",
       "gnosisSafeTitle": "Your vote is pending...",
@@ -267,10 +281,22 @@
     "all": "All",
     "unread": "Unread"
   },
+  "modalTerms": {
+    "mustAgreeTo": "To {action} this space, you must agree to the {spaceName} terms of service.",
+    "actionJoin": "join",
+    "actionCreate": "create a proposal in",
+    "actionVote": "vote in"
+  },
   "settings": {
     "header": "Mga Setting",
     "editController": "Edit controller",
     "connectWithSpaceOwner": "You are in view only mode, to modify space settings connect with a controller or admin wallet.",
+    "gnosisWrongNetwork": {
+      "base": "Your Gnosis Safe is on the wrong network. Please connect to {network} to {action}.",
+      "settings": "edit the space settings",
+      "create": "create a proposal",
+      "vote": "vote on this proposal"
+    },
     "currentSpaceControllerIs": "The current space controller is {address}",
     "newController": "New controller",
     "noRecord": "No text-record found. Make sure you have registered {id} domain on {network}, then edit the controller text-record to regain access to the space settings.",
@@ -290,8 +316,8 @@
       "select": "Select categorie(s)"
     },
     "terms": {
-      "label": "Terms",
-      "information": "Users will be required to accept these terms once before they can create a proposal or cast a vote."
+      "label": "Terms of service",
+      "information": "Users will be required to accept these terms once before they can create a proposal or cast a vote"
     },
     "hideSpace": "Itago ang espasyo sa homepage",
     "links": "Social accounts",
@@ -312,15 +338,15 @@
     "website": "Website",
     "strategies": {
       "label": "Strategie(s)",
-      "information": "Strategies are used to determine voting power or whether a user is eligible to create a proposal."
+      "information": "Strategies are used to determine voting power or whether a user is eligible to create a proposal"
     },
     "network": {
       "label": "Network",
-      "information": "The defaul network used for this space. Networks can also be specified in individual strategies."
+      "information": "The defaul network used for this space. Networks can also be specified in individual strategies"
     },
     "symbol": {
       "label": "Symbol",
-      "information": "The default symbol used for this space, usually the token symbol i.e. BAL for Balancer."
+      "information": "The default symbol used for this space, usually the token symbol i.e. BAL for Balancer"
     },
     "strategiesList": "Select up to 8 strategies",
     "votingPowerIsCumulative": "Voting power is cumulative",
@@ -328,17 +354,17 @@
     "testInPlayground": "Test in playground",
     "admins": {
       "label": "Admins",
-      "information": "Admins are able to modify the space settings and manage the space's proposals."
+      "information": "Admins are able to modify the space settings and manage the space's proposals"
     },
     "authors": {
       "label": "Authors",
-      "information": "Authors are able to create proposals without having to pass validation."
+      "information": "Authors are always able to create proposals"
     },
     "proposalValidation": "Pagpapatunay ng panukala",
     "validation": "Type",
     "proposalThreshold": {
       "label": "Threshold",
-      "information": "The minimum amount of voting power required to create a proposal."
+      "information": "The minimum amount of voting power required to create a proposal"
     },
     "allowOnlyAuthors": "Pahintulutan lamang ang mga may-akda na magsumite ng isang panukala",
     "editValidation": "I-edit ang pagpapatunay",
@@ -351,11 +377,11 @@
     "days": "Days",
     "quorum": {
       "label": "Quorum",
-      "information": "The minimum amount of voting power required for the proposal to pass."
+      "information": "The minimum amount of voting power required for the proposal to pass"
     },
     "type": {
       "label": "Type",
-      "information": "The type of voting system used for this space. This will enforce the same voting system for all proposals."
+      "information": "The type of voting system used for this space. (Enforced on all future proposals)"
     },
     "anyType": "Kahit Ano",
     "hideAbstain": "Ignore abstain votes in basic voting results",
@@ -370,17 +396,28 @@
       "label": "Treasury",
       "add": "Add treasury",
       "edit": "Edit treasury",
-      "information": "Add treasuries of your organization to show them in your space."
+      "information": "Add treasuries of your organization to show them in your space"
     },
     "addPlugin": "Magdagdag ng Plugin",
     "editPlugin": "I-edit ang plugin",
-    "pluginParameters": "Plugin parameters"
+    "pluginParameters": "Plugin parameters",
+    "proposal": {
+      "title": "Proposal",
+      "guidelines": {
+        "title": "Guidelines",
+        "information": "Display a link to your guidelines on proposal creation to help users understand what constitutes a good/valid proposal"
+      },
+      "template": {
+        "title": "Template",
+        "information": "Start every proposal with a template to help users understand what information is required"
+      }
+    }
   },
   "setup": {
     "example": "e.g. yam.eth",
     "chooseExistingEns": "Choose one of your existing ENS domains to create a space with:",
     "useSingleExistingEns": "Use your existing ENS domain:",
-    "orReigsterNewEns": "Or register a new domain:",
+    "orRegisterNewEns": "Or register a new domain:",
     "demoTestnetEnsMessage": "To create a test space you need an ENS domain on {network}.",
     "toCreateASpace": "To create a space, you first need an ENS domain. Enter one below and follow the ENS registration instructions.",
     "createASpace": "Create a space",
@@ -411,8 +448,10 @@
     "domain": {
       "title": "Setup your space domain",
       "ensMessage": " One thing you need before you can create your own space, is an ENS domain on Ethereum mainnet.",
-      "ensMessageTestnet": "You can also {link} on the Rinkeby testnet and mess with things there first.",
-      "tryDemo": "try the demo"
+      "ensMessageTestnet": "You can also {link} on the Goerli testnet and mess with things there first.",
+      "tryDemo": "try the demo",
+      "yourExistingSpaces": "Your existing spaces",
+      "invalidEns": "This ENS name is invalid. Usually this is due the use of invalid characters during registration."
     },
     "strategy": {
       "title": "How would you like to setup your voting strategy?",
@@ -444,8 +483,10 @@
     "about": {
       "header": "About",
       "joinedSpaces": "Joined spaces",
+      "createdSpaces": "Created spaces",
       "biography": "Bio",
       "notJoinSpacesYet": "Hasn't joined any spaces yet",
+      "notCreatedSpacesYet": "Hasn't created any spaces yet",
       "delegatorNetworkInfo": "Change by switching network in your wallet",
       "delegate": "Delegate",
       "delegated": "Delegated",
@@ -459,7 +500,7 @@
       "votedFor": "Voted {choice}",
       "today": "Today",
       "thisWeek": "This week",
-      "older": "Older",
+      "olderThanWeek": "Older than a week",
       "noActivity": "No activity yet"
     },
     "settings": {
@@ -525,6 +566,41 @@
       "basic": "Single choice na pagboto na may tatlong pagpipilian: Para sa, Laban o Abstain"
     }
   },
+  "privacy": {
+    "label": "Privacy",
+    "title": "Select voting privacy",
+    "information": "The type of privacy used on proposals. (Enforced on all future proposals)",
+    "any": "Any",
+    "none": "None",
+    "shutter": {
+      "label": "Shutter",
+      "description": "Choices are encrypted and only visible once the voting period is over",
+      "tooltip": "This proposal has Shutter privacy enabled. All votes will be encrypted until the voting period has ended and the final score is calculated",
+      "url": "https://blog.shutter.network/announcing-shutter-governance-shielded-voting-for-daos/"
+    }
+  },
+  "validation": {
+    "label": "Validation",
+    "title": "Select voting validation",
+    "information": "The type of validation used to determine if a user can vote. (Enforced on all future proposals)",
+    "any": {
+      "label": "Anyone can vote",
+      "description": "Anyone with voting power can cast a vote."
+    },
+    "basic": {
+      "label": "Basic",
+      "description": "Use any strategy to determine if a user can vote.",
+      "invalidMessage": "You do not meet the minimum balance requirement to vote on this proposal. "
+    },
+    "passport-gated": {
+      "label": "Gitcoin Passport gated",
+      "description": "Protect your proposals from spam and vote manipulation by requiring users to have a Gitcoin Passport.",
+      "invalidMessage": "You need a Gitcoin Passport with {amount} of the following stamps to vote on this proposal: {stamps}. "
+    },
+    "passport-weighted": {
+      "label": "Gitcoin Passport weighted"
+    }
+  },
   "safeSnap": {
     "currentOutcome": "Kasalukuyang kinalabasan",
     "currentBond": "Kasalukuyang bono",
@@ -566,6 +642,7 @@
       "changeOutcome": "Baguhin ang kinalabasan",
       "executeTxs": "Isagawa ang batch ng transaksyon {0} ng {1}",
       "executed": "Ang lahat ng mga transaksyon ay naisakatuparan",
+      "noTransactions": "There are no transactions to execute",
       "rejected": "Proposal rejected",
       "error": "May nangyaring mali",
       "connectWallet": "Ikonekta ang wallet upang makita ang mga detalye ng pagpapatupad",
@@ -573,7 +650,15 @@
       "question": "Pumasa ba ang panukala ito at natutugunan ba nito ang",
       "criteria": "pamantayan sa pagtanggap?",
       "proposalPassed": "Did the proposal pass?",
-      "expired": "The proposal has expired"
+      "expired": "The proposal has expired",
+      "approveBond": "Approve bond",
+      "confirmVoteResults": "Click to confirm the proposal passed",
+      "executeTxsUma": "Execute transaction batch",
+      "deleteDisputedProposal": "Delete disputed proposal",
+      "confirmVoteResultsToolTip": "Make sure this proposal was approved by this Snapshot vote before proposing on-chain. If the Snapshot vote rejected the proposal, the on-chain proposal will be rejected as well and you will lose your bond.",
+      "approveBondToolTip": "On-chain proposals require a bond from the proposer. This will approve tokens from your wallet to be posted as a bond. If you make an invalid proposal, it will be disputed and you will lose your bond. If the proposal is valid, your bond will be returned when the transactions are executed.",
+      "requestToolTip": "This will propose the transactions from this Snapshot vote on-chain. After a challenge window, if the proposal is valid, the transactions can be executed and your bond will be returned.",
+      "executeToolTip": "This will execute the transactions from this proposal and return the proposer's bond."
     }
   },
   "poap": {
@@ -586,6 +671,24 @@
     "button_show": "I-browse ang koleksyon",
     "success_claim": "The POAP has been minted to your collection",
     "error_claim": "Nagkaroon ng problema sa pag-minting ng token"
+  },
+  "progress": {
+    "progress": "Progress",
+    "inProgress": "In Progress",
+    "completed": "Completed",
+    "complete": "Complete",
+    "newStep": "New Step",
+    "description": "Description",
+    "add": "Add",
+    "deleteStep": "Delete Step",
+    "deleteConfirm": "Are you sure you want to delete?",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "comeBack": "Come back after voting is complete to see how this proposal is progressing!",
+    "confirmSignature": "Signing this message will allow us to authorize your request to update the progress of your proposal.",
+    "wentWrong": "Oops something went wrong.",
+    "voting": "Voting",
+    "soon": "Soon"
   },
   "charts": {
     "charts": "Charts",

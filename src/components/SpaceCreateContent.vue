@@ -1,17 +1,35 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import { useIntl, useImageUpload, useSpaceCreateForm } from '@/composables';
+import { ExtendedSpace } from '@/helpers/interfaces';
 
 defineProps<{
+  space: ExtendedSpace;
   preview: boolean;
   bodyLimit: number;
 }>();
 
 const { formatNumber } = useIntl();
-const { form, getValidation } = useSpaceCreateForm();
+const { form, formDraft, validationErrors } = useFormSpaceProposal();
 
 const imageDragging = ref(false);
 const textAreaEl = ref<HTMLTextAreaElement | null>(null);
+const visitedBodyInput = ref(false);
+
+const inputName = computed({
+  get: () => form.value.name,
+  set: value => {
+    form.value.name = value;
+    formDraft.value.name = value;
+  }
+});
+
+const inputBody = computed({
+  get: () => form.value.body,
+  set: value => {
+    form.value.body = value;
+    formDraft.value.body = value;
+    formDraft.value.isBodySet = true;
+  }
+});
 
 const injectImageToBody = image => {
   const cursorPosition = textAreaEl.value?.selectionStart;
@@ -46,20 +64,27 @@ const handleDrop = e => {
 </script>
 
 <template>
-  <div class="px-4 md:px-0">
+  <div class="mb-5 px-4 md:px-0">
     <div class="flex flex-col space-y-3">
+      <BlockLink
+        v-if="space?.guidelines"
+        :title="$t('settings.proposal.guidelines.title')"
+        :link="space.guidelines"
+      />
+
       <h1
         v-if="preview"
         class="w-full break-all"
         v-text="form.name || $t('create.untitled')"
       />
-      <BaseInput
+      <TuneInput
         v-else
-        v-model="form.name"
-        :title="$t('create.proposalTitle')"
+        v-model="inputName"
+        :label="$t('create.proposalTitle')"
         :max-length="128"
-        :error="getValidation('name')"
+        :error="validationErrors?.name"
         focus-on-mount
+        data-testid="input-proposal-title"
       />
 
       <div v-if="!preview">
@@ -82,26 +107,29 @@ const handleDrop = e => {
           >
             <textarea
               ref="textAreaEl"
-              v-model="form.body"
+              v-model.trim="inputBody"
               class="s-input mt-0 h-full min-h-[240px] w-full !rounded-xl border-none pt-0 text-base"
               :maxlength="bodyLimit"
+              data-testid="input-proposal-body"
               @paste="handlePaste"
+              @blur="visitedBodyInput = true"
+              @focus="visitedBodyInput = false"
             />
           </div>
 
           <label
-            class="relative flex items-center justify-between rounded-b-xl border border-t-0 border-skin-border py-1 px-2 peer-focus-within:border-skin-text"
+            class="relative flex items-center justify-between rounded-b-xl border border-t-0 border-skin-border px-2 py-1 peer-focus-within:border-skin-text"
           >
             <input
               accept="image/jpg, image/jpeg, image/png"
               type="file"
-              class="absolute top-0 right-0 bottom-0 left-0 ml-0 w-full p-[5px] opacity-0"
+              class="absolute bottom-0 left-0 right-0 top-0 ml-0 w-full p-[5px] opacity-0"
               @change="e => upload((e.target as HTMLInputElement)?.files?.[0], injectImageToBody)"
             />
 
             <span class="pointer-events-none relative pl-1 text-sm">
               <span v-if="isUploadingImage" class="flex">
-                <LoadingSpinner small class="mr-2 -mt-[2px]" />
+                <LoadingSpinner small class="-mt-[2px] mr-2" />
                 {{ $t('create.uploading') }}
               </span>
               <span v-else-if="imageUploadError !== ''">
@@ -121,18 +149,23 @@ const handleDrop = e => {
             </BaseLink>
           </label>
         </div>
+        <TuneErrorInput
+          v-if="visitedBodyInput"
+          :error="validationErrors?.body"
+        />
       </div>
 
       <div v-if="form.body && preview" class="mb-4">
         <BaseMarkdown :body="form.body" />
       </div>
 
-      <InputUrl
+      <TuneInputUrl
         v-if="!preview"
         v-model.trim="form.discussion"
         placeholder="https://forum.balancer.fi/proposal"
-        :title="$t('create.discussion')"
-        :error="getValidation('discussion')"
+        :label="$t('create.discussion')"
+        :error="validationErrors?.discussion"
+        data-testid="input-proposal-discussion"
       />
     </div>
   </div>

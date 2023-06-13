@@ -2,7 +2,6 @@ import erc20 from '@/abi/erc20.json';
 import { BigNumber } from '@ethersproject/bignumber';
 import { ethers } from 'ethers';
 import gql from 'graphql-tag';
-import { useWeb3 } from '@/composables';
 import { ApolloClient, InMemoryCache } from '@apollo/client/core';
 import { tokenPriceLogo } from '@/helpers/bribeContracts';
 import merkle from '@/abi/merkle.json';

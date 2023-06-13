@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { toRefs, computed } from 'vue';
 import { getInjected } from '@snapshot-labs/lock/src/utils';
 import connectors from '@/helpers/connectors.json';
 import { getIpfsUrl } from '@/helpers/utils';
@@ -12,7 +11,19 @@ defineEmits(['login', 'close']);
 
 const { open } = toRefs(props);
 
+const isShowingAllConnectors = ref(false);
+
 const injected = computed(() => getInjected());
+
+const filteredConnectors = computed(() => {
+  const baseConnectors = ['injected', 'walletconnect', 'walletlink'];
+  if (isShowingAllConnectors.value) return Object.keys(connectors);
+  return Object.keys(connectors).filter(cId => baseConnectors.includes(cId));
+});
+
+watch(open, () => {
+  isShowingAllConnectors.value = false;
+});
 </script>
 
 <template>
@@ -24,38 +35,47 @@ const injected = computed(() => getInjected());
     </template>
     <div>
       <div class="m-4 space-y-2">
-        <a
-          v-for="(connector, id, i) in connectors"
-          :key="i"
+        <div
+          v-for="cId in filteredConnectors"
+          :key="cId"
           class="block"
-          @click="$emit('login', connector.id)"
+          @click="$emit('login', connectors[cId].id)"
         >
           <BaseButton
-            v-if="id === 'injected' && injected"
+            v-if="cId === 'injected' && injected"
             class="flex w-full items-center justify-center"
+            data-testid="button-connnect-wallet-injected"
           >
             <img
               :src="getIpfsUrl(injected.icon)"
               height="28"
               width="28"
-              class="mr-2 -mt-1"
+              class="-mt-1 mr-2"
               :alt="injected.name"
             />
             {{ injected.name }}
           </BaseButton>
           <BaseButton
-            v-else-if="id !== 'gnosis' && id !== 'injected'"
+            v-else-if="cId !== 'injected' && !connectors[cId].hidden"
             class="flex w-full items-center justify-center gap-2"
           >
             <img
-              :src="getIpfsUrl((connector as any).icon)"
+              :src="getIpfsUrl(connectors[cId].icon)"
               height="25"
               width="25"
-              :alt="connector.name"
+              :alt="connectors[cId].name"
             />
-            <span>{{ connector.name }}</span>
+            <span>{{ connectors[cId].name }}</span>
           </BaseButton>
-        </a>
+        </div>
+        <BaseButton
+          v-if="!isShowingAllConnectors"
+          class="flex w-full items-center justify-center gap-1"
+          @click="isShowingAllConnectors = true"
+        >
+          {{ $t('showMore') }}
+          <i-ho-chevron-down class="text-sm text-skin-text" />
+        </BaseButton>
       </div>
     </div>
   </BaseModal>

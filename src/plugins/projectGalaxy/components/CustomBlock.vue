@@ -1,14 +1,13 @@
 <script>
 import Plugin from '../index';
-import { useWeb3 } from '@/composables/useWeb3';
 
 const { web3Account } = useWeb3();
 
-const APP_URL = 'https://galaxy.eco';
+const APP_URL = 'https://galxe.com';
 const NO_OAT_IMAGE =
   'https://snapshotsplugin.s3.us-west-2.amazonaws.com/placeholder.png';
 const IMG_LOGO_GALAXY =
-  'https://d257b89266utxb.cloudfront.net/galaxy/images/avatar/0x4960c283c45e1898c41633c39fb2015167b20dc3-1655711973.png';
+  'https://cdn-2.galxe.com/galaxy/images/galaxy/1666692826032589364.png';
 const IMG_ICON_LINK =
   'https://d257b89266utxb.cloudfront.net/galaxy/images/avatar/0x4960c283c45e1898c41633c39fb2015167b20dc3-1655712057.png';
 const IMG_ICONS = {
@@ -53,7 +52,7 @@ const CLAIMING = 'CLAIMING';
 const CLAIMED = 'CLAIMED';
 
 export default {
-  props: ['space', 'proposal', 'results', 'loaded', 'strategies', 'votes'],
+  props: ['space', 'proposal', 'results', 'loaded', 'strategies'],
   data() {
     return {
       disabled: false,
@@ -86,7 +85,7 @@ export default {
       return `${APP_URL}/${this.currentCampaignUrl}`;
     },
     galaxyId() {
-      return `${APP_URL}/galaxyid/${this.address}`;
+      return `${APP_URL}/galxeid/${this.address}`;
     },
     actionEnabled() {
       return (
@@ -107,12 +106,6 @@ export default {
       // Update the state if the address
       this.loading = true;
       this.address = newAccount;
-      await this.updateState();
-      this.loading = false;
-    },
-    votes: async function () {
-      // Update the state if the votes change
-      this.loading = true;
       await this.updateState();
       this.loading = false;
     }
@@ -209,14 +202,14 @@ export default {
   >
     <div class="relative overflow-hidden">
       <!-- background image -->
-      <div class="absolute bottom-0 top-0 right-0 left-0 z-0 w-full blur-3xl">
+      <div class="absolute bottom-0 left-0 right-0 top-0 z-0 w-full blur-3xl">
         <img
           :src="mainImg"
           alt=""
-          class="absolute bottom-0 top-0 right-0 left-0 z-0 w-full"
+          class="absolute bottom-0 left-0 right-0 top-0 z-0 w-full"
         />
         <div
-          class="absolute bottom-0 top-0 right-0 left-0 z-0 w-full"
+          class="absolute bottom-0 left-0 right-0 top-0 z-0 w-full"
           :style="{
             background:
               'linear-gradient(180deg, #211f24 0%, rgba(33, 31, 36, 0) 51.04%, #211f24 100%)'
@@ -225,9 +218,9 @@ export default {
       </div>
       <!-- main content -->
       <div
-        class="relative bottom-0 top-0 right-0 left-0 z-10 flex flex-col items-center py-6 px-6"
+        class="relative bottom-0 left-0 right-0 top-0 z-10 flex flex-col items-center px-6 py-6"
       >
-        <img :src="imgLogoGalaxy" alt="" class="mb-3 h-auto w-full" style="" />
+        <img :src="imgLogoGalaxy" alt="" class="mb-4 h-3 w-auto" style="" />
         <img
           :src="mainImg"
           alt=""

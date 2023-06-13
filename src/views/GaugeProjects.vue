@@ -1,16 +1,11 @@
 <script setup>
 import { onMounted } from 'vue';
 import { useRoute } from 'vue-router';
+import { useHead } from '@vueuse/head';
 
-import { useIntl, useI18n } from '@/composables';
-
-const { t, setPageTitle } = useI18n();
-const { formatCompactNumber } = useIntl();
 const route = useRoute();
 
-onMounted(() => {
-  setPageTitle('ve projects');
-});
+useHead({ title: 'VE projects' });
 </script>
 
 <template>

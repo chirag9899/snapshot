@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { useStorage } from '@vueuse/core';
-import { useWeb3 } from '@/composables';
 
 defineProps<{
   spaceId: string;
@@ -51,7 +50,7 @@ const createdSpaces = useStorage(
               >
             </template>
             <template #discord>
-              <BaseLink link="https://discord.gg/snapshot"> Discord</BaseLink>
+              <BaseLink link="https://discord.snapshot.org/"> Discord</BaseLink>
             </template>
           </i18n-t>
         </div>

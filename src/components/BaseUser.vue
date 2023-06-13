@@ -1,17 +1,15 @@
 <script setup lang="ts">
-import { toRefs } from 'vue';
-import { Profile } from '@/helpers/interfaces';
-
-import { useUsername, useApp } from '@/composables';
+import { Profile, ExtendedSpace, Proposal } from '@/helpers/interfaces';
 
 const { domain } = useApp();
 
 const props = defineProps<{
   address: string;
-  space?: { members: string[]; network: string };
-  proposal?: { network: string };
+  space?: ExtendedSpace;
+  proposal?: Proposal;
   profile?: Profile;
   hideAvatar?: boolean;
+  hideUsername?: boolean;
   widthClass?: string;
 }>();
 
@@ -33,11 +31,15 @@ const { username } = useUsername(address, profile);
           : { name: 'profileActivity', params: { address } }
       "
       hide-external-icon
+      tabindex="-1"
       @click.stop=""
     >
       <div :class="[widthClass, 'flex flex-nowrap items-center space-x-1']">
         <AvatarUser v-if="!hideAvatar" :address="address" size="18" />
-        <span class="w-full cursor-pointer truncate text-skin-link">
+        <span
+          v-if="!hideUsername"
+          class="w-full cursor-pointer truncate text-skin-link"
+        >
           {{ username }}
         </span>
         <BaseBadge :address="address" :members="space?.members" />

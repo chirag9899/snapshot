@@ -2,18 +2,10 @@
 import { ref, onMounted } from 'vue';
 import { shorten } from '@/helpers/utils';
 
-import { useIntl, useI18n } from '@/composables';
-
 import Projects from '../../config/Projects.json';
 
 const { formatCompactNumber } = useIntl();
-const { setPageTitle } = useI18n();
-
 const limit = ref(12);
-
-onMounted(() => {
-  setPageTitle('page.title.home');
-});
 </script>
 
 <template>
@@ -33,7 +25,7 @@ onMounted(() => {
       class="mb-4 flex flex-col flex-wrap items-center xs:flex-row md:flex-nowrap"
     >
       <div
-        class="mt-2 whitespace-nowrap text-right text-skin-text xs:mt-0 xs:ml-auto"
+        class="mt-2 whitespace-nowrap text-right text-skin-text xs:ml-auto xs:mt-0"
       >
         {{ formatCompactNumber(Projects.length) }} projects
       </div>

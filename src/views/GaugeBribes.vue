@@ -1,8 +1,5 @@
 <script setup>
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
-import { useI18n } from '@/composables/useI18n';
-import { useSkin, DARK } from '@/composables/useSkin';
-import { useApp } from '@/composables/useApp';
 import BaseModal from '../components/BaseModal.vue';
 import InputString from '../components/InputString.vue';
 import InputNumber from '../components/InputNumber.vue';
@@ -18,10 +15,9 @@ import {
   getActivePeriod
 } from '@/helpers/bribeContracts';
 import { getTokenNameBalance } from '@/helpers/rewards';
-import { useModal, useWeb3 } from '@/composables';
 import { useRoute } from 'vue-router';
+import { useHead } from '@vueuse/head';
 
-const { setPageTitle } = useI18n();
 const { userTheme } = useSkin();
 const { env } = useApp();
 const route = useRoute();
@@ -53,6 +49,8 @@ const state = reactive({
 let showBribeAddedMessage = ref(false);
 
 loadGauges();
+
+useHead({ title: 'Gauge bribes' });
 
 function getProject() {
   return Projects.find(item => item.name === route.params.name);
@@ -144,7 +142,6 @@ async function loadGauges(skip = 0) {
 
 onMounted(() => {
   userTheme.value = DARK;
-  setPageTitle('Gauge Bribes');
 });
 
 onUnmounted(() => {

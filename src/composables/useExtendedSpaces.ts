@@ -1,35 +1,35 @@
-import { ref, computed } from 'vue';
-import { SPACES_QUERY } from '@/helpers/queries';
-import { useApolloQuery } from '@/composables/useApolloQuery';
+import { SPACE_QUERY } from '@/helpers/queries';
 import { ExtendedSpace } from '@/helpers/interfaces';
 import { mapOldPluginNames } from '@/helpers/utils';
 
-const extentedSpaces = ref<ExtendedSpace[]>([]);
+const extendedSpaces = ref<ExtendedSpace[]>([]);
 
 export function useExtendedSpaces() {
   const loading = ref(false);
 
   const { apolloQuery } = useApolloQuery();
-  async function loadExtentedSpaces(id_in: string[] = []) {
-    const filteredLoadedSpaces = id_in.filter(
-      id => !extentedSpaces.value?.find(space => space.id === id)
-    );
-    if (!filteredLoadedSpaces.length) return;
+  async function loadExtendedSpace(spaceId: string) {
+    if (!spaceId || extendedSpaces.value.some(s => s.id === spaceId)) return;
 
     loading.value = true;
     try {
-      const spaces = await apolloQuery(
+      const response = await apolloQuery(
         {
-          query: SPACES_QUERY,
+          query: SPACE_QUERY,
           variables: {
-            id_in: filteredLoadedSpaces
+            id: spaceId
           }
         },
-        'spaces'
+        'space'
       );
 
-      const mappedSpaces = spaces.map(mapOldPluginNames);
-      extentedSpaces.value = [...extentedSpaces.value, ...mappedSpaces];
+      const mappedSpace = mapOldPluginNames(response);
+      extendedSpaces.value.push(mappedSpace);
+
+      // Remove any duplicates incase two requests were made at the same time
+      extendedSpaces.value = extendedSpaces.value.filter(
+        (space, index, self) => index === self.findIndex(t => t.id === space.id)
+      );
 
       loading.value = false;
     } catch (e) {
@@ -39,20 +39,39 @@ export function useExtendedSpaces() {
     }
   }
 
-  const reloadSpace = (id: string) => {
-    const spaceToReload = extentedSpaces.value?.find(space => space.id === id);
-    if (spaceToReload) {
-      extentedSpaces.value = extentedSpaces.value.filter(
-        space => space.id !== id
+  async function reloadSpace(spaceId: string) {
+    try {
+      const response = await apolloQuery(
+        {
+          query: SPACE_QUERY,
+          variables: {
+            id: spaceId
+          }
+        },
+        'space'
       );
-      loadExtentedSpaces([id]);
+      const mappedSpace = mapOldPluginNames(response);
+
+      extendedSpaces.value = extendedSpaces.value.filter(
+        s => s.id !== mappedSpace.id
+      );
+
+      extendedSpaces.value.push(mappedSpace);
+    } catch (e) {
+      console.error(e);
+      return e;
     }
-  };
+  }
+
+  function deleteSpace(id: string) {
+    extendedSpaces.value = extendedSpaces.value.filter(s => s.id !== id);
+  }
 
   return {
-    loadExtentedSpaces,
+    loadExtendedSpace,
     reloadSpace,
-    extentedSpaces: computed(() => extentedSpaces.value),
+    deleteSpace,
+    extendedSpaces: computed(() => extendedSpaces.value),
     spaceLoading: computed(() => loading.value)
   };
 }

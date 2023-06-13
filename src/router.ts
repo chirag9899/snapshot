@@ -1,5 +1,4 @@
 import { createRouter, createWebHashHistory, RouteLocation } from 'vue-router';
-import { useApp } from '@/composables/useApp';
 
 import DelegateView from '@/views/DelegateView.vue';
 import ExploreProjects from '@/views/GaugeProjects.vue';
@@ -44,15 +43,9 @@ const spaceRoutes = [
     component: SpaceProposal
   },
   {
-    path: 'create/:step?/:sourceProposal?',
+    path: 'create/:sourceProposal?',
     name: 'spaceCreate',
-    component: SpaceCreate,
-    beforeEnter: to => {
-      // set step to 1 if it is not set
-      if (!to.params.step) {
-        to.params.step = 1;
-      }
-    }
+    component: SpaceCreate
   },
 
   {
@@ -92,11 +85,6 @@ if (domain) {
   routes.push(
     { path: '/', name: 'home', component: SpaceView, children: spaceRoutes },
     { path: '/delegate/:key?/:to?', name: 'delegate', component: DelegateView },
-    {
-      path: '/playground/:name',
-      name: 'playground',
-      component: PlaygroundView
-    },
     {
       path: `/${domain}`,
       alias: `/${domainAlias ?? domain}`,

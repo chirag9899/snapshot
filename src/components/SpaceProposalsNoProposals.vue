@@ -1,5 +1,9 @@
-<script setup>
-defineProps(['space']);
+<script setup lang="ts">
+import { ExtendedSpace } from '@/helpers/interfaces';
+
+defineProps<{
+  space: ExtendedSpace;
+}>();
 </script>
 <template>
   <div class="mb-3 text-center">
@@ -7,10 +11,8 @@ defineProps(['space']);
       <div class="mb-3">
         {{ $t('noResultsFound') }}
       </div>
-      <router-link
-        :to="{ name: 'spaceCreate', params: { key: space.id, step: 1 } }"
-      >
-        <BaseButton>
+      <router-link :to="{ name: 'spaceCreate' }">
+        <BaseButton tabindex="-1">
           {{ $t('proposals.createProposal') }}
         </BaseButton>
       </router-link>

@@ -1,19 +1,17 @@
 <script setup>
 import { onMounted, onUnmounted, reactive } from 'vue';
-import { useI18n } from '@/composables/useI18n';
-import { useSkin, DARK } from '@/composables/useSkin';
-import { useApp } from '@/composables/useApp';
 import { commify, shorten } from '@/helpers/utils';
 import { getRewards, claimReward, claimAllRewards } from '@/helpers/rewards';
-import { useWeb3 } from '@/composables';
+import { useHead } from '@vueuse/head';
 
-const { setPageTitle } = useI18n();
 const { userTheme } = useSkin();
 const { env } = useApp();
 
 const { web3, login } = useWeb3();
 
 const themeBefore = userTheme.value;
+
+useHead({ title: 'Bribe rewards' });
 
 const state = reactive({
   rewardsLoading: true,
@@ -53,7 +51,6 @@ async function claimAll() {
 
 onMounted(() => {
   userTheme.value = DARK;
-  setPageTitle('Bribe rewards');
 });
 
 onUnmounted(() => {
@@ -75,7 +72,7 @@ onUnmounted(() => {
           </p>
         </div>
         <div
-          class="space-content-between grid w-full gap-4 pt-4 pb-4 text-[20px] md:grid-cols-2 lg:grid-cols-3"
+          class="space-content-between grid w-full gap-4 pb-4 pt-4 text-[20px] md:grid-cols-2 lg:grid-cols-3"
           style="width: 100%"
         >
           <div class="text-left">
@@ -98,7 +95,7 @@ onUnmounted(() => {
                 ${{ commify(state.totalRewards) }}
               </div>
               <div
-                class="mt-2 whitespace-nowrap text-right text-skin-text xs:mt-0 xs:ml-auto"
+                class="mt-2 whitespace-nowrap text-right text-skin-text xs:ml-auto xs:mt-0"
               >
                 <BaseButton
                   :disabled="state.rewards.length < 2"

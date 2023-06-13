@@ -1,13 +1,10 @@
-<script setup>
-import { ref, computed, onMounted, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+<script setup lang="ts">
 import mapKeys from 'lodash/fp/mapKeys';
 import { getAddress } from '@ethersproject/address';
 import getProvider from '@snapshot-labs/snapshot.js/src/utils/provider';
 import { getBlockNumber } from '@snapshot-labs/snapshot.js/src/utils/web3';
 import { getScores } from '@snapshot-labs/snapshot.js/src/utils';
 import { decodeJson, encodeJson } from '@/helpers/b64';
-import { useI18n, useCopy, useStrategies, useIntl } from '@/composables';
 
 const defaultParams = {
   symbol: 'BAL',
@@ -19,41 +16,29 @@ const router = useRouter();
 const route = useRoute();
 const { query: queryParams } = useRoute();
 const { copyToClipboard } = useCopy();
-const { t, setPageTitle } = useI18n();
+const { t } = useI18n();
 const { formatCompactNumber } = useIntl();
 const {
   getExtendedStrategy,
-  extendedStrategy: strategy,
-  strategyDefinition
+  extendedStrategy,
+  strategyDefinition,
+  getStrategies,
+  isLoadingStrategies,
+  filterStrategies
 } = useStrategies();
-
-let provider;
-
-const strategyExample = computed(() => {
-  if (queryParams.query) {
-    try {
-      const { params, network, snapshot, addresses } = decodeJson(
-        queryParams.query
-      );
-      return {
-        ...strategy.value?.examples?.[0],
-        addresses,
-        network,
-        snapshot,
-        strategy: { params }
-      };
-    } catch (e) {
-      return strategy.value?.examples?.[0];
-    }
-  }
-  return strategy.value?.examples?.[0];
-});
 
 const loading = ref(false);
 const strategyError = ref(null);
-const networkError = ref(null);
+const networkError = ref(false);
 const scores = ref(null);
-const form = ref({
+const isValidStrategyDefinition = ref(false);
+const searchInput = ref('');
+const form = ref<{
+  params: Record<string, any>;
+  network: string;
+  snapshot: string;
+  addresses: string[];
+}>({
   params: {},
   network: '1',
   snapshot: '',
@@ -67,24 +52,49 @@ const scoresWithZeroBalanceAddresses = computed(() => {
   // If an address is not present inside the scoresObject, add it with a zero balance
   const addressesArray = (form.value.addresses ?? []).map(getAddress);
   const scoresObject = mapKeys(getAddress, scores.value[0] ?? {});
-  const scoresObjectWithZeroBalances = addressesArray.reduce((acc, address) => {
-    acc[address] = scoresObject[address] || 0;
-    return acc;
-  }, {});
+  const scoresObjectWithZeroBalances: Record<string, number> =
+    addressesArray.reduce((acc, address) => {
+      acc[address] = scoresObject[address] || 0;
+      return acc;
+    }, {});
   // Order scoreObjectWithZeroBalances by score
   return Object.fromEntries(
-    Object.entries(scoresObjectWithZeroBalances).sort((a, b) => b[1] - a[1])
+    Object.entries(scoresObjectWithZeroBalances).sort(
+      (a: any, b: any) => b[1] - a[1]
+    )
   );
 });
 
+const strategyExample = computed(() => {
+  if (queryParams.query) {
+    try {
+      const { params, network, snapshot, addresses } = decodeJson(
+        queryParams.query
+      );
+      return {
+        ...extendedStrategy.value?.examples?.[0],
+        addresses: addresses || extendedStrategy.value?.examples?.[0].addresses,
+        network,
+        snapshot,
+        strategy: { params }
+      };
+    } catch (e) {
+      return extendedStrategy.value?.examples?.[0];
+    }
+  }
+  return extendedStrategy.value?.examples?.[0];
+});
+
 async function loadScores() {
+  if (!extendedStrategy.value) return;
+
   scores.value = null;
   strategyError.value = null;
   loading.value = true;
 
   try {
     const strategyParams = {
-      name: strategy.value.id,
+      name: extendedStrategy.value.id,
       params: form.value.params
     };
     scores.value = await getScores(
@@ -96,17 +106,25 @@ async function loadScores() {
       `${import.meta.env.VITE_SCORES_URL}/api/scores`
     );
     loading.value = false;
-  } catch (e) {
+  } catch (e: any) {
     loading.value = false;
     console.log(e);
     strategyError.value = e;
   }
 }
 
+function selectStrategy(strategy) {
+  router.push({ name: 'playground', params: { name: strategy.id } });
+}
+
 async function loadSnapshotBlockNumber() {
   try {
-    provider = await getProvider(form.value.network);
-    form.value.snapshot = await getBlockNumber(provider);
+    loading.value = true;
+    scores.value = null;
+    networkError.value = false;
+    const provider = await getProvider(form.value.network);
+    const blockNumber = await getBlockNumber(provider);
+    form.value.snapshot = blockNumber.toString();
     loading.value = false;
   } catch (e) {
     loading.value = false;
@@ -118,13 +136,10 @@ async function loadSnapshotBlockNumber() {
 async function handleURLUpdate(_, paramName) {
   router.replace({
     query: { query: encodeJson(form.value) },
-    params: { retainScrollPosition: true }
+    params: { retainScrollPosition: 'yes' }
   });
 
   if (paramName === 'networkUpdate') {
-    loading.value = true;
-    scores.value = null;
-    networkError.value = false;
     loadSnapshotBlockNumber();
   }
 }
@@ -145,20 +160,20 @@ watch(
   { immediate: true }
 );
 
-onMounted(async () => {
-  getExtendedStrategy(route.params.name);
-  setPageTitle('page.title.playground');
+watch(
+  () => route.params.name,
+  async () => {
+    getStrategies();
+    getExtendedStrategy(route.params.name as string);
 
-  loading.value = true;
-  scores.value = null;
-  networkError.value = false;
-  if (queryParams.query && strategyExample.value.snapshot) {
-    form.value.snapshot = strategyExample.value.snapshot;
-    loading.value = false;
-  } else {
-    loadSnapshotBlockNumber();
-  }
-});
+    if (queryParams.query && strategyExample.value?.snapshot) {
+      form.value.snapshot = strategyExample.value.snapshot;
+    } else {
+      loadSnapshotBlockNumber();
+    }
+  },
+  { immediate: true }
+);
 
 function handleNetworkSelect(value) {
   form.value.network = value;
@@ -169,21 +184,36 @@ function handleNetworkSelect(value) {
 <template>
   <TheLayout v-bind="$attrs">
     <template #content-left>
-      <LoadingPage v-if="!strategy" />
-      <div v-else>
-        <div class="mb-3 px-4 md:px-0">
-          <router-link :to="{ path: `/strategy/${$route.params.name}` }">
-            <ButtonBack />
-          </router-link>
-        </div>
-        <h1 class="mb-2 px-4 md:px-0">
-          {{ strategy.id }}
-        </h1>
-        <div class="space-y-3">
+      <div class="mb-3 px-4 md:px-0">
+        <ButtonBack
+          :name="$t('strategyDetails')"
+          @click="
+            router.push({
+              name: 'strategy',
+              params: { name: route.params.name }
+            })
+          "
+        />
+      </div>
+      <LoadingPage v-if="isLoadingStrategies" />
+      <template v-else>
+        <BaseBlock title="Strategy" class="mb-3">
+          <BaseCombobox
+            :label="''"
+            :items="
+              filterStrategies(searchInput).map(s => ({ id: s.id, name: s.id }))
+            "
+            :selected-id="(route.params.name as string)"
+            @select="selectStrategy"
+            @search="value => (searchInput = value)"
+          />
+        </BaseBlock>
+        <LoadingPage v-if="!extendedStrategy" />
+        <div v-else class="space-y-3">
           <BaseBlock :title="$t('settings.header')">
             <div class="space-y-2">
               <ComboboxNetwork
-                :network="form.network"
+                :network="form.network.toString()"
                 @select="handleNetworkSelect"
               />
               <BaseInput
@@ -210,6 +240,7 @@ function handleNetworkSelect(value) {
             <TextareaJson
               v-else
               v-model="form.params"
+              v-model:is-valid="isValidStrategyDefinition"
               :placeholder="$t('strategyParameters')"
               class="input text-left"
               @update:modelValue="handleURLUpdate"
@@ -230,14 +261,14 @@ function handleNetworkSelect(value) {
             />
           </BaseBlock>
         </div>
-      </div>
+      </template>
     </template>
     <template #sidebar-right>
       <div class="space-y-3">
         <BaseBlock :title="$t('actions')">
           <BaseButton
             :loading="loading"
-            :disabled="loading || !strategy"
+            :disabled="loading || !extendedStrategy"
             class="flex w-full items-center justify-center"
             primary
             @click="loadScores"
@@ -255,11 +286,11 @@ function handleNetworkSelect(value) {
         </BaseBlock>
         <BaseBlock v-if="scores" :title="$t('results')">
           <div
-            v-for="(score, key) in scoresWithZeroBalanceAddresses"
-            :key="score"
+            v-for="(score, address) in scoresWithZeroBalanceAddresses"
+            :key="address"
             class="flex justify-between"
           >
-            <BaseUser :address="key" :space="form" />
+            <BaseUser :address="(address as string)" />
             <span>
               {{ formatCompactNumber(score) }}
               {{ form.params.symbol }}

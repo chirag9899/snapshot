@@ -1,14 +1,11 @@
-<script setup>
-import { isAddress } from '@ethersproject/address';
-import { shorten, explorerUrl } from '@/helpers/utils';
-import { encodeJson } from '@/helpers/b64';
-import networks from '@snapshot-labs/snapshot.js/src/networks.json';
+<script setup lang="ts">
+import { Proposal, SpaceStrategy } from '@/helpers/interfaces';
 
-defineProps({
-  open: Boolean,
-  strategies: Object,
-  proposal: Object
-});
+defineProps<{
+  open: boolean;
+  strategies: SpaceStrategy[];
+  proposal?: Proposal;
+}>();
 
 defineEmits(['close']);
 </script>
@@ -19,58 +16,12 @@ defineEmits(['close']);
       <h3>{{ $t('strategiesPage') }}</h3>
     </template>
     <div class="m-4">
-      <BaseBlock
+      <StrategiesListItem
         v-for="(strategy, i) in strategies"
         :key="i"
-        slim
-        class="mb-3 p-4 text-skin-link"
-      >
-        <div class="flex items-center justify-between">
-          <h3 v-text="strategy.name" />
-
-          <ButtonPlayground
-            :name="strategy.name"
-            :network="strategy.network || proposal.network"
-            :params="strategy.params"
-            :snapshot="proposal.snapshot"
-          />
-        </div>
-
-        <div>
-          <div v-if="strategy.network" class="flex justify-between">
-            <span class="mr-1 flex-auto text-skin-text"> network </span>
-            <span
-              v-text="networks[strategy.network || proposal.network].name"
-            />
-          </div>
-          <div v-for="(param, key) in strategy.params" :key="key" class="flex">
-            <span class="mr-1 flex-auto text-skin-text" v-text="key" />
-            <BaseLink
-              v-if="key === 'address' || isAddress(param)"
-              :link="explorerUrl(strategy.network || proposal.network, param)"
-              class="block"
-            >
-              <span v-text="shorten(param)" />
-            </BaseLink>
-            <BaseLink
-              v-else-if="typeof param === 'string' && param.startsWith('http')"
-              :link="param"
-              class="ml-2 block truncate"
-            >
-              <span v-text="param" />
-            </BaseLink>
-            <span
-              v-else
-              class="ml-2 truncate"
-              v-text="
-                ['string', 'number', 'boolean'].includes(typeof param)
-                  ? param
-                  : typeof param
-              "
-            />
-          </div>
-        </div>
-      </BaseBlock>
+        :strategy="strategy"
+        :proposal="proposal"
+      />
     </div>
   </BaseModal>
 </template>

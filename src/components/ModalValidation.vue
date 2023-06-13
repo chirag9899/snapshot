@@ -1,53 +1,140 @@
 <script setup lang="ts">
-import { ref, computed, toRefs, watch } from 'vue';
-import { SpaceValidation } from '@/helpers/interfaces';
+import { SpaceValidation, SpaceStrategy } from '@/helpers/interfaces';
+import { clone } from '@snapshot-labs/snapshot.js/src/utils';
+import { validateForm } from '@/helpers/validation';
 
-import { useValidationsFilter } from '@/composables';
+const props = defineProps<{
+  open: boolean;
+  validation: SpaceValidation;
+  votingStrategies: SpaceStrategy[];
+  filterMinScore: number;
+}>();
 
-const defaultParams = {};
-
-const props = defineProps<{ open: boolean; validation: SpaceValidation }>();
+const DEFAULT_PARAMS: Record<string, any> = {};
 
 const emit = defineEmits(['add', 'close']);
 
 const { open } = toRefs(props);
+const { t } = useI18n();
 
-const searchInput = ref('');
-const isValid = ref(true);
+const isValidParams = ref(true);
+const validations = ref<Validations | null>(null);
+const isValidationsLoaded = ref(false);
+const formRef = ref();
+const strategiesFormRef = ref();
+const showStrategies = ref(false);
+
 const input = ref({
   name: '',
-  params: defaultParams
+  params: clone(DEFAULT_PARAMS)
 });
 
-const { filterValidations, getValidationsSpacesCount, loadingValidations } =
-  useValidationsFilter();
-const validations = computed(() => filterValidations(searchInput.value));
-
-watch(
-  () => props.open,
-  () => {
-    if (props.open) getValidationsSpacesCount();
+type Validations = Record<
+  string,
+  {
+    key: string;
+    example?: Record<string, any>[];
+    schema?: Record<string, any>;
+    about?: string;
+    voteValidationOnly?: boolean;
   }
-);
+>;
 
-function select(n) {
+const validationDefinition = computed(() => {
+  return (
+    validations.value?.[input.value.name]?.schema?.definitions?.Validation ||
+    null
+  );
+});
+
+const validationErrors = computed(() => {
+  return validateForm(validationDefinition.value || {}, input.value.params);
+});
+
+const isValid = computed(() => {
+  return Object.values(validationErrors.value).length === 0;
+});
+
+function handleSelect(n: string) {
   input.value.name = n;
+
+  if (n === 'basic') {
+    input.value.params.minScore =
+      input.value.params.minScore || props.filterMinScore || 1;
+
+    if (input.value.params.strategies) {
+      showStrategies.value = true;
+    }
+    return;
+  }
+
+  if (props.validation.name !== n) {
+    input.value.params = clone(DEFAULT_PARAMS);
+  }
+
+  if (n === 'any') {
+    handleSubmit();
+  }
 }
 
 function handleSubmit() {
-  emit('add', input.value);
+  if (!isValid.value || !isValidParams.value) {
+    strategiesFormRef.value?.forceShowError();
+    formRef?.value?.forceShowError();
+    return;
+  }
+
+  emit('add', clone(input.value));
   emit('close');
 }
 
+function removeVoteValidationOnly(validations: Validations) {
+  Object.keys(validations).forEach(key => {
+    if (validations[key]?.voteValidationOnly) {
+      delete validations[key];
+    }
+  });
+}
+
+async function getValidations() {
+  if (validations.value) return;
+  const fetchedValidations: Validations = await fetch(
+    `${import.meta.env.VITE_SCORES_URL}/api/validations`
+  ).then(res => res.json());
+  const validationsWithAny: Validations = {
+    any: {
+      key: 'any'
+    },
+    ...fetchedValidations
+  };
+
+  if (validationsWithAny.basic.schema)
+    validationsWithAny.basic.schema.definitions.Validation.properties.minScore.description =
+      t('proposalValidation.basic.minScoreHint');
+
+  removeVoteValidationOnly(validationsWithAny);
+
+  validations.value = validationsWithAny || null;
+  isValidationsLoaded.value = true;
+}
+
 watch(open, () => {
+  getValidations();
   input.value.name = '';
   if (props.validation?.params) {
     input.value.params = props.validation.params;
   } else {
     input.value = {
       name: '',
-      params: defaultParams
+      params: clone(DEFAULT_PARAMS)
     };
+  }
+});
+
+watch(showStrategies, () => {
+  if (!showStrategies.value) {
+    delete input.value.params.strategies;
+    isValidParams.value = true;
   }
 });
 </script>
@@ -58,49 +145,62 @@ watch(open, () => {
       <h3>
         {{
           input.name
-            ? $t('settings.editValidation')
-            : $t('settings.selectValidation')
+            ? $t('proposalValidation.settingsTitle')
+            : $t('proposalValidation.title')
         }}
       </h3>
     </template>
-    <BaseSearch
-      v-if="!input.name"
-      v-model="searchInput"
-      :placeholder="$t('searchPlaceholder')"
-      modal
-    />
-    <div class="my-4 mx-0 min-h-[339px] md:mx-4">
-      <div v-if="input.name" class="mb-4 rounded-md border p-4 text-skin-link">
-        <h4 class="mb-3 text-center" v-text="input.name" />
-        <TextareaJson
+
+    <div class="mx-0 my-4 min-h-[250px] md:mx-4">
+      <div v-if="input.name" class="mx-4 text-skin-link md:mx-0">
+        <TuneForm
+          v-if="validationDefinition"
+          ref="formRef"
           v-model="input.params"
-          v-model:is-valid="isValid"
-          :placeholder="$t('settings.validationParameters')"
-          class="input text-left"
+          :definition="validationDefinition"
+          :error="validationErrors"
+        />
+
+        <TuneTextareaJson
+          v-else
+          v-model="input.params"
+          :placeholder="$t('proposalValidation.paramPlaceholder')"
+          @update:is-valid="value => (isValidParams = value)"
+        />
+
+        <TuneSwitch
+          v-if="input.name === 'basic'"
+          v-model="showStrategies"
+          :label="$t('useCustomStrategies')"
+          :hint="$t('proposalValidation.basic.customStrategiesHint')"
+        />
+
+        <FormArrayStrategies
+          v-if="input.name === 'basic' && showStrategies"
+          ref="strategiesFormRef"
+          v-model="input.params.strategies"
+          :voting-strategies="votingStrategies"
+          @update:is-valid="value => (isValidParams = value)"
         />
       </div>
       <div v-if="!input.name">
-        <LoadingRow v-if="loadingValidations" block />
+        <LoadingRow v-if="!isValidationsLoaded" block class="px-0" />
         <div v-else class="space-y-3">
-          <BaseValidationItem
-            v-for="valId in validations"
-            :key="valId"
-            :validation="valId"
-            @click="select(valId)"
+          <BaseModalSelectItem
+            v-for="v in validations"
+            :key="v.key"
+            :title="$t(`proposalValidation.${v.key}.label`)"
+            :description="$t(`proposalValidation.${v.key}.description`)"
+            :selected="validation.name === v.key"
+            :tag="v.key === 'passport-gated' ? 'Beta' : ''"
+            @click="handleSelect(v.key)"
           />
-
-          <BaseNoResults v-if="Object.keys(validations).length < 1" />
         </div>
       </div>
     </div>
     <template v-if="input.name" #footer>
-      <BaseButton
-        :disabled="!isValid"
-        class="w-full"
-        primary
-        @click="handleSubmit"
-      >
-        {{ validation.name ? $t('save') : $t('add') }}
+      <BaseButton class="w-full" primary @click="handleSubmit">
+        {{ $t('save') }}
       </BaseButton>
     </template>
   </BaseModal>

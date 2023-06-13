@@ -1,9 +1,22 @@
 <script setup lang="ts">
 import { ExtendedSpace } from '@/helpers/interfaces';
+import legacySpaces from '@/../snapshot-spaces/spaces/legacy.json';
 
-defineProps<{
+const props = defineProps<{
   space: ExtendedSpace;
 }>();
+
+const hasDelegationStrategy = computed(() => {
+  return props.space.strategies?.some(
+    strategy =>
+      strategy.name.includes('delegation') ||
+      JSON.stringify(strategy.params).includes('"delegation"')
+  );
+});
+
+const isLegacySpace = computed(() => {
+  return Object.keys(legacySpaces).includes(props.space.id);
+});
 </script>
 
 <template>

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { computed } from 'vue';
 import {
   Listbox,
   ListboxButton,
@@ -7,9 +6,11 @@ import {
   ListboxOption,
   ListboxLabel
 } from '@headlessui/vue';
+import isEqual from 'lodash/isEqual';
 
 type ListboxItem = {
   value: any;
+  title?: string;
   extras?: Record<string, any>;
 };
 
@@ -18,14 +19,16 @@ const props = defineProps<{
   modelValue: any;
   label?: string;
   disableInput?: boolean;
+  definition?: any;
+  information?: string;
 }>();
 
 const emit = defineEmits(['update:modelValue']);
 
 const selectedItem = computed({
   get: () =>
-    props.items.find(item => item.value === props.modelValue) ||
-    props.items[0].value,
+    props.items.find(item => isEqual(item.value, props.modelValue)) ||
+    props.items[0],
   set: newVal => emit('update:modelValue', newVal.value)
 });
 </script>
@@ -33,7 +36,9 @@ const selectedItem = computed({
 <template>
   <Listbox v-model="selectedItem" as="div" :disabled="disableInput">
     <ListboxLabel>
-      <LabelInput>{{ label }}</LabelInput>
+      <LabelInput :information="information || definition?.description">
+        {{ label || definition?.title }}
+      </LabelInput>
     </ListboxLabel>
     <div class="relative">
       <ListboxButton
@@ -47,7 +52,7 @@ const selectedItem = computed({
         />
 
         <span v-else-if="selectedItem">
-          {{ selectedItem.value }}
+          {{ selectedItem?.title || selectedItem.value }}
         </span>
         <span
           class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-[12px]"
@@ -77,7 +82,7 @@ const selectedItem = computed({
               <li
                 :class="[
                   { 'bg-skin-border': active },
-                  'relative cursor-default select-none py-2 pr-[50px] pl-3'
+                  'relative cursor-default select-none py-2 pl-3 pr-[50px]'
                 ]"
               >
                 <span
@@ -89,7 +94,7 @@ const selectedItem = computed({
                 >
                   <slot v-if="$slots.item" name="item" :item="item" />
                   <span v-else>
-                    {{ item.value }}
+                    {{ item?.title || item.value }}
                   </span>
                 </span>
 
