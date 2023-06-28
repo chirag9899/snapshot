@@ -12,7 +12,9 @@ import { commify, shorten } from '@/helpers/utils';
 import {
   getGaugeInfo,
   addRewardAmount,
-  getActivePeriod
+  getActivePeriod,
+  getAllowance,
+  approveToken
 } from '@/helpers/bribeContracts';
 import { getTokenNameBalance } from '@/helpers/rewards';
 import { useRoute } from 'vue-router';
@@ -44,7 +46,8 @@ const state = reactive({
   ignoredGauges: 0,
   search: '',
   tokenInfo: { name: 'token', symbol: '', balance: 0 },
-  governanceTokenInfo: { name: 'governance token', symbol: '', balance: 0 }
+  governanceTokenInfo: { name: 'governance token', symbol: '', balance: 0 },
+  isApproved: false
 });
 let showBribeAddedMessage = ref(false);
 
@@ -167,7 +170,7 @@ async function addBribe() {
     return;
   }
 
-  if (state.bribeAmount < 0) {
+  if (state.bribeAmount < 0 || !state.bribeAmount) {
     state.amountError.message = 'Please enter a valid token amount';
     return;
   }
@@ -189,6 +192,44 @@ async function addBribe() {
     console.log(e);
     state.modalOpen = false;
   }
+}
+
+async function checkAllowance(e) {
+  state.tokenError = {};
+  const tokenAddress = e.target.value;
+  try {
+    if (!ethers.utils.isAddress(tokenAddress)) {
+      state.tokenError.message = 'Please enter a valid token address';
+      state.isApproved = false;
+      return;
+    }
+
+    const allowance = await getAllowance(
+      tokenAddress,
+      state.selectedProject.bribeAddress
+    );
+
+    if (allowance > 0) {
+      state.isApproved = true;
+    } else {
+      state.isApproved = false;
+    }
+  } catch (e) {
+    console.log(e);
+    state.isApproved = false;
+  }
+}
+
+async function approve() {
+  if (!ethers.utils.isAddress(state.bribeToken)) {
+    state.tokenError.message = 'Please enter a valid token address';
+    return;
+  }
+
+  state.isApproved = await approveToken(
+    state.bribeToken,
+    state.selectedProject.bribeAddress
+  );
 }
 </script>
 
@@ -306,6 +347,7 @@ async function addBribe() {
             class="mb-2"
             :definition="{ title: 'token address' }"
             :error="state.tokenError"
+            @input="checkAllowance($event)"
           />
           <inputNumber
             v-model="state.bribeAmount"
@@ -313,7 +355,16 @@ async function addBribe() {
             :definition="{ title: 'bribe amount' }"
             :error="state.amountError"
           />
-          <BaseButton class="primary mt-2" @click="addBribe()"
+          <BaseButton
+            :disabled="state.isApproved"
+            class="primary mr-4 mt-4"
+            @click="approve()"
+            >Approve
+          </BaseButton>
+          <BaseButton
+            :disabled="!state.isApproved"
+            class="primary ml-4 mt-4"
+            @click="addBribe()"
             >Add Bribe
           </BaseButton>
         </BaseContainer>

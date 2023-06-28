@@ -182,9 +182,6 @@ export async function addRewardAmount(
   const decimals = await token.decimals();
   const amount = ethers.utils.parseUnits(bribeAmount.toString(), decimals);
 
-  const approveTx = await token.approve(bribeAddress, amount);
-  console.log(approveTx);
-
   const bribeContract = new ethers.Contract(bribeAddress, bribeV3.abi, signer);
   const tx = await bribeContract.add_reward_amount(
     gaugeAddress,
@@ -211,9 +208,6 @@ export async function addSnapshotRewardAmount(
   const decimals = await token.decimals();
   const amount = ethers.utils.parseUnits(bribeAmount.toString(), decimals);
   const bribeAddress = import.meta.env.VITE_BRIBE_SNAPSHOT_ADDRESS;
-
-  const approveTx = await token.approve(bribeAddress, amount);
-  console.log(approveTx);
 
   const bribeContract = new ethers.Contract(
     bribeAddress,
@@ -243,6 +237,40 @@ export async function addSnapshotRewardAmount(
     }
   });
   console.log(request);
+}
+
+export async function getAllowance(tokenAddress, bribeAddress) {
+  console.log(tokenAddress);
+  const provider = await getProvider();
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  const signer = provider.getSigner();
+  const token = new ethers.Contract(tokenAddress, erc20.abi, signer);
+  const allowance = await token.allowance(
+    await signer.getAddress(),
+    bribeAddress.toString()
+  );
+  return ethers.utils.formatEther(allowance);
+}
+
+export async function approveToken(tokenAddress, bribeAddress) {
+  try {
+    const provider = await getProvider();
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const signer = provider.getSigner();
+    const token = new ethers.Contract(tokenAddress, erc20.abi, signer);
+
+    const approveTx = await token.approve(
+      bribeAddress,
+      ethers.constants.MaxInt256
+    );
+    console.log(approveTx);
+    return true;
+  } catch (e) {
+    console.log(e);
+    return false;
+  }
 }
 
 export async function getActiveSnapshotBribes() {

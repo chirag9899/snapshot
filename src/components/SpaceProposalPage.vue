@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import {
   addSnapshotRewardAmount,
-  getBribesForProposal
+  getBribesForProposal,
+  getAllowance,
+  approveToken
 } from '@/helpers/bribeContracts';
 import voting from '@snapshot-labs/snapshot.js/src/voting';
 import { ExtendedSpace, Proposal, Results } from '@/helpers/interfaces';
@@ -30,7 +32,7 @@ useMeta({
 
 const route = useRoute();
 const router = useRouter();
-const { web3, web3Account } = useWeb3();
+const { web3, web3Account, getProvider } = useWeb3();
 const { isMessageVisible, setMessageVisibility } = useFlaggedMessageStatus(
   route.params.id as string
 );
@@ -51,6 +53,7 @@ let amountError = ref({});
 let currentBribes = ref([]);
 let bribesLoading = ref(false);
 let showBribeAddedMessage = ref(false);
+let isApproved = ref(false);
 
 const isAdmin = computed(() => {
   const admins = (props.space.admins || []).map(admin => admin.toLowerCase());
@@ -142,7 +145,7 @@ async function addBribe() {
     return;
   }
 
-  if (bribeAmount.value < 0) {
+  if (bribeAmount.value < 0 || !bribeAmount.value) {
     amountError.value.message = 'Please enter a valid token amount';
     return;
   }
@@ -168,6 +171,44 @@ async function addBribe() {
     modalBribeOpen.value = false;
     console.log(e);
   }
+}
+
+async function checkAllowance(e) {
+  tokenError.value = {};
+  const tokenAddress = e.target.value;
+  try {
+    if (!ethers.utils.isAddress(tokenAddress)) {
+      tokenError.value.message = 'Please enter a valid token address';
+      isApproved.value = false;
+      return;
+    }
+
+    const allowance = await getAllowance(
+      tokenAddress,
+      import.meta.env.VITE_BRIBE_SNAPSHOT_ADDRESS
+    );
+
+    if (allowance > 0) {
+      isApproved.value = true;
+    } else {
+      isApproved.value = false;
+    }
+  } catch (e) {
+    console.log(e);
+    isApproved.value = false;
+  }
+}
+
+async function approve() {
+  if (!ethers.utils.isAddress(bribeToken.value)) {
+    tokenError.value.message = 'Please enter a valid token address';
+    return;
+  }
+
+  isApproved.value = await approveToken(
+    bribeToken.value,
+    import.meta.env.VITE_BRIBE_SNAPSHOT_ADDRESS
+  );
 }
 
 async function getBribes() {
@@ -301,6 +342,7 @@ onMounted(() => setMessageVisibility(props.proposal.flagged));
               class="mb-2"
               :definition="{ title: 'token address' }"
               :error="tokenError"
+              @input="checkAllowance($event)"
             />
             <inputNumber
               v-model="bribeAmount"
@@ -313,7 +355,16 @@ onMounted(() => setMessageVisibility(props.proposal.flagged));
               :items="proposal.choices"
               label="bribe option"
             />
-            <BaseButton class="primary mt-4" @click="addBribe()"
+            <BaseButton
+              :disabled="isApproved"
+              class="primary mr-4 mt-4"
+              @click="approve()"
+              >Approve
+            </BaseButton>
+            <BaseButton
+              :disabled="!isApproved"
+              class="primary ml-4 mt-4"
+              @click="addBribe()"
               >Add Bribe
             </BaseButton>
           </BaseContainer>
