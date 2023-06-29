@@ -14,7 +14,8 @@ import {
   addRewardAmount,
   getActivePeriod,
   getAllowance,
-  approveToken
+  approveToken,
+  isERC20
 } from '@/helpers/bribeContracts';
 import { getTokenNameBalance } from '@/helpers/rewards';
 import { useRoute } from 'vue-router';
@@ -170,6 +171,13 @@ async function addBribe() {
     return;
   }
 
+  const isToken = await isERC20(state.bribeToken);
+
+  if (!isToken) {
+    state.tokenError.message = 'Please enter a valid token address';
+    return;
+  }
+
   if (state.bribeAmount < 0 || !state.bribeAmount) {
     state.amountError.message = 'Please enter a valid token amount';
     return;
@@ -199,6 +207,14 @@ async function checkAllowance(e) {
   const tokenAddress = e.target.value;
   try {
     if (!ethers.utils.isAddress(tokenAddress)) {
+      state.tokenError.message = 'Please enter a valid token address';
+      state.isApproved = false;
+      return;
+    }
+
+    const isToken = await isERC20(tokenAddress);
+
+    if (!isToken) {
       state.tokenError.message = 'Please enter a valid token address';
       state.isApproved = false;
       return;
@@ -356,13 +372,21 @@ async function approve() {
             :error="state.amountError"
           />
           <BaseButton
-            :disabled="state.isApproved"
+            :disabled="
+              state.isApproved ||
+              state.tokenError.message ||
+              state.amountError.message
+            "
             class="primary mr-4 mt-4"
             @click="approve()"
             >Approve
           </BaseButton>
           <BaseButton
-            :disabled="!state.isApproved"
+            :disabled="
+              !state.isApproved ||
+              state.tokenError.message ||
+              state.amountError.message
+            "
             class="primary ml-4 mt-4"
             @click="addBribe()"
             >Add Bribe

@@ -240,7 +240,6 @@ export async function addSnapshotRewardAmount(
 }
 
 export async function getAllowance(tokenAddress, bribeAddress) {
-  console.log(tokenAddress);
   const provider = await getProvider();
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
@@ -251,6 +250,23 @@ export async function getAllowance(tokenAddress, bribeAddress) {
     bribeAddress.toString()
   );
   return ethers.utils.formatEther(allowance);
+}
+
+export async function isERC20(tokenAddress) {
+  try {
+    const provider = await getProvider();
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const signer = provider.getSigner();
+    const token = new ethers.Contract(tokenAddress, erc20.abi, signer);
+
+    const totalSupply = await token.callStatic.totalSupply();
+    console.log(totalSupply);
+    return true;
+  } catch (e) {
+    console.log(e);
+    return false;
+  }
 }
 
 export async function approveToken(tokenAddress, bribeAddress) {

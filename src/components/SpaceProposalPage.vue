@@ -3,7 +3,8 @@ import {
   addSnapshotRewardAmount,
   getBribesForProposal,
   getAllowance,
-  approveToken
+  approveToken,
+  isERC20
 } from '@/helpers/bribeContracts';
 import voting from '@snapshot-labs/snapshot.js/src/voting';
 import { ExtendedSpace, Proposal, Results } from '@/helpers/interfaces';
@@ -144,6 +145,12 @@ async function addBribe() {
     tokenError.value.message = 'Please enter a valid token address';
     return;
   }
+  const isToken = await isERC20(bribeToken.value);
+
+  if (!isToken) {
+    tokenError.value.message = 'Please enter a valid token address';
+    return;
+  }
 
   if (bribeAmount.value < 0 || !bribeAmount.value) {
     amountError.value.message = 'Please enter a valid token amount';
@@ -178,6 +185,14 @@ async function checkAllowance(e) {
   const tokenAddress = e.target.value;
   try {
     if (!ethers.utils.isAddress(tokenAddress)) {
+      tokenError.value.message = 'Please enter a valid token address';
+      isApproved.value = false;
+      return;
+    }
+
+    const isToken = await isERC20(tokenAddress);
+
+    if (!isToken) {
       tokenError.value.message = 'Please enter a valid token address';
       isApproved.value = false;
       return;
@@ -356,13 +371,17 @@ onMounted(() => setMessageVisibility(props.proposal.flagged));
               label="bribe option"
             />
             <BaseButton
-              :disabled="isApproved"
+              :disabled="
+                isApproved || tokenError.message || amountError.message
+              "
               class="primary mr-4 mt-4"
               @click="approve()"
               >Approve
             </BaseButton>
             <BaseButton
-              :disabled="!isApproved"
+              :disabled="
+                !isApproved || tokenError.message || amountError.message
+              "
               class="primary ml-4 mt-4"
               @click="addBribe()"
               >Add Bribe
