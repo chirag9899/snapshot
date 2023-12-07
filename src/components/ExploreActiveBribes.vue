@@ -1,8 +1,9 @@
 <script setup>
 import { ref, onMounted, reactive } from 'vue';
-import { shorten } from '@/helpers/utils';
+import { commify, shorten } from '@/helpers/utils';
 import { getActiveSnapshotBribes } from '@/helpers/bribeContracts';
 import { useHead } from '@vueuse/head';
+import { ethers } from 'ethers';
 
 const { formatCompactNumber } = useIntl();
 
@@ -14,7 +15,7 @@ const state = reactive({
 });
 
 getActiveBribes();
-useHead({ title: 'Active bribes' });
+useHead({ title: 'Active incentives' });
 
 async function getActiveBribes() {
   state.bribesLoading = true;
@@ -32,7 +33,7 @@ async function getActiveBribes() {
       <div
         class="mt-2 whitespace-nowrap text-right text-skin-text xs:ml-auto xs:mt-0"
       >
-        {{ formatCompactNumber(state.bribes.length) }} bribed proposals
+        {{ formatCompactNumber(state.bribes.length) }} incentivized proposals
       </div>
     </BaseContainer>
 
@@ -65,7 +66,15 @@ async function getActiveBribes() {
               </div>
 
               <div class="mb-[10px] text-skin-text">
-                {{ bribe.amount }} {{ bribe.symbol }} to vote
+                {{
+                  commify(
+                    parseFloat(
+                      ethers.utils.formatUnits(bribe.amount, bribe.decimals)
+                    ),
+                    2
+                  )
+                }}
+                {{ bribe.symbol }} to vote
                 {{ bribe.choices[bribe.option - 1] }}
               </div>
               <BaseButton class="!mb-0">View Proposal</BaseButton>

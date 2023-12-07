@@ -1,16 +1,10 @@
 <script setup lang="ts">
-import {
-  addSnapshotRewardAmount,
-  getBribesForProposal,
-  getAllowance,
-  approveToken,
-  isERC20
-} from '@/helpers/bribeContracts';
+import { getBribesForProposal } from '@/helpers/bribeContracts';
 import voting from '@snapshot-labs/snapshot.js/src/voting';
 import { ExtendedSpace, Proposal, Results } from '@/helpers/interfaces';
 import { ref } from 'vue';
-import { ethers } from 'ethers';
-import { commify, shorten } from '@/helpers/utils';
+import { commify } from '@/helpers/utils';
+import ModalSnapshotBribe from '@/components/ModalSnapshotBribe.vue';
 
 const props = defineProps<{ space: ExtendedSpace; proposal: Proposal }>();
 const emit = defineEmits(['reload-proposal']);
@@ -33,12 +27,13 @@ useMeta({
 
 const route = useRoute();
 const router = useRouter();
-const { web3, web3Account, getProvider } = useWeb3();
+const { web3, web3Account } = useWeb3();
 const { isMessageVisible, setMessageVisibility } = useFlaggedMessageStatus(
   route.params.id as string
 );
 
 const proposalId: string = route.params.id as string;
+const environment = import.meta.env.VITE_ENV;
 
 const modalOpen = ref(false);
 const selectedChoices = ref<any>(null);
@@ -46,15 +41,8 @@ const loadedResults = ref(false);
 const results = ref<Results | null>(null);
 
 let modalBribeOpen = ref(false);
-let bribeToken = ref('');
-let bribeAmount = ref(0);
-let bribeOption = ref(1);
-let tokenError = ref({});
-let amountError = ref({});
 let currentBribes = ref([]);
 let bribesLoading = ref(false);
-let showBribeAddedMessage = ref(false);
-let isApproved = ref(false);
 
 const isAdmin = computed(() => {
   const admins = (props.space.admins || []).map(admin => admin.toLowerCase());
@@ -136,96 +124,6 @@ async function openBribeModal() {
   }
 }
 
-async function addBribe() {
-  console.log(bribeToken.value, bribeAmount.value, bribeOption.value);
-  tokenError.value = {};
-  amountError.value = {};
-
-  if (!ethers.utils.isAddress(bribeToken.value)) {
-    tokenError.value.message = 'Please enter a valid token address';
-    return;
-  }
-  const isToken = await isERC20(bribeToken.value);
-
-  if (!isToken) {
-    tokenError.value.message = 'Please enter a valid token address';
-    return;
-  }
-
-  if (bribeAmount.value < 0 || !bribeAmount.value) {
-    amountError.value.message = 'Please enter a valid token amount';
-    return;
-  }
-
-  try {
-    await addSnapshotRewardAmount(
-      props.proposal.space.id,
-      props.proposal.id,
-      bribeOption.value,
-      bribeAmount.value,
-      bribeToken.value,
-      props.proposal.start,
-      props.proposal.end
-    );
-    modalBribeOpen.value = false;
-
-    bribeAmount.value = 0;
-    bribeToken.value = '';
-    bribeOption.value = 1;
-
-    showBribeAddedMessage.value = true;
-  } catch (e) {
-    modalBribeOpen.value = false;
-    console.log(e);
-  }
-}
-
-async function checkAllowance(e) {
-  tokenError.value = {};
-  const tokenAddress = e.target.value;
-  try {
-    if (!ethers.utils.isAddress(tokenAddress)) {
-      tokenError.value.message = 'Please enter a valid token address';
-      isApproved.value = false;
-      return;
-    }
-
-    const isToken = await isERC20(tokenAddress);
-
-    if (!isToken) {
-      tokenError.value.message = 'Please enter a valid token address';
-      isApproved.value = false;
-      return;
-    }
-
-    const allowance = await getAllowance(
-      tokenAddress,
-      import.meta.env.VITE_BRIBE_SNAPSHOT_ADDRESS
-    );
-
-    if (allowance > 0) {
-      isApproved.value = true;
-    } else {
-      isApproved.value = false;
-    }
-  } catch (e) {
-    console.log(e);
-    isApproved.value = false;
-  }
-}
-
-async function approve() {
-  if (!ethers.utils.isAddress(bribeToken.value)) {
-    tokenError.value.message = 'Please enter a valid token address';
-    return;
-  }
-
-  isApproved.value = await approveToken(
-    bribeToken.value,
-    import.meta.env.VITE_BRIBE_SNAPSHOT_ADDRESS
-  );
-}
-
 async function getBribes() {
   bribesLoading.value = true;
   currentBribes.value = await getBribesForProposal(
@@ -273,6 +171,18 @@ onMounted(() => setMessageVisibility(props.proposal.flagged));
           />
           <SpaceProposalContent :space="space" :proposal="proposal" />
         </div>
+        <BaseBlock class="mb-4" title="Important" :is-collapsable="false">
+          <p class="mb-2">
+            QuickSnap's frontend integrates directly with Snapshot's backend,
+            allowing voting on either platform. Votes made on QuickSnap are
+            directly captured by Snapshot.
+          </p>
+          <p class="mb-2">
+            QuickSnap enhances your experience by facilitating incentive
+            provision and claims on our website. For voting, however, you can
+            use Snapshot. We are an add-on to Snapshot's platform.
+          </p>
+        </BaseBlock>
         <div class="space-y-4">
           <div v-if="proposal?.discussion" class="px-3 md:px-0">
             <h3 v-text="$t('discussion')" />
@@ -308,12 +218,12 @@ onMounted(() => setMessageVisibility(props.proposal.flagged));
           :proposal="proposal"
           :strategies="strategies"
         />
-        <BaseBlock :loading="bribesLoading" title="Bribe">
+        <BaseBlock :loading="bribesLoading" title="Incentives">
           <p class="mb-4">
             You can add a reward for voters that choose the desired option
           </p>
           <div v-if="currentBribes.length > 0" class="mb-4">
-            <h6>Current Bribes</h6>
+            <h6>Current Incentives</h6>
             <div v-for="bribe in currentBribes" :key="bribe">
               <b>{{ bribe.option }}</b>
               <span class="float-right"
@@ -321,9 +231,15 @@ onMounted(() => setMessageVisibility(props.proposal.flagged));
               >
             </div>
           </div>
-          <BaseButton class="block w-full" primary @click="openBribeModal()"
-            >Add Bribe</BaseButton
-          >
+          <BaseButton
+            class="block w-full"
+            primary
+            :disabled="
+              proposal.state != 'active' && environment === 'production'
+            "
+            @click="openBribeModal()"
+            >Add Incentive
+          </BaseButton>
           <br />
           <router-link :to="{ name: 'rewards' }">
             <BaseButton class="block w-full" primary>Check rewards</BaseButton>
@@ -348,47 +264,11 @@ onMounted(() => setMessageVisibility(props.proposal.flagged));
           :strategies="strategies"
         />
       </div>
-      <BaseModal :open="modalBribeOpen" @close="modalBribeOpen = false">
-        <template #header>
-          <h4>Add bribe for {{ shorten(proposal.title, 20) }}</h4>
-          <BaseContainer :style="{ height: '400px' }" class="p-6">
-            <InputString
-              v-model="bribeToken"
-              class="mb-2"
-              :definition="{ title: 'token address' }"
-              :error="tokenError"
-              @input="checkAllowance($event)"
-            />
-            <inputNumber
-              v-model="bribeAmount"
-              class="mb-2"
-              :definition="{ title: 'bribe amount' }"
-              :error="amountError"
-            />
-            <ChoicesListbox
-              v-model="bribeOption"
-              :items="proposal.choices"
-              label="bribe option"
-            />
-            <BaseButton
-              :disabled="
-                isApproved || tokenError.message || amountError.message
-              "
-              class="primary mr-4 mt-4"
-              @click="approve()"
-              >Approve
-            </BaseButton>
-            <BaseButton
-              :disabled="
-                !isApproved || tokenError.message || amountError.message
-              "
-              class="primary ml-4 mt-4"
-              @click="addBribe()"
-              >Add Bribe
-            </BaseButton>
-          </BaseContainer>
-        </template>
-      </BaseModal>
+      <ModalSnapshotBribe
+        :proposal="proposal"
+        :open="modalBribeOpen"
+        @close="modalBribeOpen = false"
+      />
     </template>
   </TheLayout>
   <teleport to="#modal">
@@ -416,15 +296,5 @@ onMounted(() => setMessageVisibility(props.proposal.flagged));
       :selected-choices="selectedChoices"
       @close="isModalPostVoteOpen = false"
     />
-    <ModalNotice
-      :open="showBribeAddedMessage"
-      title="Bribed!"
-      @close="showBribeAddedMessage = false"
-    >
-      <p>
-        Your bribe will be added in a few minutes when confirmed by the
-        blockchain
-      </p>
-    </ModalNotice>
   </teleport>
 </template>

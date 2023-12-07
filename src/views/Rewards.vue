@@ -11,7 +11,7 @@ const { web3, login } = useWeb3();
 
 const themeBefore = userTheme.value;
 
-useHead({ title: 'Bribe rewards' });
+useHead({ title: 'Rewards' });
 
 const state = reactive({
   rewardsLoading: true,
@@ -92,7 +92,7 @@ onUnmounted(() => {
             >
               Yours to claim:
               <div class="pl-1 text-white">
-                ${{ commify(state.totalRewards) }}
+                ${{ commify(state.totalRewards, 2) }}
               </div>
               <div
                 class="mt-2 whitespace-nowrap text-right text-skin-text xs:ml-auto xs:mt-0"
@@ -106,6 +106,15 @@ onUnmounted(() => {
             </BaseContainer>
           </BaseBlock>
         </div>
+
+        <BaseContainer class="mb-4 mt-4 w-full">
+          <div class="">
+            <p class="text-center">
+              Once the vote closes, your rewards will be calculated and updated
+              the next day at 1PM UTC.
+            </p>
+          </div>
+        </BaseContainer>
 
         <BaseContainer class="mt-4" :slim="true">
           <TransitionGroup
@@ -132,13 +141,14 @@ onUnmounted(() => {
                 <div class="mb-4 mt-4 grid grid-cols-2 gap-1 text-[16px]">
                   <div class="text-left">Reward</div>
                   <div class="text-right">
-                    {{ commify(reward.claimable, 3) }}
-                    {{ shorten(reward.rewardToken.symbol, 5) }}
+                    {{ shorten(commify(reward.claimable)) }}
+                    {{ reward.rewardToken.symbol }}
                   </div>
                   <div class="text-left">USD value</div>
                   <div class="text-right">
                     {{
-                      '$' + commify(reward.claimable * reward.rewardTokenPrice)
+                      '$' +
+                      commify(reward.claimable * reward.rewardTokenPrice, 2)
                     }}
                   </div>
                 </div>

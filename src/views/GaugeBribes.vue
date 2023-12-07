@@ -54,7 +54,7 @@ let showBribeAddedMessage = ref(false);
 
 loadGauges();
 
-useHead({ title: 'Gauge bribes' });
+useHead({ title: 'Gauge incentives' });
 
 function getProject() {
   return Projects.find(item => item.name === route.params.name);
@@ -275,14 +275,14 @@ async function approve() {
             <div class="text-left">
               <p>{{ state.tokenInfo.name }} balance</p>
               <p>
-                {{ commify(state.tokenInfo.balance, 3) }}
+                {{ commify(state.tokenInfo.balance) }}
                 {{ state.tokenInfo.symbol }}
               </p>
             </div>
             <div class="text-left">
               <p>{{ state.governanceTokenInfo.name }} balance</p>
               <p>
-                {{ commify(state.governanceTokenInfo.balance, 3) }}
+                {{ commify(state.governanceTokenInfo.balance) }}
                 {{ state.governanceTokenInfo.symbol }}
               </p>
             </div>
@@ -326,17 +326,17 @@ async function approve() {
                 <td>{{ shorten(gauge.name, 70) }}</td>
                 <td class="table-number">{{ commify(gauge.gaugeWeight) }}</td>
                 <td class="table-number">
-                  $ {{ commify(gauge.dollarsPerVote) }}
+                  $ {{ commify(gauge.dollarsPerVote, 2) }}
                 </td>
                 <td class="table-number">
-                  $ {{ commify(gauge.totalRewards) }}
+                  $ {{ commify(gauge.totalRewards, 2) }}
                 </td>
                 <td>
                   <BaseButton
                     class="btn-small !bg-skin-bg"
                     :primary="true"
                     @click="openModal(gauge)"
-                    >Add bribe
+                    >Add incentive
                   </BaseButton>
                 </td>
               </tr>
@@ -356,7 +356,7 @@ async function approve() {
 
     <BaseModal :open="state.modalOpen" @close="state.modalOpen = false">
       <template #header>
-        <h4>Add bribe for {{ shorten(state.selectedGauge.name, 20) }}</h4>
+        <h4>Add incentives for {{ shorten(state.selectedGauge.name, 20) }}</h4>
         <BaseContainer class="p-6">
           <InputString
             v-model="state.bribeToken"
@@ -368,7 +368,7 @@ async function approve() {
           <inputNumber
             v-model="state.bribeAmount"
             class="mb-2"
-            :definition="{ title: 'bribe amount' }"
+            :definition="{ title: 'incentive amount' }"
             :error="state.amountError"
           />
           <BaseButton
@@ -389,18 +389,18 @@ async function approve() {
             "
             class="primary ml-4 mt-4"
             @click="addBribe()"
-            >Add Bribe
+            >Add Incentive
           </BaseButton>
         </BaseContainer>
       </template>
     </BaseModal>
     <ModalNotice
       :open="showBribeAddedMessage"
-      title="Bribed!"
+      title="Done!"
       @close="showBribeAddedMessage = false"
     >
       <p>
-        Your bribe will be added in a few minutes when confirmed by the
+        Your incentive will be added in a few minutes when confirmed by the
         blockchain
       </p>
     </ModalNotice>

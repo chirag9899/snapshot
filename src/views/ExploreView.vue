@@ -94,7 +94,7 @@ useInfiniteScroll(
       <BaseButton
         :primary="showActiveBribes"
         @click="() => (showActiveBribes = true)"
-        >Active Bribes</BaseButton
+        >Active Incentives</BaseButton
       >
     </BaseContainer>
     <div v-if="showActiveBribes">

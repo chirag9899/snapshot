@@ -1,20 +1,20 @@
 <script setup lang="ts">
 const socials = [
   {
+    icon: 'gitbook',
+    link: 'https://quicksnap.gitbook.io'
+  },
+  {
     icon: 'twitter',
     link: 'https://twitter.com/QuicksnapFi'
   },
-  // {
-  //   icon: 'discord',
-  //   link: 'https://discord.gg/snapshot'
-  // },
   {
     icon: 'telegram',
     link: 'https://t.me/+6Q42CsOZFn5hNzBh'
   },
   {
     icon: 'github',
-    link: `https://github.com/quicksnap-finance`
+    link: `https://github.com/quicksnap-io`
   }
 ];
 </script>
@@ -26,17 +26,17 @@ const socials = [
     <span v-for="social in socials" :key="social.icon">
       <BaseLink :link="social.link" hide-external-icon>
         <FooterSocialsItem v-if="social.icon === 'github'">
-          <i-s-github class="text-[25px]" />
+          <i-s-github class="text-[24px]" />
         </FooterSocialsItem>
         <FooterSocialsItem v-else-if="social.icon === 'twitter'">
           <i-s-twitter class="text-[24px]" />
         </FooterSocialsItem>
-        <FooterSocialsItem v-else-if="social.icon === 'discord'">
-          <i-s-discord class="text-[23px]" />
+        <FooterSocialsItem v-else-if="social.icon === 'gitbook'">
+          <i-s-gitbook class="text-[24px]" />
         </FooterSocialsItem>
-        <!--        <FooterSocialsItem v-else-if="social.icon === 'telegram'">-->
-        <!--          <i-s-telegram class="text-[21px]" />-->
-        <!--        </FooterSocialsItem>-->
+        <FooterSocialsItem v-else-if="social.icon === 'telegram'">
+          <i-s-telegram class="text-[24px]" />
+        </FooterSocialsItem>
       </BaseLink>
     </span>
   </div>

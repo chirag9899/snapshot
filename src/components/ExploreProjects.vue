@@ -55,7 +55,7 @@ const limit = ref(12);
               <div class="mb-[12px] text-skin-text">
                 {{ project.displayName }}
               </div>
-              <BaseButton class="!mb-0">View bribes</BaseButton>
+              <BaseButton class="!mb-0">View incentives</BaseButton>
             </BaseBlock>
           </router-link>
         </div>

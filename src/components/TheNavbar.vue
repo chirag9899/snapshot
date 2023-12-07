@@ -45,31 +45,30 @@ watch(
           >
             quicksnap
           </router-link>
-          <router-link
-            :to="{ path: '/' }"
-            class="menuItem -ml-3 hidden items-center sm:block"
-            style="font-size: 18px"
-          >
-            Snapshot Voters
-          </router-link>
-          <router-link
-            :to="{ path: '/vevoters' }"
-            class="menuItem -ml-3 hidden items-center sm:block"
-            style="font-size: 18px"
-          >
-            VE Voters
-          </router-link>
+          <!--          <router-link-->
+          <!--            :to="{ path: '/' }"-->
+          <!--            class="menuItem -ml-3 hidden items-center sm:block"-->
+          <!--            style="font-size: 18px"-->
+          <!--          >-->
+          <!--            Snapshot Voters-->
+          <!--          </router-link>-->
+          <!--          <router-link-->
+          <!--            :to="{ path: '/vevoters' }"-->
+          <!--            class="menuItem -ml-3 hidden items-center sm:block"-->
+          <!--            style="font-size: 18px"-->
+          <!--          >-->
+          <!--            VE Voters-->
+          <!--          </router-link>-->
+        </div>
+        <div :key="web3Account" class="flex items-center space-x-2">
           <router-link
             :to="{ path: '/rewards' }"
-            class="menuItem -ml-3 hidden items-center sm:block"
+            class="-ml-3 mr-3 hidden items-center sm:block"
             style="font-size: 18px"
           >
-            Rewards
+            rewards
           </router-link>
-        </div>
-        <div :key="web3Account" class="flex space-x-2">
           <NavbarAccount />
-
           <!--          <NavbarNotifications v-if="web3Account && !domain" />-->
 
           <!--          <NavbarExtras />-->

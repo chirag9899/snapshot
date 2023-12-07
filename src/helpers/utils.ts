@@ -142,11 +142,18 @@ export async function clearStampCache(id: string, type = 'space') {
     return await fetch(`https://cdn.stamp.fyi/clear/avatar/eth:${id}`);
 }
 
-export function commify(number: any, decimals = 2) {
-  return number
-    .toFixed(decimals)
-    .toString()
-    .replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+export function commify(number: any, decimals?: number | undefined) {
+  if (!decimals) {
+    const parts = String(number).split('.');
+    const wholePart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    const decimalPart = parts[1] ? `.${parts[1]}` : '';
+    return `${wholePart}${decimalPart}`;
+  } else {
+    return number
+      .toFixed(decimals)
+      .toString()
+      .replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  }
 }
 
 export function urlify(text: string, target = '_blank') {

@@ -9,11 +9,11 @@ import { ApolloClient, InMemoryCache } from '@apollo/client/core';
 import { BigNumber } from '@ethersproject/bignumber';
 import { ethers } from 'ethers';
 import GaugeNames from '../../config/GaugeNames.json';
-import { ADD_SNAPSHOT_BRIBE_MUTATION } from '@/helpers/mutations';
+import { PROPOSAL_REDUCED_QUERY } from '@/helpers/queries';
 import {
   CURRENT_SNAPSHOT_BRIBES,
-  PROPOSAL_REDUCED_QUERY
-} from '@/helpers/queries';
+  BRIBES_BY_PROPOSAL_QUERY
+} from '@/helpers/graphQueries';
 
 const { getProvider } = useWeb3();
 
@@ -24,6 +24,11 @@ const client = new ApolloClient({
 
 const snapshotClient = new ApolloClient({
   uri: `${import.meta.env.VITE_HUB_URL}/graphql`,
+  cache: new InMemoryCache()
+});
+
+const graphClient = new ApolloClient({
+  uri: `${import.meta.env.VITE_GRAPH_ENDPOINT}`,
   cache: new InMemoryCache()
 });
 
@@ -192,7 +197,6 @@ export async function addRewardAmount(
 }
 
 export async function addSnapshotRewardAmount(
-  space,
   proposal,
   option,
   bribeAmount,
@@ -218,25 +222,11 @@ export async function addSnapshotRewardAmount(
     proposal,
     option,
     bribeToken,
-    amount
+    amount,
+    start,
+    end
   );
   console.log(tx);
-
-  // add bribe to the db for easier querying later
-  const request = await client.mutate({
-    mutation: ADD_SNAPSHOT_BRIBE_MUTATION,
-    variables: {
-      tx: tx.hash,
-      space,
-      proposal,
-      option,
-      token: bribeToken,
-      amount: parseFloat(bribeAmount),
-      start,
-      end
-    }
-  });
-  console.log(request);
 }
 
 export async function getAllowance(tokenAddress, bribeAddress) {
@@ -292,25 +282,31 @@ export async function approveToken(tokenAddress, bribeAddress) {
 export async function getActiveSnapshotBribes() {
   const activeSnapshotBribes = [];
   try {
-    const { data } = await client.query({
-      query: CURRENT_SNAPSHOT_BRIBES
+    const { data } = await graphClient.query({
+      query: CURRENT_SNAPSHOT_BRIBES,
+      variables: { time: Math.floor(Date.now() / 1000), skip: 0 }
     });
-    const { snapshotBribes } = data;
+    const { bribes } = data;
 
-    for (let i = 0; i < snapshotBribes.length; i++) {
+    for (let i = 0; i < bribes.length; i++) {
       // get proposal info
       const proposalData = await snapshotClient.query({
         query: PROPOSAL_REDUCED_QUERY,
-        variables: { id: snapshotBribes[i].proposal }
+        variables: { id: bribes[i].proposal }
       });
       const { proposal } = proposalData.data;
 
       // get token info
-      const { price, logo } = await tokenPriceLogo(snapshotBribes[i].token);
-      const tokenInfo = await getTokenInfo(snapshotBribes[i].token);
-      const tokenData = { price, logo, symbol: tokenInfo.symbol };
+      const { price, logo } = await tokenPriceLogo(bribes[i].reward_token);
+      const tokenInfo = await getTokenInfo(bribes[i].reward_token);
+      const tokenData = {
+        price,
+        logo,
+        symbol: tokenInfo.symbol,
+        decimals: tokenInfo.decimals
+      };
       activeSnapshotBribes.push({
-        ...snapshotBribes[i],
+        ...bribes[i],
         ...proposal,
         ...tokenData
       });
@@ -326,19 +322,16 @@ export async function getBribesForProposal(proposal, choices) {
   const bribedChoices = [];
   try {
     const provider = await getProvider();
-    const bribeAddress = import.meta.env.VITE_BRIBE_SNAPSHOT_ADDRESS;
-    const bribeContract = new ethers.Contract(
-      bribeAddress,
-      bribeV3Snapshot.abi,
-      provider
-    );
-
-    const bribes = await bribeContract.rewards_per_proposal(proposal);
+    const { data } = await graphClient.query({
+      query: BRIBES_BY_PROPOSAL_QUERY,
+      variables: { id: proposal }
+    });
+    const { bribes } = data;
 
     console.log(bribes, choices);
 
     for (let i = 0; i < bribes.length; i++) {
-      const { amount, option, token } = bribes[i];
+      const { amount, option, reward_token: token } = bribes[i];
       const tokenContract = new ethers.Contract(token, erc20.abi, provider);
       const [decimals, symbol] = await Promise.all([
         tokenContract.decimals(),

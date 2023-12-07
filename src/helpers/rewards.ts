@@ -8,16 +8,18 @@ import merkle from '@/abi/merkle.json';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-const { web3Account, getProvider } = useWeb3();
-const account = web3Account.value;
+const { getProvider, login, web3Account } = useWeb3();
 const MERKLE_ADDRESS = import.meta.env.VITE_MERKLE_ADDRESS;
 
 export async function getRewards() {
   try {
+    await login();
+    console.log('web3account', web3Account.value);
+
     const claims = [];
     let claimInfo = { totalBalance: 0, totalClaimed: 0 };
 
-    if (web3Account) {
+    if (web3Account.value) {
       const client = new ApolloClient({
         uri: `${import.meta.env.VITE_API_ENDPOINT}/graphql`,
         cache: new InMemoryCache()
@@ -39,7 +41,7 @@ export async function getRewards() {
       `;
       const { data } = await client.query({
         query: claimsQuery,
-        variables: { account }
+        variables: { account: web3Account.value }
       });
       claimInfo = data.claimInfo;
 
@@ -102,13 +104,14 @@ export async function getTokenNameBalance(
   tokenAddress
 ): Promise<{ name: string; symbol: string; balance: number } | undefined> {
   try {
+    await login();
     const provider = await getProvider();
     const token = new ethers.Contract(tokenAddress, erc20.abi, provider);
 
     const [name, symbol, balance, decimals] = await Promise.all([
       token.name(),
       token.symbol(),
-      token.balanceOf(account),
+      token.balanceOf(web3Account.value),
       token.decimals()
     ]);
 
@@ -126,6 +129,7 @@ export async function getTokenNameBalance(
 }
 
 export async function claimReward(reward) {
+  await login();
   const provider = await getProvider();
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
@@ -138,7 +142,7 @@ export async function claimReward(reward) {
   const tx = await merkleContract.claim(
     reward.claimData.token,
     reward.claimData.index,
-    account,
+    web3Account.value,
     reward.claimData.amount,
     reward.claimData.merkleProof
   );
@@ -146,6 +150,7 @@ export async function claimReward(reward) {
 }
 
 export async function claimAllRewards(rewards) {
+  await login();
   //prepare array
   const claims = [];
   const provider = await getProvider();
@@ -168,6 +173,6 @@ export async function claimAllRewards(rewards) {
     merkle.abi,
     signer
   );
-  const tx = await merkleContract.claimMulti(account, claims);
+  const tx = await merkleContract.claimMulti(web3Account.value, claims);
   console.log(tx);
 }
