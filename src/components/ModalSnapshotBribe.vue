@@ -31,6 +31,7 @@ let bribeOption = ref(1);
 let tokenError = ref({ message: '', push: false });
 let amountError = ref({ message: '', push: false });
 let showBribeAddedMessage = ref(false);
+let showBribeErrorMessage = ref(false);
 let isApproved = ref(false);
 let isApproveLoading = ref(false);
 let isBribeLoading = ref(false);
@@ -88,6 +89,7 @@ async function addBribe() {
     emit('close');
   } catch (e) {
     emit('close');
+    showBribeErrorMessage.value = true;
     console.log(e);
     isBribeLoading.value = false;
   }
@@ -300,6 +302,15 @@ watch(
     <p>
       Your incentive will be added in a few minutes when confirmed by the
       blockchain
+    </p>
+  </ModalNotice>
+  <ModalNotice
+    :open="showBribeErrorMessage"
+    title="Error"
+    @close="showBribeErrorMessage = false"
+  >
+    <p>
+      Something has gone wrong, please check your inputs and try again later.
     </p>
   </ModalNotice>
 </template>

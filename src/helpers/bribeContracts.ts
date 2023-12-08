@@ -162,7 +162,9 @@ export function getActivePeriod() {
 }
 
 export async function tokenPriceLogo(token) {
-  const url = `https://api.coingecko.com/api/v3/coins/ethereum/contract/${token}`;
+  const url = `https://api.coingecko.com/api/v3/coins/ethereum/contract/${token}?x_cg_demo_api_key=${
+    import.meta.env.VITE_COINGECKO_API_KEY
+  }`;
 
   const response = await fetch(url);
   const body = await response.json();

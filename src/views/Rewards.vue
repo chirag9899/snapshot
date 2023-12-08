@@ -137,12 +137,14 @@ onUnmounted(() => {
                     class="mb-1"
                   />
                 </div>
+                <div class="relative mb-2 block">
+                  <p>{{ reward.rewardToken.symbol }}</p>
+                </div>
 
-                <div class="mb-4 mt-4 grid grid-cols-2 gap-1 text-[16px]">
+                <div class="mb-4 mt-4 grid grid-cols-2 text-[16px]">
                   <div class="text-left">Reward</div>
                   <div class="text-right">
-                    {{ shorten(commify(reward.claimable)) }}
-                    {{ reward.rewardToken.symbol }}
+                    {{ shorten(commify(reward.claimable), 12) }}
                   </div>
                   <div class="text-left">USD value</div>
                   <div class="text-right">
