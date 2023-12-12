@@ -159,7 +159,8 @@ async function getTokenInfo() {
   isTokenLoading.value = true;
 
   const { data } = await getTokenPrices(bribeToken.value, '1');
-  console.log(data);
+  // console.log("price data from api call....")
+  // console.log(data);
   // get the reward token price
   const { price } = await tokenPriceLogo(bribeToken.value);
   token.value.price = price;
@@ -191,10 +192,12 @@ async function getTokenInfo() {
 }
 
 function checkMinimumAmount() {
+  console.log('get token price....');
+  console.log(token.value.price);
   const bribeDollarAmount = token.value.price * bribeAmount.value;
 
-  if (bribeDollarAmount < 10000) {
-    amountError.value.message = 'Bribes must be at least $10.000 in value';
+  if (bribeDollarAmount < 1000) {
+    amountError.value.message = `Bribes must be at least $1000 in value, now it is $${bribeDollarAmount}`;
     return;
   } else {
     amountError.value.message = '';
@@ -205,6 +208,7 @@ function checkMinimumAmount() {
 watch(
   [bribeToken],
   async () => {
+    console.log('see when this get triggered...');
     await getTokenInfo();
     await checkAllowance();
   },
