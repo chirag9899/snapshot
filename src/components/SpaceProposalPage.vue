@@ -169,20 +169,25 @@ onMounted(() => setMessageVisibility(props.proposal.flagged));
             :is-admin="isAdmin"
             :is-moderator="isModerator"
           />
+          <BaseBlock
+            class="important-notice mb-4"
+            title="Important"
+            :is-collapsable="false"
+          >
+            <p class="mb-2">
+              QuickSnap's frontend integrates directly with Snapshot's backend,
+              allowing voting on either platform. Votes made on QuickSnap are
+              directly captured by Snapshot.
+            </p>
+            <p class="mb-2">
+              QuickSnap enhances your experience by facilitating incentive
+              provision and claims on our website. For voting, however, you can
+              use Snapshot. We are an add-on to Snapshot's platform.
+            </p>
+          </BaseBlock>
           <SpaceProposalContent :space="space" :proposal="proposal" />
         </div>
-        <BaseBlock class="mb-4" title="Important" :is-collapsable="false">
-          <p class="mb-2">
-            QuickSnap's frontend integrates directly with Snapshot's backend,
-            allowing voting on either platform. Votes made on QuickSnap are
-            directly captured by Snapshot.
-          </p>
-          <p class="mb-2">
-            QuickSnap enhances your experience by facilitating incentive
-            provision and claims on our website. For voting, however, you can
-            use Snapshot. We are an add-on to Snapshot's platform.
-          </p>
-        </BaseBlock>
+
         <div class="space-y-4">
           <div v-if="proposal?.discussion" class="px-3 md:px-0">
             <h3 v-text="$t('discussion')" />
@@ -298,3 +303,9 @@ onMounted(() => setMessageVisibility(props.proposal.flagged));
     />
   </teleport>
 </template>
+
+<style scoped lang="scss">
+.important-notice {
+  border-color: #ffbd00;
+}
+</style>
