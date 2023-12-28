@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { shorten } from '@/helpers/utils';
 import { useInfiniteScroll, watchDebounced } from '@vueuse/core';
+import type { Header } from 'vue3-easy-data-table';
+
+const headers: Header[] = [
+  { text: 'USER', value: 'name', sortable: true },
+  { text: 'MEMBERS', value: 'followersCount', sortable: true },
+  { text: 'VOTES', value: 'votesCount', sortable: true }
+];
 
 const route = useRoute();
 const { validEnsTlds } = useEns();
@@ -34,6 +41,10 @@ const spaces = computed(() => {
     return space ? [space] : [];
   }
   return spacesHome.value;
+});
+
+const totalSpaces = computed(() => {
+  return spacesHomeMetrics.value.total;
 });
 
 function handleClickMore() {
@@ -90,55 +101,64 @@ onMounted(() => {
         {{ $tc('spaceCount', [formatCompactNumber(spacesHomeMetrics.total)]) }}
       </div>
     </BaseContainer>
-
     <BaseContainer slim>
-      <ExploreSkeletonLoading
+      <DataTableSkeltonLoading
         v-if="loadingSpacesHome || spaceLoading"
         is-spaces
       />
-      <BaseNoResults v-else-if="spaces.length < 1" use-block />
+      <BaseNoResults
+        v-if="spaces.length < 1 && !loadingSpacesHome && !spaceLoading"
+        use-block
+      />
 
-      <TransitionGroup
-        v-else-if="!loadingSpacesHome && !spaceLoading"
-        name="fade"
-        tag="div"
-        class="grid gap-4 md:grid-cols-3 lg:grid-cols-4"
+      <EasyDataTable
+        v-if="totalSpaces > 0 && spaces.length > 0"
+        :headers="headers"
+        :items="spaces"
+        :pagination="false"
+        :hide-footer="true"
+        :rows-per-page="totalSpaces"
       >
-        <div v-for="space in spaces" :key="space.id">
+        <template #item-name="item">
           <router-link
-            :to="{ name: 'spaceProposals', params: { key: space.id } }"
-          >
-            <BaseBlock
-              class="mb-0 flex items-center justify-center text-center transition-all hover:border-skin-text"
-              style="height: 266px"
-            >
-              <div class="relative mb-2 inline-block">
-                <AvatarSpace
-                  :space="space"
-                  symbol-index="space"
-                  size="82"
-                  class="mb-1"
-                />
-              </div>
+            :to="{ name: 'spaceProposals', params: { key: item.id } }"
+            ><div class="flex items-center">
+              <AvatarSpace
+                :space="item"
+                symbol-index="space"
+                size="40"
+                class="mr-1"
+              />
               <div class="flex items-center justify-center gap-1 truncate">
-                <h3
-                  class="mb-0 mt-0 !h-[32px] overflow-hidden pb-0 text-[22px]"
-                  v-text="shorten(space.name, 16)"
-                />
-                <IconVerifiedSpace v-if="space.verified" class="pt-[1px]" />
+                <span>{{ item.name }}</span>
+                <IconVerifiedSpace v-if="item.verified" class="pt-[1px]" />
               </div>
-              <div class="mb-[12px] text-skin-text">
-                {{
-                  $tc('members', space.followersCount, {
-                    count: formatCompactNumber(space.followersCount)
-                  })
-                }}
-              </div>
-              <ButtonFollow class="!mb-0" :space="space" />
-            </BaseBlock>
+            </div>
           </router-link>
-        </div>
-      </TransitionGroup>
+        </template>
+        <template #item-followersCount="item">
+          <router-link
+            :to="{ name: 'spaceProposals', params: { key: item.id } }"
+          >
+            <div class="items-center text-skin-text">
+              {{
+                $tc('members', item.followersCount, {
+                  count: formatCompactNumber(item.followersCount)
+                })
+              }}
+            </div>
+          </router-link>
+        </template>
+        <template #item-votesCount="item">
+          <router-link
+            :to="{ name: 'spaceProposals', params: { key: item.id } }"
+          >
+            <div class="items-center text-skin-text">
+              {{ formatCompactNumber(item.votesCount) }}
+            </div>
+          </router-link>
+        </template>
+      </EasyDataTable>
       <div
         v-if="
           !enableSpaceHomeScroll &&
@@ -157,3 +177,95 @@ onMounted(() => {
     </BaseContainer>
   </div>
 </template>
+
+<style lang="scss">
+.vue3-easy-data-table {
+  border: 2px solid red; /* Change border to red as an example */
+}
+
+/* Override table styles */
+.vue3-easy-data-table__main.fixed-header.hoverable table thead tr th {
+  background: #333; /* Change background color for header */
+  color: #fff;
+  padding: 15px 25px;
+}
+
+.vue3-easy-data-table__main.fixed-header.hoverable table tbody tr td {
+  padding: 10px 15px; /* Adjust padding */
+}
+
+.vue3-easy-data-table__main.fixed-header.hoverable table tbody tr td {
+  background: #444; /* Change background color for body */
+  color: #fff;
+}
+
+.vue3-easy-data-table__footer {
+  display: none;
+}
+
+// -----
+.vue3-easy-data-table__header th.sortable.none .sortType-icon,
+.vue3-easy-data-table__header th.sortable .sortType-icon {
+  border-bottom-color: #fff !important;
+}
+.vue3-easy-data-table__main {
+  background-color: transparent !important;
+}
+.vue3-easy-data-table {
+  border: 0px !important;
+}
+table {
+  border-collapse: initial !important;
+  display: table;
+  width: 100%;
+  border-spacing: 0;
+  margin: 0;
+  border-spacing: 0px 15px !important;
+}
+
+table thead tr th {
+  background: transparent !important;
+  color: #fff !important;
+  border-bottom: 0px !important;
+  font-size: 18px !important;
+}
+
+table tbody tr td {
+  padding: 15px 20px !important;
+  font-size: 17px !important;
+}
+
+table tbody tr td {
+  background: transparent !important;
+  color: #fff !important;
+  border-bottom: 1px solid !important;
+  border-top: 1px solid !important;
+  border-color: rgb(33, 70, 153) !important;
+}
+
+table tbody tr td:first-child {
+  border-left: 1px solid !important;
+  border-radius: 5px 0px 0px 5px !important;
+  border-color: rgb(33, 70, 153) !important;
+}
+
+table tbody tr td:last-child {
+  border-right: 1px solid !important;
+  border-radius: 0px 5px 5px 0px !important;
+  border-color: rgb(33, 70, 153) !important;
+}
+table tbody tr:hover td {
+  border-color: rgb(42, 108, 255) !important;
+  background-color: rgba(
+    26,
+    97,
+    255,
+    0.27
+  ) !important; /* box-shadow: rgba(232, 57, 110, 0.5) 0px 0px 25px; */
+  color: #fff;
+}
+
+table tbody tr:hover {
+  box-shadow: rgba(42, 108, 255, 0.5) 0px 0px 25px !important;
+}
+</style>

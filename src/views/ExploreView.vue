@@ -99,17 +99,7 @@ useInfiniteScroll(
         "
         >Browse projects</BaseButton
       >
-      <BaseButton
-        :primary="showActiveBribes"
-        @click="
-          () => {
-            showBrowseProjects = false;
-            showActiveBribes = true;
-            showActiveSpaces = false;
-          }
-        "
-        >Active Incentives</BaseButton
-      >
+
       <BaseButton
         :primary="showActiveSpaces"
         @click="
@@ -120,6 +110,17 @@ useInfiniteScroll(
           }
         "
         >Active Proposals</BaseButton
+      >
+      <BaseButton
+        :primary="showActiveBribes"
+        @click="
+          () => {
+            showBrowseProjects = false;
+            showActiveBribes = true;
+            showActiveSpaces = false;
+          }
+        "
+        >Active Incentives</BaseButton
       >
     </BaseContainer>
     <div v-if="showBrowseProjects">
