@@ -94,41 +94,41 @@ useInfiniteScroll(
         @click="
           () => {
             showBrowseProjects = true;
-            showActiveBribes = false;
+            showActiveIncentives = false;
             showActiveSpaces = false;
           }
         "
-        >Browse projects</BaseButton
-      >
+        >Browse projects
+      </BaseButton>
 
       <BaseButton
         :primary="showActiveSpaces"
         @click="
           () => {
             showBrowseProjects = false;
-            showActiveBribes = false;
+            showActiveIncentives = false;
             showActiveSpaces = true;
           }
         "
-        >Active Proposals</BaseButton
-      >
+        >Active Proposals
+      </BaseButton>
       <BaseButton
-        :primary="showActiveBribes"
+        :primary="showActiveIncentives"
         @click="
           () => {
             showBrowseProjects = false;
-            showActiveBribes = true;
+            showActiveIncentives = true;
             showActiveSpaces = false;
           }
         "
-        >Active Incentives</BaseButton
-      >
+        >Active Incentives
+      </BaseButton>
     </BaseContainer>
     <div v-if="showBrowseProjects">
       <ExploreSpaces />
     </div>
-    <div v-if="showActiveBribes">
-      <ExploreActiveBribes />
+    <div v-if="showActiveIncentives">
+      <ExploreActiveIncentives />
     </div>
     <div v-if="showActiveSpaces">
       <ExploreActiveSpaces />
