@@ -56,14 +56,11 @@ yarn run lint
 
 ### Development Guide
 
-Use `http://localhost:8080/#/fabien.eth` for testing your code.
+Use `http://localhost:8080` for testing your code.
 
-By default your instance will connect to the hub at `https://testnet.snapshot.org`. To change that (or other values) you can create a `.env.local` and overwrite the values from `.env`. In order to make gauges on FRAX work you will need to get an etherscan API key and change the `VITE_ETHERSCAN_API_KEY` setting in `.env` or `.env.local`.
-
-In order to add another gauge voting project (compatible with CRV), you can fork this project and deploy the BribeV3 contract using the GaugeController and veAddress for the specific project. Add the project variables in `config/Projects.json` and test locally if the UI works as expected, if there are special cases that need to be considered for your token you can add those improvements to the code as well. If all is well you can create a pull request and we can merge it and support it. Keep in mind that no rewards will be claimed by our system until we have approved your changes.
-
-You can also add or change gauge names in `config/GaugeNames.json` if they are not showing properly, the gauges in this file are gauges that don't operate on mainnet. You can also create a pull request for this.
+By default your instance will connect to the hub at `https://testnet.snapshot.org`. To change that (or other values) you
+can create a `.env.local` and overwrite the values from `.env`.
 
 ## License
 
-Snapshot is open-sourced software licensed under the © [MIT license](LICENSE).
+QuickSnap is open-sourced software licensed under the © [MIT license](LICENSE).

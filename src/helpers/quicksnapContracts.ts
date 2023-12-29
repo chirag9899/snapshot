@@ -1,6 +1,6 @@
 import angleGauge from '@/abi/angleGauge.json';
 import bribeV3 from '@/abi/bribev3.json';
-import bribeV3Snapshot from '@/abi/bribev3snapshot.json';
+import quicksnap from '@/abi/QuickSnap.json';
 import erc20 from '@/abi/erc20.json';
 import gauge from '@/abi/gauge.json';
 import { getContractName } from '@/helpers/etherscan';
@@ -11,8 +11,8 @@ import { ethers } from 'ethers';
 import GaugeNames from '../../config/GaugeNames.json';
 import { PROPOSAL_REDUCED_QUERY } from '@/helpers/queries';
 import {
-  CURRENT_SNAPSHOT_BRIBES,
-  BRIBES_BY_PROPOSAL_QUERY
+  CURRENT_SNAPSHOT_INCENTIVES,
+  INCENTIVES_BY_PROPOSAL_QUERY
 } from '@/helpers/graphQueries';
 
 const { getProvider } = useWeb3();
@@ -178,21 +178,21 @@ export async function tokenPriceLogo(token) {
 export async function addRewardAmount(
   bribeAddress,
   gaugeAddress,
-  bribeAmount,
-  bribeToken
+  rewardAmount,
+  rewardToken
 ) {
   const provider = await getProvider();
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   const signer = provider.getSigner();
-  const token = new ethers.Contract(bribeToken, erc20.abi, signer);
+  const token = new ethers.Contract(rewardToken, erc20.abi, signer);
   const decimals = await token.decimals();
-  const amount = ethers.utils.parseUnits(bribeAmount.toString(), decimals);
+  const amount = ethers.utils.parseUnits(rewardAmount.toString(), decimals);
 
   const bribeContract = new ethers.Contract(bribeAddress, bribeV3.abi, signer);
   const tx = await bribeContract.add_reward_amount(
     gaugeAddress,
-    bribeToken,
+    rewardToken,
     amount
   );
   console.log(tx);
@@ -201,8 +201,8 @@ export async function addRewardAmount(
 export async function addSnapshotRewardAmount(
   proposal,
   option,
-  bribeAmount,
-  bribeToken,
+  rewardAmount,
+  rewardToken,
   start,
   end
 ) {
@@ -210,20 +210,20 @@ export async function addSnapshotRewardAmount(
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   const signer = provider.getSigner();
-  const token = new ethers.Contract(bribeToken, erc20.abi, signer);
+  const token = new ethers.Contract(rewardToken, erc20.abi, signer);
   const decimals = await token.decimals();
-  const amount = ethers.utils.parseUnits(bribeAmount.toString(), decimals);
-  const bribeAddress = import.meta.env.VITE_BRIBE_SNAPSHOT_ADDRESS;
+  const amount = ethers.utils.parseUnits(rewardAmount.toString(), decimals);
+  const quicksnapAddress = import.meta.env.VITE_QUICKSNAP_ADDRESS;
 
   const bribeContract = new ethers.Contract(
-    bribeAddress,
-    bribeV3Snapshot.abi,
+    quicksnapAddress,
+    quicksnap.abi,
     signer
   );
   const tx = await bribeContract.add_reward_amount(
     proposal,
     option,
-    bribeToken,
+    rewardToken,
     amount,
     start,
     end
@@ -231,7 +231,7 @@ export async function addSnapshotRewardAmount(
   console.log(tx);
 }
 
-export async function getAllowance(tokenAddress, bribeAddress) {
+export async function getAllowance(tokenAddress, quicksnapAddress) {
   const provider = await getProvider();
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
@@ -239,7 +239,7 @@ export async function getAllowance(tokenAddress, bribeAddress) {
   const token = new ethers.Contract(tokenAddress, erc20.abi, signer);
   const allowance = await token.allowance(
     await signer.getAddress(),
-    bribeAddress.toString()
+    quicksnapAddress.toString()
   );
   return ethers.utils.formatEther(allowance);
 }
@@ -261,7 +261,7 @@ export async function isERC20(tokenAddress) {
   }
 }
 
-export async function approveToken(tokenAddress, bribeAddress) {
+export async function approveToken(tokenAddress, quicksnapAddress) {
   try {
     const provider = await getProvider();
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -270,7 +270,7 @@ export async function approveToken(tokenAddress, bribeAddress) {
     const token = new ethers.Contract(tokenAddress, erc20.abi, signer);
 
     const approveTx = await token.approve(
-      bribeAddress,
+      quicksnapAddress,
       ethers.constants.MaxInt256
     );
     console.log(approveTx);
@@ -281,34 +281,39 @@ export async function approveToken(tokenAddress, bribeAddress) {
   }
 }
 
-export async function getActiveSnapshotBribes() {
-  const activeSnapshotBribes = [];
+export async function getActiveSnapshotIncentives() {
+  const activeSnapshotIncentives = [];
   try {
     const { data } = await graphClient.query({
-      query: CURRENT_SNAPSHOT_BRIBES,
+      query: CURRENT_SNAPSHOT_INCENTIVES,
       variables: { time: Math.floor(Date.now() / 1000), skip: 0 }
     });
-    const { bribes } = data;
+    const { rewardAddeds: rewards } = data;
 
-    for (let i = 0; i < bribes.length; i++) {
+    for (let i = 0; i < rewards.length; i++) {
       // get proposal info
       const proposalData = await snapshotClient.query({
         query: PROPOSAL_REDUCED_QUERY,
-        variables: { id: bribes[i].proposal }
+        variables: { id: rewards[i].proposal }
       });
       const { proposal } = proposalData.data;
 
       // get token info
-      const { price, logo } = await tokenPriceLogo(bribes[i].reward_token);
-      const tokenInfo = await getTokenInfo(bribes[i].reward_token);
+      const { amount } = rewards[i];
+      const { price, logo } = await tokenPriceLogo(rewards[i].reward_token);
+      const tokenInfo = await getTokenInfo(rewards[i].reward_token);
       const tokenData = {
         price,
         logo,
         symbol: tokenInfo.symbol,
         decimals: tokenInfo.decimals
       };
-      activeSnapshotBribes.push({
-        ...bribes[i],
+      const formattedAmount = parseFloat(
+        ethers.utils.formatUnits(amount, tokenInfo.decimals)
+      );
+      activeSnapshotIncentives.push({
+        formattedAmount: (formattedAmount / 95) * 100,
+        ...rewards[i],
         ...proposal,
         ...tokenData
       });
@@ -317,23 +322,23 @@ export async function getActiveSnapshotBribes() {
     console.log(e);
   }
 
-  return activeSnapshotBribes;
+  return activeSnapshotIncentives;
 }
 
-export async function getBribesForProposal(proposal, choices) {
-  const bribedChoices = [];
+export async function getIncentivesForProposal(proposal, choices) {
+  const incentivizedChoices = [];
   try {
     const provider = await getProvider();
     const { data } = await graphClient.query({
-      query: BRIBES_BY_PROPOSAL_QUERY,
+      query: INCENTIVES_BY_PROPOSAL_QUERY,
       variables: { id: proposal }
     });
-    const { bribes } = data;
+    const { rewardAddeds: rewards } = data;
 
-    console.log(bribes, choices);
+    console.log(rewards, choices);
 
-    for (let i = 0; i < bribes.length; i++) {
-      const { amount, option, reward_token: token } = bribes[i];
+    for (let i = 0; i < rewards.length; i++) {
+      const { amount, option, reward_token: token } = rewards[i];
       const tokenContract = new ethers.Contract(token, erc20.abi, provider);
       const [decimals, symbol] = await Promise.all([
         tokenContract.decimals(),
@@ -342,7 +347,7 @@ export async function getBribesForProposal(proposal, choices) {
       const formattedAmount = parseFloat(
         ethers.utils.formatUnits(amount, decimals)
       );
-      bribedChoices.push({
+      incentivizedChoices.push({
         // include fee in amount
         amount: (formattedAmount / 95) * 100,
         symbol,
@@ -350,10 +355,10 @@ export async function getBribesForProposal(proposal, choices) {
       });
     }
 
-    console.log(bribedChoices);
-    return bribedChoices;
+    console.log(incentivizedChoices);
+    return incentivizedChoices;
   } catch (e) {
     console.log(e);
-    return bribedChoices;
+    return incentivizedChoices;
   }
 }

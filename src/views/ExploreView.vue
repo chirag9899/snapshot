@@ -1,6 +1,7 @@
 <script setup>
 import { useInfiniteScroll } from '@vueuse/core';
 import { useHead } from '@vueuse/head';
+import ExploreActiveIncentives from '@/components/ExploreActiveIncentives.vue';
 
 useHead({ title: 'QuickSnap' });
 
@@ -72,7 +73,7 @@ const loading = computed(() => {
 
 const loadBy = 15;
 const limit = ref(loadBy);
-const showActiveBribes = ref(false);
+const showActiveIncentives = ref(false);
 
 useInfiniteScroll(
   document,
@@ -87,20 +88,20 @@ useInfiniteScroll(
   <div v-if="isSpaces">
     <BaseContainer class="mb-4 xs:flex-row md:flex-nowrap">
       <BaseButton
-        :primary="!showActiveBribes"
-        @click="() => (showActiveBribes = false)"
-        >Browse projects</BaseButton
-      >
+        :primary="!showActiveIncentives"
+        @click="() => (showActiveIncentives = false)"
+        >Browse projects
+      </BaseButton>
       <BaseButton
-        :primary="showActiveBribes"
-        @click="() => (showActiveBribes = true)"
-        >Active Incentives</BaseButton
-      >
+        :primary="showActiveIncentives"
+        @click="() => (showActiveIncentives = true)"
+        >Active Incentives
+      </BaseButton>
     </BaseContainer>
-    <div v-if="showActiveBribes">
-      <ExploreActiveBribes />
+    <div v-if="showActiveIncentives">
+      <ExploreActiveIncentives />
     </div>
-    <div v-if="!showActiveBribes">
+    <div v-if="!showActiveIncentives">
       <ExploreSpaces />
     </div>
   </div>
