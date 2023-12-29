@@ -1,11 +1,11 @@
 import gql from 'graphql-tag';
 
-export const BRIBES_BY_PROPOSAL_QUERY = gql`
-  query Bribes($id: String!) {
-    bribes(where: { proposal: $id }) {
+export const INCENTIVES_BY_PROPOSAL_QUERY = gql`
+  query RewardAddeds($id: String!) {
+    rewardAddeds(where: { proposal: $id }) {
       id
       time
-      briber
+      rewarder
       proposal
       option
       reward_token
@@ -18,16 +18,16 @@ export const BRIBES_BY_PROPOSAL_QUERY = gql`
   }
 `;
 
-export const CURRENT_SNAPSHOT_BRIBES = gql`
-  query SnapshotBribes($time: Int!, $skip: Int!) {
-    bribes(
+export const CURRENT_SNAPSHOT_INCENTIVES = gql`
+  query RewardAddeds($time: Int!, $skip: Int!) {
+    rewardAddeds(
       first: 1000
       skip: $skip
       where: { startTime_lte: $time, endTime_gte: $time }
     ) {
       id
       time
-      briber
+      rewarder
       proposal
       option
       reward_token

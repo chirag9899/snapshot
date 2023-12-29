@@ -16,7 +16,7 @@ import {
   getAllowance,
   approveToken,
   isERC20
-} from '@/helpers/bribeContracts';
+} from '@/helpers/quicksnapContracts';
 import { getTokenNameBalance } from '@/helpers/rewards';
 import { useRoute } from 'vue-router';
 import { useHead } from '@vueuse/head';

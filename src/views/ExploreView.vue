@@ -1,6 +1,7 @@
 <script setup>
 import { useInfiniteScroll } from '@vueuse/core';
 import { useHead } from '@vueuse/head';
+import ExploreActiveIncentives from '@/components/ExploreActiveIncentives.vue';
 
 useHead({ title: 'QuickSnap' });
 
@@ -72,8 +73,8 @@ const loading = computed(() => {
 
 const loadBy = 15;
 const limit = ref(loadBy);
+const showActiveIncentives = ref(false);
 const showBrowseProjects = ref(true);
-const showActiveBribes = ref(false);
 const showActiveSpaces = ref(false);
 
 useInfiniteScroll(

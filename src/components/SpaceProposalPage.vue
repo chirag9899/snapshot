@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { getBribesForProposal } from '@/helpers/bribeContracts';
+import { getIncentivesForProposal } from '@/helpers/quicksnapContracts';
 import voting from '@snapshot-labs/snapshot.js/src/voting';
 import { ExtendedSpace, Proposal, Results } from '@/helpers/interfaces';
 import { ref } from 'vue';
 import { commify } from '@/helpers/utils';
-import ModalSnapshotBribe from '@/components/ModalSnapshotBribe.vue';
+import ModalSnapshotIncentive from '@/components/ModalSnapshotIncentive.vue';
 
 const props = defineProps<{ space: ExtendedSpace; proposal: Proposal }>();
 const emit = defineEmits(['reload-proposal']);
@@ -40,9 +40,9 @@ const selectedChoices = ref<any>(null);
 const loadedResults = ref(false);
 const results = ref<Results | null>(null);
 
-let modalBribeOpen = ref(false);
-let currentBribes = ref([]);
-let bribesLoading = ref(false);
+let modalIncentiveOpen = ref(false);
+let currentIncentives = ref([]);
+let incentivesLoading = ref(false);
 
 const isAdmin = computed(() => {
   const admins = (props.space.admins || []).map(admin => admin.toLowerCase());
@@ -80,7 +80,7 @@ function reloadProposal() {
 
 async function loadResults() {
   if (!props.proposal) return;
-  await getBribes();
+  await getIncentives();
   if (props.proposal.scores.length === 0) {
     const votingClass = new voting[props.proposal.type](
       props.proposal,
@@ -116,21 +116,21 @@ function handleChoiceQuery() {
   }
 }
 
-async function openBribeModal() {
+async function openIncentiveModal() {
   if (web3Account.value === '') {
     modalAccountOpen.value = true;
   } else {
-    modalBribeOpen.value = true;
+    modalIncentiveOpen.value = true;
   }
 }
 
-async function getBribes() {
-  bribesLoading.value = true;
-  currentBribes.value = await getBribesForProposal(
+async function getIncentives() {
+  incentivesLoading.value = true;
+  currentIncentives.value = await getIncentivesForProposal(
     props.proposal.id,
     props.proposal.choices
   );
-  bribesLoading.value = false;
+  incentivesLoading.value = false;
 }
 
 watch(
@@ -196,13 +196,13 @@ onMounted(() => setMessageVisibility(props.proposal.flagged));
               data-testid="proposal-page-discussion-link"
             />
           </div>
-          <SpaceProposalVote
-            v-if="proposal?.state === 'active'"
-            v-model="selectedChoices"
-            :proposal="proposal"
-            @open="modalOpen = true"
-            @clickVote="clickVote"
-          />
+          <!--          <SpaceProposalVote-->
+          <!--            v-if="proposal?.state === 'active'"-->
+          <!--            v-model="selectedChoices"-->
+          <!--            :proposal="proposal"-->
+          <!--            @open="modalOpen = true"-->
+          <!--            @clickVote="clickVote"-->
+          <!--          />-->
           <SpaceProposalVotesList :space="space" :proposal="proposal" />
           <SpaceProposalPlugins
             v-if="proposal?.plugins && loadedResults && results"
@@ -223,16 +223,16 @@ onMounted(() => setMessageVisibility(props.proposal.flagged));
           :proposal="proposal"
           :strategies="strategies"
         />
-        <BaseBlock :loading="bribesLoading" title="Incentives">
+        <BaseBlock :loading="incentivesLoading" title="Incentives">
           <p class="mb-4">
             You can add a reward for voters that choose the desired option
           </p>
-          <div v-if="currentBribes.length > 0" class="mb-4">
+          <div v-if="currentIncentives.length > 0" class="mb-4">
             <h6>Current Incentives</h6>
-            <div v-for="bribe in currentBribes" :key="bribe">
-              <b>{{ bribe.option }}</b>
+            <div v-for="incentive in currentIncentives" :key="incentive">
+              <b>{{ incentive.option }}</b>
               <span class="float-right"
-                >{{ commify(bribe.amount) }} {{ bribe.symbol }}</span
+                >{{ commify(incentive.amount) }} {{ incentive.symbol }}</span
               >
             </div>
           </div>
@@ -242,7 +242,7 @@ onMounted(() => setMessageVisibility(props.proposal.flagged));
             :disabled="
               proposal.state != 'active' && environment === 'production'
             "
-            @click="openBribeModal()"
+            @click="openIncentiveModal()"
             >Add Incentive
           </BaseButton>
           <br />
@@ -269,10 +269,10 @@ onMounted(() => setMessageVisibility(props.proposal.flagged));
           :strategies="strategies"
         />
       </div>
-      <ModalSnapshotBribe
+      <ModalSnapshotIncentive
         :proposal="proposal"
-        :open="modalBribeOpen"
-        @close="modalBribeOpen = false"
+        :open="modalIncentiveOpen"
+        @close="modalIncentiveOpen = false"
       />
     </template>
   </TheLayout>

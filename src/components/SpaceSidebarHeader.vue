@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Space, ExtendedSpace } from '@/helpers/interfaces';
+
 const props = defineProps<{
   space: Space | ExtendedSpace;
 }>();
@@ -63,23 +64,23 @@ watchEffect(() => {
       </div>
     </div>
 
-    <div
-      class="flex flex-grow items-start justify-end gap-x-2 lg:mb-4 lg:justify-center"
-    >
-      <ButtonFollow :space="space" :primary="!isFollowing" />
-      <BaseButton
-        v-if="isFollowing"
-        class="inline"
-        @click="toggleSubscription()"
-      >
-        <LoadingSpinner v-if="loading" />
-        <BaseIcon
-          v-else
-          size="20"
-          class="text-skin-link"
-          :name="notificationIcon"
-        />
-      </BaseButton>
-    </div>
+    <!--    <div-->
+    <!--      class="flex flex-grow items-start justify-end gap-x-2 lg:mb-4 lg:justify-center"-->
+    <!--    >-->
+    <!--      <ButtonFollow :space="space" :primary="!isFollowing" />-->
+    <!--      <BaseButton-->
+    <!--        v-if="isFollowing"-->
+    <!--        class="inline"-->
+    <!--        @click="toggleSubscription()"-->
+    <!--      >-->
+    <!--        <LoadingSpinner v-if="loading" />-->
+    <!--        <BaseIcon-->
+    <!--          v-else-->
+    <!--          size="20"-->
+    <!--          class="text-skin-link"-->
+    <!--          :name="notificationIcon"-->
+    <!--        />-->
+    <!--      </BaseButton>-->
+    <!--    </div>-->
   </div>
 </template>

@@ -6,7 +6,7 @@ import {
   approveToken,
   getAllowance,
   tokenPriceLogo
-} from '@/helpers/bribeContracts';
+} from '@/helpers/quicksnapContracts';
 import { Proposal } from '@/helpers/interfaces';
 import { shorten } from '@/helpers/utils';
 import { isAddress } from '@ethersproject/address';
@@ -25,16 +25,16 @@ const DEFAULT_TOKEN = {
 };
 
 const isTokenLoading = ref(false);
-let bribeToken = ref('');
-let bribeAmount = ref(0);
-let bribeOption = ref(1);
+let rewardToken = ref('');
+let rewardAmount = ref(0);
+let rewardOption = ref(1);
 let tokenError = ref({ message: '', push: false });
 let amountError = ref({ message: '', push: false });
-let showBribeAddedMessage = ref(false);
-let showBribeErrorMessage = ref(false);
+let showRewardAddedMessage = ref(false);
+let showRewardErrorMessage = ref(false);
 let isApproved = ref(false);
 let isApproveLoading = ref(false);
-let isBribeLoading = ref(false);
+let isRewardLoading = ref(false);
 const token = ref(clone(DEFAULT_TOKEN));
 
 const props = defineProps<{
@@ -50,12 +50,12 @@ const emit = defineEmits(['close', 'confirm']);
 const { open, proposal } = toRefs(props);
 console.log(proposal);
 
-async function addBribe() {
-  console.log(bribeToken.value, bribeAmount.value, bribeOption.value);
+async function addReward() {
+  console.log(rewardToken.value, rewardAmount.value, rewardOption.value);
   tokenError.value.message = '';
   amountError.value.message = '';
 
-  if (!ethers.utils.isAddress(bribeToken.value)) {
+  if (!ethers.utils.isAddress(rewardToken.value)) {
     tokenError.value.message = 'Please enter a valid token address';
     return;
   }
@@ -65,33 +65,33 @@ async function addBribe() {
     return;
   }
 
-  if (bribeAmount.value < 0 || !bribeAmount.value) {
+  if (rewardAmount.value < 0 || !rewardAmount.value) {
     amountError.value.message = 'Please enter a valid token amount';
     return;
   }
 
-  isBribeLoading.value = true;
+  isRewardLoading.value = true;
   try {
     await addSnapshotRewardAmount(
       props.proposal.id,
-      bribeOption.value,
-      bribeAmount.value,
-      bribeToken.value,
+      rewardOption.value,
+      rewardAmount.value,
+      rewardToken.value,
       props.proposal.start,
       props.proposal.end
     );
 
-    showBribeAddedMessage.value = true;
-    bribeAmount.value = 0;
-    bribeToken.value = '';
-    bribeOption.value = 1;
-    isBribeLoading.value = false;
+    showRewardAddedMessage.value = true;
+    rewardAmount.value = 0;
+    rewardToken.value = '';
+    rewardOption.value = 1;
+    isRewardLoading.value = false;
     emit('close');
   } catch (e) {
     emit('close');
-    showBribeErrorMessage.value = true;
+    showRewardErrorMessage.value = true;
     console.log(e);
-    isBribeLoading.value = false;
+    isRewardLoading.value = false;
   }
 }
 
@@ -99,7 +99,7 @@ async function checkAllowance() {
   tokenError.value.message = '';
   amountError.value.message = '';
   try {
-    if (!ethers.utils.isAddress(bribeToken.value)) {
+    if (!ethers.utils.isAddress(rewardToken.value)) {
       tokenError.value.message = 'Please enter a valid token address';
       isApproved.value = false;
       return;
@@ -113,8 +113,8 @@ async function checkAllowance() {
 
     const allowance = parseFloat(
       await getAllowance(
-        bribeToken.value,
-        import.meta.env.VITE_BRIBE_SNAPSHOT_ADDRESS
+        rewardToken.value,
+        import.meta.env.VITE_QUICKSNAP_ADDRESS
       )
     );
 
@@ -130,15 +130,15 @@ async function checkAllowance() {
 }
 
 async function approve() {
-  if (!ethers.utils.isAddress(bribeToken.value)) {
+  if (!ethers.utils.isAddress(rewardToken.value)) {
     tokenError.value.message = 'Please enter a valid token address';
     return;
   }
   isApproveLoading.value = true;
   try {
     isApproved.value = await approveToken(
-      bribeToken.value,
-      import.meta.env.VITE_BRIBE_SNAPSHOT_ADDRESS
+      rewardToken.value,
+      import.meta.env.VITE_QUICKSNAP_ADDRESS
     );
     isApproveLoading.value = false;
   } catch (e) {
@@ -150,7 +150,7 @@ async function approve() {
 async function getTokenInfo() {
   tokenError.value.message = '';
 
-  if (!bribeToken.value || !isAddress(bribeToken.value)) {
+  if (!rewardToken.value || !isAddress(rewardToken.value)) {
     tokenError.value.message = 'invalid address';
     token.value = clone(DEFAULT_TOKEN);
     return;
@@ -158,11 +158,11 @@ async function getTokenInfo() {
 
   isTokenLoading.value = true;
 
-  const { data } = await getTokenPrices(bribeToken.value, '1');
+  const { data } = await getTokenPrices(rewardToken.value, '1');
   // console.log("price data from api call....")
   // console.log(data);
   // get the reward token price
-  const { price } = await tokenPriceLogo(bribeToken.value);
+  const { price } = await tokenPriceLogo(rewardToken.value);
   token.value.price = price;
 
   if (data?.[0]?.contract_name) {
@@ -175,9 +175,9 @@ async function getTokenInfo() {
     try {
       const provider = new JsonRpcProvider(import.meta.env.VITE_WEB3_ENDPOINT);
       const tokenInfo = await Promise.all([
-        call(provider, ERC20ABI, [bribeToken.value, 'name', []]),
-        call(provider, ERC20ABI, [bribeToken.value, 'symbol', []]),
-        call(provider, ERC20ABI, [bribeToken.value, 'decimals', []])
+        call(provider, ERC20ABI, [rewardToken.value, 'name', []]),
+        call(provider, ERC20ABI, [rewardToken.value, 'symbol', []]),
+        call(provider, ERC20ABI, [rewardToken.value, 'decimals', []])
       ]);
       token.value.name = tokenInfo[0];
       token.value.symbol = tokenInfo[1];
@@ -194,10 +194,10 @@ async function getTokenInfo() {
 function checkMinimumAmount() {
   console.log('get token price....');
   console.log(token.value.price);
-  const bribeDollarAmount = token.value.price * bribeAmount.value;
+  const rewardDollarAmount = token.value.price * rewardAmount.value;
 
-  if (bribeDollarAmount < 1000) {
-    amountError.value.message = `Bribes must be at least $1000 in value, now it is $${bribeDollarAmount}`;
+  if (rewardDollarAmount < 1000) {
+    amountError.value.message = `Incentives must be at least $1000 in value, now it is $${rewardDollarAmount}`;
     return;
   } else {
     amountError.value.message = '';
@@ -206,7 +206,7 @@ function checkMinimumAmount() {
 }
 
 watch(
-  [bribeToken],
+  [rewardToken],
   async () => {
     console.log('see when this get triggered...');
     await getTokenInfo();
@@ -216,7 +216,7 @@ watch(
 );
 
 watch(
-  [bribeAmount],
+  [rewardAmount],
   async () => {
     checkMinimumAmount();
   },
@@ -230,19 +230,19 @@ watch(
       <h4>Add incentive for {{ shorten(proposal.title, 20) }}</h4>
       <BaseContainer class="p-6">
         <InputString
-          v-model="bribeToken"
+          v-model="rewardToken"
           class="mb-2"
           :definition="{ title: 'token address' }"
           :error="tokenError"
         />
         <inputNumber
-          v-model="bribeAmount"
+          v-model="rewardAmount"
           class="mb-2"
           :definition="{ title: 'incentive amount' }"
           :error="amountError"
         />
         <ChoicesListbox
-          v-model="bribeOption"
+          v-model="rewardOption"
           :items="proposal.choices"
           label="preferred option"
         />
@@ -252,7 +252,7 @@ watch(
               <AvatarToken
                 v-if="token.logo"
                 :src="token.logo"
-                :address="bribeToken"
+                :address="rewardToken"
                 class="mr-1"
                 size="30"
               />
@@ -266,7 +266,7 @@ watch(
             <div class="flex items-center">
               <BaseLink
                 class="text-skin-text hover:text-skin-link"
-                :link="`https://etherscan.io/token/${bribeToken}`"
+                :link="`https://etherscan.io/token/${rewardToken}`"
               >
                 {{ $t('setup.strategy.tokenVoting.seeOnEtherscan') }}
               </BaseLink>
@@ -290,18 +290,18 @@ watch(
             tokenError.message !== '' ||
             amountError.message !== ''
           "
-          :loading="isBribeLoading"
+          :loading="isRewardLoading"
           class="primary ml-4 mt-4"
-          @click="addBribe()"
+          @click="addReward()"
           >Add Incentive
         </BaseButton>
       </BaseContainer>
     </template>
   </BaseModal>
   <ModalNotice
-    :open="showBribeAddedMessage"
+    :open="showRewardAddedMessage"
     title="Done!"
-    @close="showBribeAddedMessage = false"
+    @close="showRewardAddedMessage = false"
   >
     <p>
       Your incentive will be added in a few minutes when confirmed by the
@@ -309,9 +309,9 @@ watch(
     </p>
   </ModalNotice>
   <ModalNotice
-    :open="showBribeErrorMessage"
+    :open="showRewardErrorMessage"
     title="Error"
-    @close="showBribeErrorMessage = false"
+    @close="showRewardErrorMessage = false"
   >
     <p>
       Something has gone wrong, please check your inputs and try again later.

@@ -176,6 +176,15 @@ watch(spaceProposals, () => {
       <div
         class="mb-4 flex flex-col justify-between gap-x-3 gap-y-[10px] px-[20px] sm:flex-row md:px-0"
       >
+        <!--        <SpaceProposalsSearch />-->
+        <!--        <BaseLink-->
+        <!--          :link="{ name: 'spaceCreate' }"-->
+        <!--          data-testid="create-proposal-button"-->
+        <!--        >-->
+        <!--          <BaseButton :primary="isFollowing" class="w-full sm:w-auto">-->
+        <!--            New proposal-->
+        <!--          </BaseButton>-->
+        <!--        </BaseLink>-->
         <!-- <SpaceProposalsSearch /> -->
         <div class="flex">
           <BaseButton
@@ -218,14 +227,14 @@ watch(spaceProposals, () => {
             >Closed</BaseButton
           >
         </div>
-        <BaseLink
-          :link="{ name: 'spaceCreate' }"
-          data-testid="create-proposal-button"
-        >
-          <BaseButton :primary="isFollowing" class="w-full sm:w-auto">
-            New proposal
-          </BaseButton>
-        </BaseLink>
+        <!--        <BaseLink-->
+        <!--          :link="{ name: 'spaceCreate' }"-->
+        <!--          data-testid="create-proposal-button"-->
+        <!--        >-->
+        <!--          <BaseButton :primary="isFollowing" class="w-full sm:w-auto">-->
+        <!--            New proposal-->
+        <!--          </BaseButton>-->
+        <!--        </BaseLink>-->
       </div>
 
       <LoadingRow v-if="loading" block />

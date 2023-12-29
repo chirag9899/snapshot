@@ -3,7 +3,7 @@ import { BigNumber } from '@ethersproject/bignumber';
 import { ethers } from 'ethers';
 import gql from 'graphql-tag';
 import { ApolloClient, InMemoryCache } from '@apollo/client/core';
-import { tokenPriceLogo } from '@/helpers/bribeContracts';
+import { tokenPriceLogo } from '@/helpers/quicksnapContracts';
 import merkle from '@/abi/merkle.json';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -26,7 +26,7 @@ export async function getRewards() {
       });
 
       const claimsQuery = gql`
-        query BribeRewards($account: String!) {
+        query rewarderewards($account: String!) {
           claims(account: $account) {
             token
             index
