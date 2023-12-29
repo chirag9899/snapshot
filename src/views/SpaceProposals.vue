@@ -8,6 +8,11 @@ const props = defineProps<{
   space: ExtendedSpace;
 }>();
 
+const showAllProposals = ref(true);
+const showActiveProposals = ref(false);
+const showClosedProposals = ref(false);
+const defaultState = ref('all');
+
 useMeta({
   title: {
     key: 'metaInfo.space.proposals.title',
@@ -59,7 +64,7 @@ const spaceProposals = computed(() => {
   );
 });
 
-const stateFilter = computed(() => route.query.state || 'all');
+const stateFilter = computed(() => route.query.state || defaultState.value);
 const titleSearch = computed(() => route.query.q || '');
 const showOnlyCore = computed(() => (route.query.onlyCore as string) || '0');
 const showFlagged = computed(() => (route.query.showFlagged as string) || '0');
@@ -172,6 +177,56 @@ watch(spaceProposals, () => {
         class="mb-4 flex flex-col justify-between gap-x-3 gap-y-[10px] px-[20px] sm:flex-row md:px-0"
       >
         <!--        <SpaceProposalsSearch />-->
+        <!--        <BaseLink-->
+        <!--          :link="{ name: 'spaceCreate' }"-->
+        <!--          data-testid="create-proposal-button"-->
+        <!--        >-->
+        <!--          <BaseButton :primary="isFollowing" class="w-full sm:w-auto">-->
+        <!--            New proposal-->
+        <!--          </BaseButton>-->
+        <!--        </BaseLink>-->
+        <!-- <SpaceProposalsSearch /> -->
+        <div class="flex">
+          <BaseButton
+            :primary="showAllProposals"
+            class="mr-2"
+            @click="
+              () => {
+                showAllProposals = true;
+                showActiveProposals = false;
+                showClosedProposals = false;
+                defaultState = 'all';
+              }
+            "
+            >All</BaseButton
+          >
+          <BaseButton
+            :primary="showActiveProposals"
+            class="mr-2"
+            @click="
+              () => {
+                showAllProposals = false;
+                showActiveProposals = true;
+                showClosedProposals = false;
+                defaultState = 'active';
+              }
+            "
+            >Active</BaseButton
+          >
+          <BaseButton
+            :primary="showClosedProposals"
+            class="mr-2"
+            @click="
+              () => {
+                showAllProposals = false;
+                showActiveProposals = false;
+                showClosedProposals = true;
+                defaultState = 'closed';
+              }
+            "
+            >Closed</BaseButton
+          >
+        </div>
         <!--        <BaseLink-->
         <!--          :link="{ name: 'spaceCreate' }"-->
         <!--          data-testid="create-proposal-button"-->

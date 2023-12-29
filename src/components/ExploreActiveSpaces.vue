@@ -3,12 +3,6 @@ import { shorten } from '@/helpers/utils';
 import { useInfiniteScroll, watchDebounced } from '@vueuse/core';
 import type { Header } from 'vue3-easy-data-table';
 
-const headers: Header[] = [
-  { text: 'USER', value: 'name', sortable: true },
-  { text: 'MEMBERS', value: 'followersCount', sortable: true },
-  { text: 'VOTES', value: 'votesCount', sortable: true }
-];
-
 const route = useRoute();
 const { validEnsTlds } = useEns();
 const { formatCompactNumber } = useIntl();
@@ -23,6 +17,12 @@ const {
   spacesHomeMetrics
 } = useSpaces();
 
+const headers: Header[] = [
+  { text: 'USER', value: 'name', sortable: true },
+  { text: 'MEMBERS', value: 'followersCount', sortable: true },
+  { text: 'VOTES', value: 'votesCount', sortable: true }
+];
+
 const queryInput = ref({
   search: (route.query.q as string) || '',
   category: route.query.category || undefined
@@ -33,6 +33,10 @@ const isSearchInputTld = computed(() => {
   return validEnsTlds.includes(queryInput.value.search.split('.').pop() ?? '');
 });
 
+const totalSpaces = computed(() => {
+  return spacesHomeMetrics.value.total;
+});
+
 const spaces = computed(() => {
   if (isSearchInputTld.value) {
     const space = extendedSpaces.value.find(
@@ -40,11 +44,11 @@ const spaces = computed(() => {
     );
     return space ? [space] : [];
   }
-  return spacesHome.value;
-});
+  const result = spacesHome.value;
 
-const totalSpaces = computed(() => {
-  return spacesHomeMetrics.value.total;
+  const filteredSpaces = result.filter(space => space.activeProposals > 0);
+
+  return filteredSpaces;
 });
 
 function handleClickMore() {
@@ -101,6 +105,7 @@ onMounted(() => {
         {{ $tc('spaceCount', [formatCompactNumber(spacesHomeMetrics.total)]) }}
       </div>
     </BaseContainer>
+
     <BaseContainer slim>
       <DataTableSkeltonLoading
         v-if="loadingSpacesHome || spaceLoading"
@@ -163,7 +168,7 @@ onMounted(() => {
         v-if="
           !enableSpaceHomeScroll &&
           spacesHomeMetrics.total > spacesHome.length &&
-          spaces.length >= 12
+          spaces.length > 0
         "
         class="px-3 text-center md:px-0"
       >

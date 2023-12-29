@@ -2,19 +2,19 @@
 const socials = [
   {
     icon: 'gitbook',
-    link: 'https://quicksnap.gitbook.io'
+    link: 'https://quicksnap.gitbook.io/'
   },
   {
     icon: 'twitter',
-    link: 'https://twitter.com/QuicksnapFi'
+    link: 'https://twitter.com/QuickSnap_Lab'
   },
   {
-    icon: 'telegram',
-    link: 'https://t.me/+6Q42CsOZFn5hNzBh'
+    icon: 'discord',
+    link: 'https://discord.gg/zEnKNzBD3W'
   },
   {
     icon: 'github',
-    link: `https://github.com/quicksnap-io`
+    link: `https://github.com/quicksnap-io/`
   }
 ];
 </script>
@@ -34,8 +34,8 @@ const socials = [
         <FooterSocialsItem v-else-if="social.icon === 'gitbook'">
           <i-s-gitbook class="text-[24px]" />
         </FooterSocialsItem>
-        <FooterSocialsItem v-else-if="social.icon === 'telegram'">
-          <i-s-telegram class="text-[24px]" />
+        <FooterSocialsItem v-else-if="social.icon === 'discord'">
+          <i-s-discord class="text-[24px]" />
         </FooterSocialsItem>
       </BaseLink>
     </span>

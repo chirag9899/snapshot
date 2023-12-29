@@ -74,6 +74,8 @@ const loading = computed(() => {
 const loadBy = 15;
 const limit = ref(loadBy);
 const showActiveIncentives = ref(false);
+const showBrowseProjects = ref(true);
+const showActiveSpaces = ref(false);
 
 useInfiniteScroll(
   document,
@@ -86,23 +88,50 @@ useInfiniteScroll(
 
 <template>
   <div v-if="isSpaces">
-    <BaseContainer class="mb-4 xs:flex-row md:flex-nowrap">
+    <BaseContainer class="base_container mb-4 xs:flex-row md:flex-nowrap">
       <BaseButton
-        :primary="!showActiveIncentives"
-        @click="() => (showActiveIncentives = false)"
+        :primary="showBrowseProjects"
+        @click="
+          () => {
+            showBrowseProjects = true;
+            showActiveIncentives = false;
+            showActiveSpaces = false;
+          }
+        "
         >Browse projects
+      </BaseButton>
+
+      <BaseButton
+        :primary="showActiveSpaces"
+        @click="
+          () => {
+            showBrowseProjects = false;
+            showActiveIncentives = false;
+            showActiveSpaces = true;
+          }
+        "
+        >Active Proposals
       </BaseButton>
       <BaseButton
         :primary="showActiveIncentives"
-        @click="() => (showActiveIncentives = true)"
+        @click="
+          () => {
+            showBrowseProjects = false;
+            showActiveIncentives = true;
+            showActiveSpaces = false;
+          }
+        "
         >Active Incentives
       </BaseButton>
     </BaseContainer>
+    <div v-if="showBrowseProjects">
+      <ExploreSpaces />
+    </div>
     <div v-if="showActiveIncentives">
       <ExploreActiveIncentives />
     </div>
-    <div v-if="!showActiveIncentives">
-      <ExploreSpaces />
+    <div v-if="showActiveSpaces">
+      <ExploreActiveSpaces />
     </div>
   </div>
   <div v-else>
@@ -168,3 +197,9 @@ useInfiniteScroll(
     </BaseContainer>
   </div>
 </template>
+
+<style scoped>
+.base_container {
+  display: flex;
+}
+</style>

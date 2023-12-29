@@ -244,7 +244,7 @@ watch(
         <ChoicesListbox
           v-model="rewardOption"
           :items="proposal.choices"
-          label="reward option"
+          label="preferred option"
         />
         <BaseBlock v-if="token.name" class="!mt-3 space-x-1 text-left text-sm">
           <div class="flex justify-between">

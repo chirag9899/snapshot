@@ -114,6 +114,10 @@
     "watchTxStatus": true,
     "toValue": true,
     "useResolveName": true,
-    "useFlaggedMessageStatus": true
+    "useFlaggedMessageStatus": true,
+    "ExtractDefaultPropTypes": true,
+    "ExtractPropTypes": true,
+    "ExtractPublicPropTypes": true,
+    "WritableComputedRef": true
   }
 }

@@ -43,6 +43,7 @@ watch(
             class="menuItem -ml-3 hidden items-center sm:block"
             style="font-size: 28px"
           >
+            <i-s-logo class="text-[24px]" />
             quicksnap
           </router-link>
           <!--          <router-link-->
@@ -88,5 +89,11 @@ watch(
 <style scoped lang="scss">
 .menuItem {
   margin-right: 50px;
+  display: flex;
+  align-items: center;
+}
+
+.menuItem svg g path {
+  fill: #ffbd00 !important;
 }
 </style>
