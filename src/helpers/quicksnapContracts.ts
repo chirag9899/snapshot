@@ -228,6 +228,7 @@ export async function addSnapshotRewardAmount(
     start,
     end
   );
+  await tx.wait();
   console.log(tx);
 }
 
@@ -273,6 +274,7 @@ export async function approveToken(tokenAddress, quicksnapAddress) {
       quicksnapAddress,
       ethers.constants.MaxInt256
     );
+    await approveTx.wait();
     console.log(approveTx);
     return true;
   } catch (e) {
