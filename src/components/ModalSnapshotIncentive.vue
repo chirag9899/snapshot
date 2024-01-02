@@ -196,8 +196,8 @@ function checkMinimumAmount() {
   console.log(token.value.price);
   const rewardDollarAmount = token.value.price * rewardAmount.value;
 
-  if (rewardDollarAmount < 100) {
-    amountError.value.message = `Incentives must be at least $100 in value, now it is $${rewardDollarAmount}`;
+  if (rewardDollarAmount < 1) {
+    amountError.value.message = `Incentives must be at least $1 in value, now it is $${rewardDollarAmount}`;
     return;
   } else {
     amountError.value.message = '';
