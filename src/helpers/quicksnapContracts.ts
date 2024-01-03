@@ -228,6 +228,7 @@ export async function addSnapshotRewardAmount(
     start,
     end
   );
+  await tx.wait(1);
   console.log(tx);
 }
 
@@ -241,7 +242,19 @@ export async function getAllowance(tokenAddress, quicksnapAddress) {
     await signer.getAddress(),
     quicksnapAddress.toString()
   );
-  return ethers.utils.formatEther(allowance);
+  const decimals = await token.decimals();
+  return ethers.utils.formatUnits(allowance, decimals);
+}
+
+export async function getTokenBalance(tokenAddress) {
+  const provider = await getProvider();
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  const signer = provider.getSigner();
+  const token = new ethers.Contract(tokenAddress, erc20.abi, signer);
+  const allowance = await token.balanceOf(await signer.getAddress());
+  const decimals = await token.decimals();
+  return ethers.utils.formatUnits(allowance, decimals);
 }
 
 export async function isERC20(tokenAddress) {
@@ -273,6 +286,7 @@ export async function approveToken(tokenAddress, quicksnapAddress) {
       quicksnapAddress,
       ethers.constants.MaxInt256
     );
+    await approveTx.wait(1);
     console.log(approveTx);
     return true;
   } catch (e) {
