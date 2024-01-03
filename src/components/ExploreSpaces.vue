@@ -4,7 +4,7 @@ import { useInfiniteScroll, watchDebounced } from '@vueuse/core';
 import type { Header } from 'vue3-easy-data-table';
 
 const headers: Header[] = [
-  { text: 'USER', value: 'name', sortable: true },
+  { text: 'SPACES', value: 'name', sortable: true },
   { text: 'MEMBERS', value: 'followersCount', sortable: true },
   { text: 'VOTES', value: 'votesCount', sortable: true }
 ];

@@ -38,6 +38,8 @@ let isApproveLoading = ref(false);
 let isRewardLoading = ref(false);
 const token = ref(clone(DEFAULT_TOKEN));
 
+let availableAmount = token.value.price * rewardAmount.value;
+
 const props = defineProps<{
   open: boolean;
   title?: string;
@@ -254,7 +256,11 @@ watch(
           :error="tokenError"
         />
 
-        <div class="shadow-sm mt-2 flex rounded-md">
+        <div class="shadow-sm relative mt-2 flex rounded-md">
+          <div class="available_amount">
+            <span>available :</span>
+            <span>{{ availableAmount }}</span>
+          </div>
           <div class="relative flex flex-grow items-stretch focus-within:z-10">
             <inputNumber
               v-model="rewardAmount"
@@ -347,3 +353,13 @@ watch(
     </p>
   </ModalNotice>
 </template>
+<style scoped>
+.available_amount {
+  position: absolute;
+  right: 5px;
+  top: 0px;
+  min-width: 150px;
+  display: flex;
+  gap: 3px;
+}
+</style>
