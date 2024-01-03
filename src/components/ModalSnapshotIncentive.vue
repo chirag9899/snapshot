@@ -9,7 +9,7 @@ import {
   getTokenBalance
 } from '@/helpers/quicksnapContracts';
 import { Proposal } from '@/helpers/interfaces';
-import { shorten } from '@/helpers/utils';
+import { commify, shorten } from '@/helpers/utils';
 import { isAddress } from '@ethersproject/address';
 import { call, clone } from '@snapshot-labs/snapshot.js/src/utils';
 import { getTokenPrices } from '@/helpers/covalent';
@@ -37,8 +37,7 @@ let isApproved = ref(false);
 let isApproveLoading = ref(false);
 let isRewardLoading = ref(false);
 const token = ref(clone(DEFAULT_TOKEN));
-
-let availableAmount = token.value.price * rewardAmount.value;
+let availableAmount = ref(0);
 
 const props = defineProps<{
   open: boolean;
@@ -215,6 +214,7 @@ function checkMinimumAmount() {
   console.log('get token price....');
   console.log(token.value.price);
   const rewardDollarAmount = token.value.price * rewardAmount.value;
+  availableAmount.value = rewardDollarAmount;
 
   if (rewardDollarAmount < 1) {
     amountError.value.message = `Incentives must be at least $1 in value, now it is $${rewardDollarAmount}`;
@@ -259,7 +259,7 @@ watch(
         <div class="shadow-sm relative mt-2 flex rounded-md">
           <div class="available_amount">
             <span>available :</span>
-            <span>{{ availableAmount }}</span>
+            <span>$ {{ commify(availableAmount, 3) }}</span>
           </div>
           <div class="relative flex flex-grow items-stretch focus-within:z-10">
             <inputNumber
