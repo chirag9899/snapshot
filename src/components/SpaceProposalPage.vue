@@ -242,7 +242,8 @@ onMounted(() => setMessageVisibility(props.proposal.flagged));
                 ></span
               >
               <span class="total_rewards flex justify-between"
-                ><b>Total Rewards </b> <b>${{ commify(0, 3) }}</b></span
+                ><b>Total Rewards </b>
+                <b>${{ commify(incentive.dollarAmount, 3) }}</b></span
               >
             </div>
           </div>
@@ -323,13 +324,16 @@ onMounted(() => setMessageVisibility(props.proposal.flagged));
   border-top: 0.3px solid #8b949e4f;
   padding: 10px 0px 5px 0px;
 }
+
 .total_incentive b:first-child {
   color: #fff;
 }
+
 .total_rewards {
   border-bottom: 0.3px solid #8b949e4f;
   padding: 5px 0px 10px 0px;
 }
+
 .total_rewards b:first-child {
   color: #fff;
 }

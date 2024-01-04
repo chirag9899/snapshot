@@ -79,7 +79,8 @@ async function getActiveIncentives() {
               name: 'spaceProposal',
               params: { id: item.proposal, key: item.space.id }
             }"
-            ><div class="flex items-center">
+          >
+            <div class="flex items-center">
               <AvatarSpace
                 :space="item.space"
                 symbol-index="space"
@@ -126,7 +127,7 @@ async function getActiveIncentives() {
             }"
           >
             <div class="total_rewards w-[100px] items-center text-skin-text">
-              ${{ commify(0, 3) }}
+              ${{ commify(item.formattedAmount * item.price, 3) }}
             </div>
           </router-link>
         </template>

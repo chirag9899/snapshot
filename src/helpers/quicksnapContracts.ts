@@ -353,6 +353,8 @@ export async function getIncentivesForProposal(proposal, choices) {
 
     for (let i = 0; i < rewards.length; i++) {
       const { amount, option, reward_token: token } = rewards[i];
+      const { price } = await tokenPriceLogo(token);
+
       const tokenContract = new ethers.Contract(token, erc20.abi, provider);
       const [decimals, symbol] = await Promise.all([
         tokenContract.decimals(),
@@ -364,6 +366,7 @@ export async function getIncentivesForProposal(proposal, choices) {
       incentivizedChoices.push({
         // include fee in amount
         amount: (formattedAmount / 95) * 100,
+        dollarAmount: (formattedAmount / 95) * 100 * price,
         symbol,
         option: choices[parseInt(option) - 1]
       });
