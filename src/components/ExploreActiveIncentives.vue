@@ -16,10 +16,14 @@ const headers: Header[] = [
     sortable: true
   },
   {
-    text: 'TOTAL REWARDS',
+    text: 'TOKEN',
     value: 'formattedAmount',
-    sortable: true,
-    width: 100
+    sortable: true
+  },
+  {
+    text: 'TOTAL REWARDS',
+    value: 'totalReward',
+    sortable: true
   },
   { text: 'VOTE', value: 'option', sortable: true }
 ];
@@ -108,8 +112,21 @@ async function getActiveIncentives() {
               params: { id: item.proposal, key: item.space.id }
             }"
           >
-            <div class="rewards w-[220px] items-center text-skin-text">
+            <div class="rewards w-[70px] items-center text-skin-text">
               {{ commify(item.formattedAmount) }} {{ item.symbol }}
+            </div>
+          </router-link>
+        </template>
+
+        <template #item-totalReward="item">
+          <router-link
+            :to="{
+              name: 'spaceProposal',
+              params: { id: item.proposal, key: item.space.id }
+            }"
+          >
+            <div class="total_rewards w-[100px] items-center text-skin-text">
+              ${{ commify(0, 3) }}
             </div>
           </router-link>
         </template>
@@ -133,3 +150,9 @@ async function getActiveIncentives() {
     </div>
   </div>
 </template>
+
+<style scoped lang="scss">
+.total_rewards {
+  padding-left: 15px;
+}
+</style>

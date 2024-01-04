@@ -235,11 +235,14 @@ onMounted(() => setMessageVisibility(props.proposal.flagged));
               class="my-3"
             >
               <b>{{ incentive?.option }}</b>
-              <span class="total_rewards mt-4 flex justify-between"
-                ><b>Total Rewards </b>
+              <span class="total_incentive mt-4 flex justify-between"
+                ><b>Token </b>
                 <b
                   >{{ commify(incentive.amount) }} {{ incentive.symbol }}</b
                 ></span
+              >
+              <span class="total_rewards flex justify-between"
+                ><b>Total Rewards </b> <b>${{ commify(0, 3) }}</b></span
               >
             </div>
           </div>
@@ -315,10 +318,17 @@ onMounted(() => setMessageVisibility(props.proposal.flagged));
 .important-notice {
   border-color: #ffbd00;
 }
-.total_rewards {
+
+.total_incentive {
   border-top: 0.3px solid #8b949e4f;
+  padding: 10px 0px 5px 0px;
+}
+.total_incentive b:first-child {
+  color: #fff;
+}
+.total_rewards {
   border-bottom: 0.3px solid #8b949e4f;
-  padding: 10px 0px;
+  padding: 5px 0px 10px 0px;
 }
 .total_rewards b:first-child {
   color: #fff;
