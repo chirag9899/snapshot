@@ -77,7 +77,12 @@ onUnmounted(() => {
         >
           <div class="text-left">
             <p>Total unclaimed rewards</p>
-            <p>$ {{ commify(state.claimData.totalBalance, 2) }}</p>
+            <p>
+              $
+              {{
+                commify(state.totalRewards - state.claimData.totalClaimed, 2)
+              }}
+            </p>
           </div>
           <div class="text-left">
             <p>Total claimed rewards</p>
