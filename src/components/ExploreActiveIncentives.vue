@@ -25,7 +25,8 @@ const headers: Header[] = [
     value: 'totalReward',
     sortable: true
   },
-  { text: 'VOTE', value: 'option', sortable: true }
+  { text: 'VOTE', value: 'option', sortable: true },
+  { text: 'End Date', value: 'endTime', sortable: true }
 ];
 
 const limit = ref(12);
@@ -113,7 +114,7 @@ async function getActiveIncentives() {
               params: { id: item.proposal, key: item.space.id }
             }"
           >
-            <div class="rewards w-[70px] items-center text-skin-text">
+            <div class="rewards items-center text-skin-text">
               {{ commify(item.formattedAmount) }} {{ item.symbol }}
             </div>
           </router-link>
@@ -126,7 +127,7 @@ async function getActiveIncentives() {
               params: { id: item.proposal, key: item.space.id }
             }"
           >
-            <div class="total_rewards w-[100px] items-center text-skin-text">
+            <div class="items-center text-skin-text">
               ${{ commify(item.formattedAmount * item.price, 3) }}
             </div>
           </router-link>
@@ -144,16 +145,22 @@ async function getActiveIncentives() {
             </div>
           </router-link>
         </template>
+        <template #item-endTime="item">
+          <router-link
+            :to="{
+              name: 'spaceProposal',
+              params: { id: item.proposal, key: item.space.id }
+            }"
+          >
+            <div class="w-[150px] items-center text-skin-text">
+              {{ $d(item.endTime * 1e3, 'short', 'en-US') }}
+            </div>
+          </router-link>
+        </template>
       </EasyDataTable>
     </BaseContainer>
     <div class="relative">
-      <div ref="endElement" class="absolute h-[10px] w-[10px]" />
+      <div ref="endElement" class="absolute h-[10px]" />
     </div>
   </div>
 </template>
-
-<style scoped lang="scss">
-.total_rewards {
-  padding-left: 15px;
-}
-</style>
