@@ -37,7 +37,7 @@ let isApproved = ref(false);
 let isApproveLoading = ref(false);
 let isRewardLoading = ref(false);
 const token = ref(clone(DEFAULT_TOKEN));
-let availableAmount = ref(token.value.price * rewardAmount.value);
+let availableAmount = ref(0);
 
 const props = defineProps<{
   open: boolean;
@@ -176,6 +176,9 @@ async function getTokenInfo() {
   }
 
   isTokenLoading.value = true;
+
+  const balance = parseFloat(await getTokenBalance(rewardToken.value));
+  availableAmount.value = balance;
 
   const { data } = await getTokenPrices(rewardToken.value, '1');
   // console.log("price data from api call....")
