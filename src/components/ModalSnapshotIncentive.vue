@@ -37,7 +37,7 @@ let isApproved = ref(false);
 let isApproveLoading = ref(false);
 let isRewardLoading = ref(false);
 const token = ref(clone(DEFAULT_TOKEN));
-let availableAmount = ref(0);
+let availableAmount = ref(token.value.price * rewardAmount.value);
 
 const props = defineProps<{
   open: boolean;
@@ -214,7 +214,6 @@ function checkMinimumAmount() {
   console.log('get token price....');
   console.log(token.value.price);
   const rewardDollarAmount = token.value.price * rewardAmount.value;
-  availableAmount.value = rewardDollarAmount;
 
   if (rewardDollarAmount < 1) {
     amountError.value.message = `Incentives must be at least $1 in value, now it is $${rewardDollarAmount}`;
@@ -245,10 +244,10 @@ watch(
 </script>
 
 <template>
-  <BaseModal :open="open" @close="$emit('close')">
+  <BaseModal :open="open" class="incentive_modal" @close="$emit('close')">
     <template #header>
       <h4>Add incentive for {{ shorten(proposal.title, 20) }}</h4>
-      <BaseContainer class="p-6">
+      <BaseContainer class="base_container p-6">
         <InputString
           v-model="rewardToken"
           class="mb-2"
@@ -256,10 +255,10 @@ watch(
           :error="tokenError"
         />
 
-        <div class="shadow-sm relative mt-2 flex rounded-md">
+        <div class="shadow-sm incentive_amount relative mt-2 flex rounded-md">
           <div class="available_amount">
             <span>available :</span>
-            <span>$ {{ commify(availableAmount, 3) }}</span>
+            <span> {{ availableAmount }}</span>
           </div>
           <div class="relative flex flex-grow items-stretch focus-within:z-10">
             <inputNumber
@@ -361,5 +360,14 @@ watch(
   min-width: 150px;
   display: flex;
   gap: 3px;
+}
+.modal .shell {
+  height: 600px !important;
+}
+.incentive_amount {
+  height: 135px;
+}
+.base_container .w-full {
+  height: 105px;
 }
 </style>

@@ -122,4 +122,7 @@ onBeforeUnmount(() => {
     }
   }
 }
+.incentive_modal .shell {
+  height: 640px;
+}
 </style>

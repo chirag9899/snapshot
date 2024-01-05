@@ -234,7 +234,7 @@ onMounted(() => setMessageVisibility(props.proposal.flagged));
               :key="incentive"
               class="my-3"
             >
-              <b>{{ incentive?.option }}</b>
+              <b>Vote - </b> <b>{{ incentive?.option }}</b>
               <span class="total_incentive mt-4 flex justify-between"
                 ><b>Token </b>
                 <b
