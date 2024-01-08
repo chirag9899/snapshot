@@ -9,7 +9,7 @@ import type { Header } from 'vue3-easy-data-table';
 const { formatCompactNumber } = useIntl();
 
 const headers: Header[] = [
-  { text: 'DAO', value: 'logo', sortable: true },
+  { text: 'SPACES', value: 'logo', sortable: true },
   {
     text: 'INCENTIVES PROPOSALS',
     value: 'title',
@@ -101,7 +101,7 @@ async function getActiveIncentives() {
               params: { id: item.proposal, key: item.space.id }
             }"
           >
-            <div class="items-center text-skin-text">
+            <div class="w-[200px] items-center break-words text-skin-text">
               {{ item.title }}
             </div>
           </router-link>
