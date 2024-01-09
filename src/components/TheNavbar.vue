@@ -69,7 +69,8 @@ watch(
           >
             rewards
           </router-link>
-          <NavbarAccount />
+          <w3m-button balance="hide" />
+          <!--          <NavbarAccount />-->
           <!--          <NavbarNotifications v-if="web3Account && !domain" />-->
 
           <!--          <NavbarExtras />-->

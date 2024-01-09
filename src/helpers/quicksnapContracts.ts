@@ -14,8 +14,9 @@ import {
   CURRENT_SNAPSHOT_INCENTIVES,
   INCENTIVES_BY_PROPOSAL_QUERY
 } from '@/helpers/graphQueries';
+import { addIncentiveFee } from '@/helpers/utils';
 
-const { getProvider } = useWeb3();
+const { getProvider, checkNetwork } = useWeb3();
 
 const client = new ApolloClient({
   uri: `${import.meta.env.VITE_API_ENDPOINT}/graphql`,
@@ -68,7 +69,7 @@ export async function getGaugeInfo(
         decimals
       );
       // include fee in amount
-      const bribeAmount = (parseFloat(rawBribeAmount) / 95) * 100;
+      const bribeAmount = addIncentiveFee(parseFloat(rawBribeAmount));
       console.log(rewards[i], bribeAmount);
       const { price } = await tokenPriceLogo(rewards[i]);
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -162,6 +163,7 @@ export function getActivePeriod() {
 }
 
 export async function tokenPriceLogo(token) {
+  checkNetwork();
   const url = `https://api.coingecko.com/api/v3/coins/ethereum/contract/${token}?x_cg_demo_api_key=${
     import.meta.env.VITE_COINGECKO_API_KEY
   }`;
@@ -206,6 +208,7 @@ export async function addSnapshotRewardAmount(
   start,
   end
 ) {
+  checkNetwork();
   const provider = await getProvider();
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
@@ -228,10 +231,12 @@ export async function addSnapshotRewardAmount(
     start,
     end
   );
+  await tx.wait(1);
   console.log(tx);
 }
 
 export async function getAllowance(tokenAddress, quicksnapAddress) {
+  checkNetwork();
   const provider = await getProvider();
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
@@ -241,10 +246,24 @@ export async function getAllowance(tokenAddress, quicksnapAddress) {
     await signer.getAddress(),
     quicksnapAddress.toString()
   );
-  return ethers.utils.formatEther(allowance);
+  const decimals = await token.decimals();
+  return ethers.utils.formatUnits(allowance, decimals);
+}
+
+export async function getTokenBalance(tokenAddress) {
+  checkNetwork();
+  const provider = await getProvider();
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  const signer = provider.getSigner();
+  const token = new ethers.Contract(tokenAddress, erc20.abi, signer);
+  const allowance = await token.balanceOf(await signer.getAddress());
+  const decimals = await token.decimals();
+  return ethers.utils.formatUnits(allowance, decimals);
 }
 
 export async function isERC20(tokenAddress) {
+  checkNetwork();
   try {
     const provider = await getProvider();
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -262,6 +281,7 @@ export async function isERC20(tokenAddress) {
 }
 
 export async function approveToken(tokenAddress, quicksnapAddress) {
+  checkNetwork();
   try {
     const provider = await getProvider();
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -273,6 +293,7 @@ export async function approveToken(tokenAddress, quicksnapAddress) {
       quicksnapAddress,
       ethers.constants.MaxInt256
     );
+    await approveTx.wait(1);
     console.log(approveTx);
     return true;
   } catch (e) {
@@ -283,6 +304,7 @@ export async function approveToken(tokenAddress, quicksnapAddress) {
 
 export async function getActiveSnapshotIncentives() {
   const activeSnapshotIncentives = [];
+  checkNetwork();
   try {
     const { data } = await graphClient.query({
       query: CURRENT_SNAPSHOT_INCENTIVES,
@@ -312,7 +334,7 @@ export async function getActiveSnapshotIncentives() {
         ethers.utils.formatUnits(amount, tokenInfo.decimals)
       );
       activeSnapshotIncentives.push({
-        formattedAmount: (formattedAmount / 95) * 100,
+        formattedAmount: addIncentiveFee(formattedAmount),
         ...rewards[i],
         ...proposal,
         ...tokenData
@@ -326,6 +348,7 @@ export async function getActiveSnapshotIncentives() {
 }
 
 export async function getIncentivesForProposal(proposal, choices) {
+  checkNetwork();
   const incentivizedChoices = [];
   try {
     const provider = await getProvider();
@@ -339,6 +362,8 @@ export async function getIncentivesForProposal(proposal, choices) {
 
     for (let i = 0; i < rewards.length; i++) {
       const { amount, option, reward_token: token } = rewards[i];
+      const { price } = await tokenPriceLogo(token);
+
       const tokenContract = new ethers.Contract(token, erc20.abi, provider);
       const [decimals, symbol] = await Promise.all([
         tokenContract.decimals(),
@@ -349,7 +374,8 @@ export async function getIncentivesForProposal(proposal, choices) {
       );
       incentivizedChoices.push({
         // include fee in amount
-        amount: (formattedAmount / 95) * 100,
+        amount: addIncentiveFee(formattedAmount),
+        dollarAmount: addIncentiveFee(formattedAmount * price),
         symbol,
         option: choices[parseInt(option) - 1]
       });

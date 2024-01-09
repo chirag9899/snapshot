@@ -18,7 +18,7 @@ const {
 } = useSpaces();
 
 const headers: Header[] = [
-  { text: 'USER', value: 'name', sortable: true },
+  { text: 'SPACES', value: 'name', sortable: true },
   { text: 'MEMBERS', value: 'followersCount', sortable: true },
   { text: 'VOTES', value: 'votesCount', sortable: true }
 ];
@@ -192,7 +192,8 @@ onMounted(() => {
 .vue3-easy-data-table__main.fixed-header.hoverable table thead tr th {
   background: #333; /* Change background color for header */
   color: #fff;
-  padding: 15px 25px;
+  padding: 5px 10px;
+  white-space: nowrap;
 }
 
 .vue3-easy-data-table__main.fixed-header.hoverable table tbody tr td {
@@ -236,7 +237,7 @@ table thead tr th {
 }
 
 table tbody tr td {
-  padding: 15px 20px !important;
+  padding: 15px 10px !important;
   font-size: 17px !important;
 }
 
@@ -248,10 +249,15 @@ table tbody tr td {
   border-color: rgb(33, 70, 153) !important;
 }
 
+table thead tr th:first-child {
+  padding-left: 15px !important;
+}
+
 table tbody tr td:first-child {
   border-left: 1px solid !important;
   border-radius: 5px 0px 0px 5px !important;
   border-color: rgb(33, 70, 153) !important;
+  padding-left: 15px !important;
 }
 
 table tbody tr td:last-child {

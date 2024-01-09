@@ -5,10 +5,11 @@ import {
   addSnapshotRewardAmount,
   approveToken,
   getAllowance,
-  tokenPriceLogo
+  tokenPriceLogo,
+  getTokenBalance
 } from '@/helpers/quicksnapContracts';
 import { Proposal } from '@/helpers/interfaces';
-import { shorten } from '@/helpers/utils';
+import { commify, shorten } from '@/helpers/utils';
 import { isAddress } from '@ethersproject/address';
 import { call, clone } from '@snapshot-labs/snapshot.js/src/utils';
 import { getTokenPrices } from '@/helpers/covalent';
@@ -36,6 +37,7 @@ let isApproved = ref(false);
 let isApproveLoading = ref(false);
 let isRewardLoading = ref(false);
 const token = ref(clone(DEFAULT_TOKEN));
+let availableAmount = ref(0);
 
 const props = defineProps<{
   open: boolean;
@@ -96,8 +98,6 @@ async function addReward() {
 }
 
 async function checkAllowance() {
-  tokenError.value.message = '';
-  amountError.value.message = '';
   try {
     if (!ethers.utils.isAddress(rewardToken.value)) {
       tokenError.value.message = 'Please enter a valid token address';
@@ -118,14 +118,35 @@ async function checkAllowance() {
       )
     );
 
-    if (allowance > 0) {
+    const balance = parseFloat(await getTokenBalance(rewardToken.value));
+
+    if (balance >= rewardAmount.value) {
       isApproved.value = true;
     } else {
       isApproved.value = false;
+      amountError.value.message = 'Amount is bigger than balance';
+      return;
+    }
+
+    if (allowance >= rewardAmount.value) {
+      isApproved.value = true;
+    } else {
+      isApproved.value = false;
+      amountError.value.message = 'Amount is bigger than allowance';
+      return;
     }
   } catch (e) {
     console.log(e);
     isApproved.value = false;
+  }
+}
+
+async function setMax() {
+  try {
+    const balance = parseFloat(await getTokenBalance(rewardToken.value));
+    rewardAmount.value = balance;
+  } catch (e) {
+    console.log(e);
   }
 }
 
@@ -141,6 +162,7 @@ async function approve() {
       import.meta.env.VITE_QUICKSNAP_ADDRESS
     );
     isApproveLoading.value = false;
+    await checkAllowance();
   } catch (e) {
     console.log(e);
     isApproveLoading.value = false;
@@ -148,8 +170,6 @@ async function approve() {
 }
 
 async function getTokenInfo() {
-  tokenError.value.message = '';
-
   if (!rewardToken.value || !isAddress(rewardToken.value)) {
     tokenError.value.message = 'invalid address';
     token.value = clone(DEFAULT_TOKEN);
@@ -157,6 +177,9 @@ async function getTokenInfo() {
   }
 
   isTokenLoading.value = true;
+
+  const balance = parseFloat(await getTokenBalance(rewardToken.value));
+  availableAmount.value = balance;
 
   const { data } = await getTokenPrices(rewardToken.value, '1');
   // console.log("price data from api call....")
@@ -196,19 +219,16 @@ function checkMinimumAmount() {
   console.log(token.value.price);
   const rewardDollarAmount = token.value.price * rewardAmount.value;
 
-  if (rewardDollarAmount < 1000) {
-    amountError.value.message = `Incentives must be at least $1000 in value, now it is $${rewardDollarAmount}`;
-    return;
-  } else {
-    amountError.value.message = '';
-    return;
+  if (rewardDollarAmount < 1) {
+    amountError.value.message = `Incentives must be at least $1 in value, now it is $${rewardDollarAmount}`;
   }
+  return;
 }
 
 watch(
   [rewardToken],
   async () => {
-    console.log('see when this get triggered...');
+    tokenError.value.message = '';
     await getTokenInfo();
     await checkAllowance();
   },
@@ -218,6 +238,9 @@ watch(
 watch(
   [rewardAmount],
   async () => {
+    tokenError.value.message = '';
+    amountError.value.message = '';
+    await checkAllowance();
     checkMinimumAmount();
   },
   { deep: true }
@@ -225,22 +248,37 @@ watch(
 </script>
 
 <template>
-  <BaseModal :open="open" @close="$emit('close')">
+  <BaseModal :open="open" class="incentive_modal" @close="$emit('close')">
     <template #header>
       <h4>Add incentive for {{ shorten(proposal.title, 20) }}</h4>
-      <BaseContainer class="p-6">
+      <BaseContainer class="base_container p-6">
         <InputString
           v-model="rewardToken"
           class="mb-2"
           :definition="{ title: 'token address' }"
           :error="tokenError"
         />
-        <inputNumber
-          v-model="rewardAmount"
-          class="mb-2"
-          :definition="{ title: 'incentive amount' }"
-          :error="amountError"
-        />
+
+        <div class="shadow-sm incentive_amount relative mt-2 flex rounded-md">
+          <div class="available_amount">
+            <span>available :</span>
+            <span> {{ availableAmount }}</span>
+          </div>
+          <div class="relative flex flex-grow items-stretch focus-within:z-10">
+            <inputNumber
+              v-model="rewardAmount"
+              class="mb-2"
+              :definition="{ title: 'incentive amount' }"
+              :error="amountError"
+            />
+          </div>
+          <BaseButton
+            :disabled="token.name === ''"
+            class="primary mt-4"
+            @click="setMax()"
+            >Max
+          </BaseButton>
+        </div>
         <ChoicesListbox
           v-model="rewardOption"
           :items="proposal.choices"
@@ -277,7 +315,7 @@ watch(
           :disabled="
             isApproved ||
             tokenError.message !== '' ||
-            amountError.message !== ''
+            amountError.message !== 'Amount is bigger than allowance'
           "
           :loading="isApproveLoading"
           class="primary mr-4 mt-4"
@@ -318,3 +356,22 @@ watch(
     </p>
   </ModalNotice>
 </template>
+<style scoped>
+.available_amount {
+  position: absolute;
+  right: 5px;
+  top: 0px;
+  min-width: 150px;
+  display: flex;
+  gap: 3px;
+}
+.modal .shell {
+  height: 600px !important;
+}
+.incentive_amount {
+  height: 135px;
+}
+.base_container .w-full {
+  height: 105px;
+}
+</style>

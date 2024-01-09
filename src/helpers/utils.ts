@@ -207,3 +207,20 @@ export async function resolveLens(handle: string) {
     return null;
   }
 }
+
+function getDecimals(amount) {
+  if (amount % 1 != 0) return amount.toString().split('.')[1].length;
+  return 0;
+}
+
+export function addIncentiveFee(amount) {
+  const decimals = getDecimals(amount);
+
+  let totalAmount = (amount / 95) * 100;
+
+  if (getDecimals(totalAmount) > decimals) {
+    totalAmount = parseFloat(totalAmount.toFixed(decimals + 1));
+  }
+
+  return totalAmount;
+}

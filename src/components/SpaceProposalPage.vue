@@ -229,10 +229,21 @@ onMounted(() => setMessageVisibility(props.proposal.flagged));
           </p>
           <div v-if="currentIncentives.length > 0" class="mb-4">
             <h6>Current Incentives</h6>
-            <div v-for="incentive in currentIncentives" :key="incentive">
-              <b>{{ incentive.option }}</b>
-              <span class="float-right"
-                >{{ commify(incentive.amount) }} {{ incentive.symbol }}</span
+            <div
+              v-for="incentive in currentIncentives"
+              :key="incentive"
+              class="my-3"
+            >
+              <b>Vote - </b> <b>{{ incentive?.option }}</b>
+              <span class="total_incentive mt-4 flex justify-between"
+                ><b>Token </b>
+                <b
+                  >{{ commify(incentive.amount) }} {{ incentive.symbol }}</b
+                ></span
+              >
+              <span class="total_rewards flex justify-between"
+                ><b>Total Rewards </b>
+                <b>${{ commify(incentive.dollarAmount, 3) }}</b></span
               >
             </div>
           </div>
@@ -307,5 +318,23 @@ onMounted(() => setMessageVisibility(props.proposal.flagged));
 <style scoped lang="scss">
 .important-notice {
   border-color: #ffbd00;
+}
+
+.total_incentive {
+  border-top: 0.3px solid #8b949e4f;
+  padding: 10px 0px 5px 0px;
+}
+
+.total_incentive b:first-child {
+  color: #fff;
+}
+
+.total_rewards {
+  border-bottom: 0.3px solid #8b949e4f;
+  padding: 5px 0px 10px 0px;
+}
+
+.total_rewards b:first-child {
+  color: #fff;
 }
 </style>

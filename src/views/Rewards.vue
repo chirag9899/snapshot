@@ -65,10 +65,11 @@ onUnmounted(() => {
         <div class="">
           <h2>Claim rewards</h2>
           <p>
-            These rewards are claimed automatically for you so you can claim
-            when you're ready without time restrictions. You can choose to claim
-            them all at once or claim them separately though we advice to claim
-            them all together to save on gas costs.
+            These rewards are automatically reserved on your behalf, allowing
+            you to claim them at your convenience without any time constraints.
+            You have the option to claim all your rewards at once or to claim
+            them individually. However, we recommend claiming them all together
+            to minimize gas expenses
           </p>
         </div>
         <div
@@ -76,11 +77,11 @@ onUnmounted(() => {
           style="width: 100%"
         >
           <div class="text-left">
-            <p>Total unclaimed rewards</p>
+            <p>Total all spaces unclaimed rewards</p>
             <p>$ {{ commify(state.claimData.totalBalance, 2) }}</p>
           </div>
           <div class="text-left">
-            <p>Total claimed rewards</p>
+            <p>Total all spaces claimed rewards</p>
             <p>$ {{ commify(state.claimData.totalClaimed, 2) }}</p>
           </div>
         </div>
