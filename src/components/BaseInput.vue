@@ -50,7 +50,7 @@ const BaseInputEL = ref<HTMLDivElement | undefined>(undefined);
 
 const visited = ref(false);
 
-const showErrorMessage = computed(() => visited.value || props.error?.push);
+const showErrorMessage = computed(() => visited.value || props.error?.message);
 
 onMounted(() => {
   if (props.focusOnMount) {
