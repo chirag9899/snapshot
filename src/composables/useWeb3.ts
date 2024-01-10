@@ -4,47 +4,11 @@ import { Web3Provider } from '@ethersproject/providers';
 import { getInstance } from '@snapshot-labs/lock/plugins/vue3';
 import networks from '@snapshot-labs/snapshot.js/src/networks.json';
 import { formatUnits } from '@ethersproject/units';
-import {
-  createWeb3Modal,
-  defaultConfig,
-  useWeb3Modal,
-  useWeb3ModalState
-} from '@web3modal/ethers5/vue';
+import { useWeb3ModalState, useWeb3Modal } from '@web3modal/ethers5/vue';
 
 let auth;
 const defaultNetwork: any =
   import.meta.env.VITE_DEFAULT_NETWORK || Object.keys(networks)[0];
-
-const projectId = '55f8e4a3ce3a3ad37353e8582b8db050';
-
-const mainnet = {
-  chainId: 1,
-  name: 'Ethereum',
-  currency: 'ETH',
-  explorerUrl: 'https://etherscan.io',
-  rpcUrl: import.meta.env.VITE_WEB3_ENDPOINT
-};
-
-// 3. Create modal
-const metadata = {
-  name: 'QuickSnap Finance',
-  description:
-    'QuickSnap is a decentralized platform rewarding DAO governance token holders for actively participating in token protocol governance. It functions as a marketplace for governance incentives, streamlining the process for both initiators and users. This setup promotes voter engagement and offers users the chance to earn extra yields from their governance tokens through active involvement in governance activities.',
-  url: 'https://quicksnap.finance/',
-  icons: []
-};
-
-createWeb3Modal({
-  ethersConfig: defaultConfig({ metadata, defaultChainId: 1 }),
-  chains: [mainnet],
-  projectId,
-  themeMode: 'dark',
-  themeVariables: {
-    '--w3m-accent': '#211f24'
-  }
-});
-
-const { open } = useWeb3Modal();
 
 const state = reactive<{
   account: string;
@@ -70,9 +34,15 @@ export function useWeb3() {
     state.authLoading = false;
   }
 
-  function checkNetwork() {
+  async function checkNetwork() {
+    console.log('check network');
     const { selectedNetworkId } = useWeb3ModalState();
-    handleChainChanged(selectedNetworkId);
+    const { open } = useWeb3Modal();
+
+    if (selectedNetworkId != 1) {
+      await open({ view: 'Networks' });
+      await login();
+    }
   }
 
   function logout() {
@@ -98,7 +68,7 @@ export function useWeb3() {
       if (auth.provider.value.on) {
         try {
           auth.provider.value.on('chainChanged', async chainId => {
-            handleChainChanged(parseInt(formatUnits(chainId, 0)));
+            await handleChainChanged(parseInt(formatUnits(chainId, 0)));
           });
           auth.provider.value.on('accountsChanged', async accounts => {
             if (accounts.length !== 0) {
@@ -128,7 +98,7 @@ export function useWeb3() {
       }
       console.log('Network', network);
       console.log('Accounts', accounts);
-      handleChainChanged(network.chainId);
+      await handleChainChanged(network.chainId);
       const acc = accounts.length > 0 ? accounts[0] : null;
 
       state.account = acc;
@@ -139,12 +109,8 @@ export function useWeb3() {
     }
   }
 
-  function handleChainChanged(chainId) {
-    if (chainId === 1) {
-      state.network = networks[chainId];
-    } else {
-      open({ view: 'Networks' });
-    }
+  async function handleChainChanged(chainId) {
+    state.network = networks[chainId];
   }
 
   return {

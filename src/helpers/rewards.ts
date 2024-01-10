@@ -8,11 +8,12 @@ import merkle from '@/abi/merkle.json';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-const { getProvider, login, web3Account } = useWeb3();
+const { getProvider, login, web3Account, checkNetwork } = useWeb3();
 const MERKLE_ADDRESS = import.meta.env.VITE_MERKLE_ADDRESS;
 
 export async function getRewards() {
   try {
+    await checkNetwork();
     await login();
     console.log('web3account', web3Account.value);
 
@@ -79,7 +80,8 @@ export async function getTokenInfo(
   tokenAddress
 ): Promise<{ address: string; symbol: string; decimals: number } | undefined> {
   try {
-    const provider = await getProvider();
+    await checkNetwork();
+    const provider = getProvider();
     const token = new ethers.Contract(tokenAddress, erc20.abi, provider);
 
     const [symbol, decimals] = await Promise.all([
@@ -104,6 +106,7 @@ export async function getTokenNameBalance(
   tokenAddress
 ): Promise<{ name: string; symbol: string; balance: number } | undefined> {
   try {
+    await checkNetwork();
     await login();
     const provider = await getProvider();
     const token = new ethers.Contract(tokenAddress, erc20.abi, provider);
@@ -129,6 +132,7 @@ export async function getTokenNameBalance(
 }
 
 export async function claimReward(reward) {
+  await checkNetwork();
   await login();
   const provider = await getProvider();
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -150,6 +154,7 @@ export async function claimReward(reward) {
 }
 
 export async function claimAllRewards(rewards) {
+  await checkNetwork();
   await login();
   //prepare array
   const claims = [];

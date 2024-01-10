@@ -1,16 +1,65 @@
 <script setup lang="ts">
+import {
+  createWeb3Modal,
+  defaultConfig,
+  useWeb3Modal
+} from '@web3modal/ethers5/vue';
+
 const { pendingTransactions, pendingTransactionsWithHash } = useTxStatus();
 const { env, showSidebar, domain } = useApp();
-const { web3Account } = useWeb3();
+const { web3Account, web3 } = useWeb3();
 
 const showDemoBanner = ref(true);
 const showPendingTransactionsModal = ref(false);
+const pendingCount = ref(pendingTransactions.value.length);
+
+const projectId = '55f8e4a3ce3a3ad37353e8582b8db050';
+
+const mainnet = {
+  chainId: 1,
+  name: 'Ethereum',
+  currency: 'ETH',
+  explorerUrl: 'https://etherscan.io',
+  rpcUrl: import.meta.env.VITE_WEB3_ENDPOINT
+};
+
+// 3. Create modal
+const metadata = {
+  name: 'QuickSnap Finance',
+  description:
+    'QuickSnap is a decentralized platform rewarding DAO governance token holders for actively participating in token protocol governance. It functions as a marketplace for governance incentives, streamlining the process for both initiators and users. This setup promotes voter engagement and offers users the chance to earn extra yields from their governance tokens through active involvement in governance activities.',
+  url: 'https://quicksnap.finance/',
+  icons: []
+};
+
+createWeb3Modal({
+  ethersConfig: defaultConfig({ metadata, defaultChainId: 1 }),
+  chains: [mainnet],
+  projectId,
+  themeMode: 'dark',
+  themeVariables: {
+    '--w3m-accent': '#211f24'
+  }
+});
+
+const { open } = useWeb3Modal();
 
 watch(
   () => pendingTransactionsWithHash.value.length === 0,
   () => {
     showPendingTransactionsModal.value = false;
   }
+);
+
+watch(
+  [web3],
+  async () => {
+    console.log('network changed', web3.value.network);
+    if (!web3.value.network || web3.value.network.chainId != 1) {
+      await open({ view: 'Networks' });
+    }
+  },
+  { deep: true }
 );
 </script>
 

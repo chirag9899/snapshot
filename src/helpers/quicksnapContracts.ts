@@ -163,7 +163,7 @@ export function getActivePeriod() {
 }
 
 export async function tokenPriceLogo(token) {
-  checkNetwork();
+  await checkNetwork();
   const url = `https://api.coingecko.com/api/v3/coins/ethereum/contract/${token}?x_cg_demo_api_key=${
     import.meta.env.VITE_COINGECKO_API_KEY
   }`;
@@ -208,7 +208,7 @@ export async function addSnapshotRewardAmount(
   start,
   end
 ) {
-  checkNetwork();
+  await checkNetwork();
   const provider = await getProvider();
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
@@ -236,7 +236,7 @@ export async function addSnapshotRewardAmount(
 }
 
 export async function getAllowance(tokenAddress, quicksnapAddress) {
-  checkNetwork();
+  await checkNetwork();
   const provider = await getProvider();
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
@@ -251,7 +251,7 @@ export async function getAllowance(tokenAddress, quicksnapAddress) {
 }
 
 export async function getTokenBalance(tokenAddress) {
-  checkNetwork();
+  await checkNetwork();
   const provider = await getProvider();
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
@@ -263,7 +263,7 @@ export async function getTokenBalance(tokenAddress) {
 }
 
 export async function isERC20(tokenAddress) {
-  checkNetwork();
+  await checkNetwork();
   try {
     const provider = await getProvider();
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -281,7 +281,7 @@ export async function isERC20(tokenAddress) {
 }
 
 export async function approveToken(tokenAddress, quicksnapAddress) {
-  checkNetwork();
+  await checkNetwork();
   try {
     const provider = await getProvider();
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -304,7 +304,7 @@ export async function approveToken(tokenAddress, quicksnapAddress) {
 
 export async function getActiveSnapshotIncentives() {
   const activeSnapshotIncentives = [];
-  checkNetwork();
+  await checkNetwork();
   try {
     const { data } = await graphClient.query({
       query: CURRENT_SNAPSHOT_INCENTIVES,
@@ -348,7 +348,7 @@ export async function getActiveSnapshotIncentives() {
 }
 
 export async function getIncentivesForProposal(proposal, choices) {
-  checkNetwork();
+  await checkNetwork();
   const incentivizedChoices = [];
   try {
     const provider = await getProvider();
