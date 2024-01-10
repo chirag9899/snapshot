@@ -64,3 +64,4 @@ can create a `.env.local` and overwrite the values from `.env`.
 ## License
 
 QuickSnap is open-sourced software licensed under the © [MIT license](LICENSE).
+# snapshot-issue
