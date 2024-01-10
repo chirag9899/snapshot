@@ -12,6 +12,23 @@ watch(
     showPendingTransactionsModal.value = false;
   }
 );
+
+const showChainDropdown = ref(false);
+const selectedChain = ref('');
+
+const toggleChainDropdown = () => {
+  showChainDropdown.value = !showChainDropdown.value;
+};
+
+const selectChain = (chain: string) => {
+  // Handle chain selection logic here
+  console.log(`Selected chain: ${chain}`);
+  selectedChain.value = chain; // Store the selected chain
+  showChainDropdown.value = false; // Close the dropdown after selection
+  console.log(selectedChain.value);
+};
+
+import BaseNetworkItem from './BaseNetworkItem.vue';
 </script>
 
 <template>
@@ -70,6 +87,38 @@ watch(
             rewards
           </router-link>
           <w3m-button balance="hide" />
+
+          <!-- multichain support  -->
+
+          <div class="relative" @click="toggleChainDropdown">
+            <BaseButton
+              class="flex items-center rounded-none"
+              style="font-size: 18px; width: 150px"
+            >
+              <p class="w-full">
+                {{ selectedChain ? selectedChain : 'Chains' }}
+              </p>
+              <i-ho-chevron-down class="ml-1" />
+            </BaseButton>
+            <div
+              v-show="showChainDropdown"
+              class="top-10 shadow-md absolute right-0 rounded bg-white p-2"
+            >
+              <!-- Add your chain options here -->
+              <div @click="selectChain('Ethereum')">Ethereum</div>
+              <div @click="selectChain('Binance')">Binance</div>
+              <!-- Add more chains as needed -->
+            </div>
+          </div>
+
+          <BaseNetworkItem
+            :network="{
+              logo: 'your-logo-url',
+              name: 'Ethereum',
+              key: 'your-network-key'
+            }"
+          />
+
           <!--          <NavbarAccount />-->
           <!--          <NavbarNotifications v-if="web3Account && !domain" />-->
 
