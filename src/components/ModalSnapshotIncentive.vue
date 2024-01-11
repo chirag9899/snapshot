@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onBeforeUnmount } from 'vue';
 import { ethers } from 'ethers';
 import {
   addSnapshotRewardAmount,
@@ -102,6 +102,12 @@ async function addReward() {
 
 async function checkAllowance() {
   try {
+    if (rewardToken.value === '') {
+      tokenError.value.message = '';
+      isApproved.value = false;
+      return;
+    }
+
     if (!ethers.utils.isAddress(rewardToken.value)) {
       tokenError.value.message = 'Please enter a valid token address';
       isApproved.value = false;
@@ -218,8 +224,6 @@ async function getTokenInfo() {
 }
 
 function checkMinimumAmount() {
-  console.log('get token price....');
-  console.log(token.value.price);
   const rewardDollarAmount = token.value.price * rewardAmount.value;
 
   if (rewardDollarAmount < 1) {
@@ -248,12 +252,27 @@ watch(
   },
   { deep: true }
 );
+
+onBeforeUnmount(() => {
+  rewardToken.value = '';
+  rewardAmount.value = 0;
+  rewardOption.value = 1;
+  tokenError.value = { message: '', push: false };
+  amountError.value = { message: '', push: false };
+  showRewardAddedMessage.value = false;
+  showRewardErrorMessage.value = false;
+  isApproved.value = false;
+  isApproveLoading.value = false;
+  isRewardLoading.value = false;
+  token.value = clone(DEFAULT_TOKEN);
+  availableAmount.value = 0;
+});
 </script>
 
 <template>
   <BaseModal :open="open" class="incentive_modal" @close="$emit('close')">
     <template #header>
-      <h4>Add incentive for {{ shorten(proposal.title, 20) }}</h4>
+      <h4>Add incentive for {{ shorten(proposal.title, 15) }}</h4>
       <BaseContainer class="base_container p-6">
         <InputString
           v-model="rewardToken"

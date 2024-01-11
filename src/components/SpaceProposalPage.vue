@@ -281,6 +281,7 @@ onMounted(() => setMessageVisibility(props.proposal.flagged));
         />
       </div>
       <ModalSnapshotIncentive
+        v-if="modalIncentiveOpen"
         :proposal="proposal"
         :open="modalIncentiveOpen"
         @close="modalIncentiveOpen = false"
