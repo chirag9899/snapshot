@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { getProposal } from '@/helpers/snapshot';
 import { ExtendedSpace, Proposal } from '@/helpers/interfaces';
+import { useWeb3 } from '@/composables/useWeb3';
 
 const props = defineProps<{ spaceKey: string }>();
 
@@ -12,6 +13,7 @@ const route = useRoute();
 const router = useRouter();
 
 const { loadExtendedSpace, extendedSpaces } = useExtendedSpaces();
+const { checkNetwork } = useWeb3();
 
 const proposalId = route.params.id as string;
 
@@ -40,8 +42,10 @@ async function loadProposal() {
 
   loadingProposal.value = false;
 }
-onMounted(() => {
-  loadProposal();
+
+onMounted(async () => {
+  await checkNetwork();
+  await loadProposal();
 });
 </script>
 

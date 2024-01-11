@@ -2,6 +2,7 @@
 import { shorten } from '@/helpers/utils';
 import { useInfiniteScroll, watchDebounced } from '@vueuse/core';
 import type { Header } from 'vue3-easy-data-table';
+import { useWeb3 } from '@/composables/useWeb3';
 
 const headers: Header[] = [
   { text: 'SPACES', value: 'name', sortable: true },
@@ -22,6 +23,8 @@ const {
   spacesHome,
   spacesHomeMetrics
 } = useSpaces();
+
+const { checkNetwork } = useWeb3();
 
 const queryInput = ref({
   search: (route.query.q as string) || '',
@@ -75,8 +78,9 @@ watchDebounced(
   { deep: true, debounce: 300 }
 );
 
-onMounted(() => {
-  loadSpaces();
+onMounted(async () => {
+  await checkNetwork();
+  await loadSpaces();
 });
 </script>
 
@@ -122,7 +126,8 @@ onMounted(() => {
         <template #item-name="item">
           <router-link
             :to="{ name: 'spaceProposals', params: { key: item.id } }"
-            ><div class="flex items-center">
+          >
+            <div class="flex items-center">
               <AvatarSpace
                 :space="item"
                 symbol-index="space"
@@ -210,12 +215,15 @@ onMounted(() => {
 .vue3-easy-data-table__header th.sortable .sortType-icon {
   border-bottom-color: #fff !important;
 }
+
 .vue3-easy-data-table__main {
   background-color: transparent !important;
 }
+
 .vue3-easy-data-table {
   border: 0px !important;
 }
+
 table {
   border-collapse: initial !important;
   display: table;
@@ -261,6 +269,7 @@ table tbody tr td:last-child {
   border-radius: 0px 5px 5px 0px !important;
   border-color: rgb(33, 70, 153) !important;
 }
+
 table tbody tr:hover td {
   border-color: rgb(42, 108, 255) !important;
   background-color: rgba(

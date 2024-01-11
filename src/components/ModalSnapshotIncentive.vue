@@ -55,7 +55,6 @@ const { open, proposal } = toRefs(props);
 console.log(proposal);
 
 async function addReward() {
-  await checkNetwork();
   console.log(rewardToken.value, rewardAmount.value, rewardOption.value);
   tokenError.value.message = '';
   amountError.value.message = '';
@@ -252,6 +251,10 @@ watch(
   },
   { deep: true }
 );
+
+onMounted(async () => {
+  await checkNetwork();
+});
 
 onBeforeUnmount(() => {
   rewardToken.value = '';

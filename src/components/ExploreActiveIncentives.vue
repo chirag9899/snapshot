@@ -5,6 +5,7 @@ import { getActiveSnapshotIncentives } from '@/helpers/quicksnapContracts';
 import { useHead } from '@vueuse/head';
 import { ethers } from 'ethers';
 import type { Header } from 'vue3-easy-data-table';
+import { useWeb3 } from '@/composables/useWeb3';
 
 const { formatCompactNumber } = useIntl();
 
@@ -31,6 +32,8 @@ const headers: Header[] = [
 
 const limit = ref(12);
 
+const { checkNetwork } = useWeb3();
+
 const state = reactive({
   incentivesLoading: false,
   rewards: []
@@ -40,6 +43,7 @@ getActiveIncentives();
 useHead({ title: 'Active incentives' });
 
 async function getActiveIncentives() {
+  await checkNetwork();
   state.incentivesLoading = true;
   state.rewards = await getActiveSnapshotIncentives();
 
