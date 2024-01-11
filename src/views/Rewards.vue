@@ -4,10 +4,10 @@ import { commify, shorten } from '@/helpers/utils';
 import { getRewards, claimReward, claimAllRewards } from '@/helpers/rewards';
 import { useHead } from '@vueuse/head';
 
+const { checkNetwork, web3 } = useWeb3();
+
 const { userTheme } = useSkin();
 const { env } = useApp();
-
-const { web3, login } = useWeb3();
 
 const themeBefore = userTheme.value;
 
@@ -40,13 +40,15 @@ async function loadRewards() {
 }
 
 async function claim(reward) {
+  await checkNetwork();
   await claimReward(reward);
-  loadRewards();
+  await loadRewards();
 }
 
 async function claimAll() {
+  await checkNetwork();
   await claimAllRewards(state.rewards);
-  loadRewards();
+  await loadRewards();
 }
 
 onMounted(() => {
@@ -99,7 +101,9 @@ onUnmounted(() => {
                 class="mt-2 whitespace-nowrap text-right text-skin-text xs:ml-auto xs:mt-0"
               >
                 <BaseButton
-                  :disabled="state.rewards.length < 2"
+                  :disabled="
+                    state.rewards.length < 2 || web3.network.chainId != 1
+                  "
                   @click="claimAll()"
                   >claim all
                 </BaseButton>
@@ -156,7 +160,10 @@ onUnmounted(() => {
                   </div>
                 </div>
 
-                <BaseButton class="!mb-0" @click="claimReward(reward)"
+                <BaseButton
+                  :disabled="web3.network.chainId != 1"
+                  class="!mb-0"
+                  @click="claimReward(reward)"
                   >claim
                 </BaseButton>
               </BaseBlock>

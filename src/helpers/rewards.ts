@@ -8,12 +8,12 @@ import merkle from '@/abi/merkle.json';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-const { getProvider, login, web3Account, checkNetwork } = useWeb3();
+const { getProvider, login, web3Account, checkNetwork, getReadOnlyProvider } =
+  useWeb3();
 const MERKLE_ADDRESS = import.meta.env.VITE_MERKLE_ADDRESS;
 
 export async function getRewards() {
   try {
-    await checkNetwork();
     await login();
     console.log('web3account', web3Account.value);
 
@@ -80,8 +80,7 @@ export async function getTokenInfo(
   tokenAddress
 ): Promise<{ address: string; symbol: string; decimals: number } | undefined> {
   try {
-    await checkNetwork();
-    const provider = getProvider();
+    const provider = getReadOnlyProvider();
     const token = new ethers.Contract(tokenAddress, erc20.abi, provider);
 
     const [symbol, decimals] = await Promise.all([
@@ -106,9 +105,8 @@ export async function getTokenNameBalance(
   tokenAddress
 ): Promise<{ name: string; symbol: string; balance: number } | undefined> {
   try {
-    await checkNetwork();
     await login();
-    const provider = await getProvider();
+    const provider = getReadOnlyProvider();
     const token = new ethers.Contract(tokenAddress, erc20.abi, provider);
 
     const [name, symbol, balance, decimals] = await Promise.all([
@@ -134,7 +132,7 @@ export async function getTokenNameBalance(
 export async function claimReward(reward) {
   await checkNetwork();
   await login();
-  const provider = await getProvider();
+  const provider = getProvider();
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   const signer = provider.getSigner();
@@ -158,7 +156,7 @@ export async function claimAllRewards(rewards) {
   await login();
   //prepare array
   const claims = [];
-  const provider = await getProvider();
+  const provider = getProvider();
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   const signer = provider.getSigner();

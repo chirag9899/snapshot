@@ -16,6 +16,8 @@ import { getTokenPrices } from '@/helpers/covalent';
 import { JsonRpcProvider } from '@ethersproject/providers';
 import { ERC20ABI } from '@/helpers/abi';
 
+const { checkNetwork, web3 } = useWeb3();
+
 const DEFAULT_TOKEN = {
   name: '',
   logo: '',
@@ -53,6 +55,7 @@ const { open, proposal } = toRefs(props);
 console.log(proposal);
 
 async function addReward() {
+  await checkNetwork();
   console.log(rewardToken.value, rewardAmount.value, rewardOption.value);
   tokenError.value.message = '';
   amountError.value.message = '';
@@ -315,7 +318,8 @@ watch(
           :disabled="
             isApproved ||
             tokenError.message !== '' ||
-            amountError.message !== 'Amount is bigger than allowance'
+            amountError.message !== 'Amount is bigger than allowance' ||
+            web3.network.chainId != 1
           "
           :loading="isApproveLoading"
           class="primary mr-4 mt-4"
@@ -326,7 +330,8 @@ watch(
           :disabled="
             !isApproved ||
             tokenError.message !== '' ||
-            amountError.message !== ''
+            amountError.message !== '' ||
+            web3.network.chainId != 1
           "
           :loading="isRewardLoading"
           class="primary ml-4 mt-4"
@@ -365,12 +370,15 @@ watch(
   display: flex;
   gap: 3px;
 }
+
 .modal .shell {
   height: 600px !important;
 }
+
 .incentive_amount {
   height: 135px;
 }
+
 .base_container .w-full {
   height: 105px;
 }

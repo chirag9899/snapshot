@@ -58,6 +58,10 @@ export function useWeb3() {
       : ethers.getDefaultProvider(import.meta.env.VITE_WEB3_ENDPOINT);
   }
 
+  function getReadOnlyProvider() {
+    return ethers.getDefaultProvider(import.meta.env.VITE_WEB3_ENDPOINT);
+  }
+
   async function loadProvider() {
     try {
       if (
@@ -118,6 +122,7 @@ export function useWeb3() {
     checkNetwork,
     logout,
     getProvider,
+    getReadOnlyProvider,
     loadProvider,
     handleChainChanged,
     web3: computed(() => state),

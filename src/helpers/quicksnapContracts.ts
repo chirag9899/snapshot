@@ -16,7 +16,8 @@ import {
 } from '@/helpers/graphQueries';
 import { addIncentiveFee } from '@/helpers/utils';
 
-const { getProvider, checkNetwork } = useWeb3();
+const { getProvider, getReadOnlyProvider, checkNetwork, web3Account } =
+  useWeb3();
 
 const client = new ApolloClient({
   uri: `${import.meta.env.VITE_API_ENDPOINT}/graphql`,
@@ -41,7 +42,7 @@ export async function getGaugeInfo(
   index
 ) {
   try {
-    const provider = await getProvider();
+    const provider = getReadOnlyProvider();
     const bribeContract = new ethers.Contract(
       bribeAddress,
       bribeV3.abi,
@@ -163,7 +164,6 @@ export function getActivePeriod() {
 }
 
 export async function tokenPriceLogo(token) {
-  await checkNetwork();
   const url = `https://api.coingecko.com/api/v3/coins/ethereum/contract/${token}?x_cg_demo_api_key=${
     import.meta.env.VITE_COINGECKO_API_KEY
   }`;
@@ -183,7 +183,7 @@ export async function addRewardAmount(
   rewardAmount,
   rewardToken
 ) {
-  const provider = await getProvider();
+  const provider = getProvider();
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   const signer = provider.getSigner();
@@ -209,7 +209,7 @@ export async function addSnapshotRewardAmount(
   end
 ) {
   await checkNetwork();
-  const provider = await getProvider();
+  const provider = getProvider();
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   const signer = provider.getSigner();
@@ -236,14 +236,10 @@ export async function addSnapshotRewardAmount(
 }
 
 export async function getAllowance(tokenAddress, quicksnapAddress) {
-  await checkNetwork();
-  const provider = await getProvider();
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  const signer = provider.getSigner();
-  const token = new ethers.Contract(tokenAddress, erc20.abi, signer);
+  const provider = getReadOnlyProvider();
+  const token = new ethers.Contract(tokenAddress, erc20.abi, provider);
   const allowance = await token.allowance(
-    await signer.getAddress(),
+    web3Account.value,
     quicksnapAddress.toString()
   );
   const decimals = await token.decimals();
@@ -251,26 +247,17 @@ export async function getAllowance(tokenAddress, quicksnapAddress) {
 }
 
 export async function getTokenBalance(tokenAddress) {
-  await checkNetwork();
-  const provider = await getProvider();
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  const signer = provider.getSigner();
-  const token = new ethers.Contract(tokenAddress, erc20.abi, signer);
-  const allowance = await token.balanceOf(await signer.getAddress());
+  const provider = getReadOnlyProvider();
+  const token = new ethers.Contract(tokenAddress, erc20.abi, provider);
+  const allowance = await token.balanceOf(web3Account.value);
   const decimals = await token.decimals();
   return ethers.utils.formatUnits(allowance, decimals);
 }
 
 export async function isERC20(tokenAddress) {
-  await checkNetwork();
   try {
-    const provider = await getProvider();
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    const signer = provider.getSigner();
-    const token = new ethers.Contract(tokenAddress, erc20.abi, signer);
-
+    const provider = getReadOnlyProvider();
+    const token = new ethers.Contract(tokenAddress, erc20.abi, provider);
     const totalSupply = await token.callStatic.totalSupply();
     console.log(totalSupply);
     return true;
@@ -283,7 +270,7 @@ export async function isERC20(tokenAddress) {
 export async function approveToken(tokenAddress, quicksnapAddress) {
   await checkNetwork();
   try {
-    const provider = await getProvider();
+    const provider = getProvider();
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     const signer = provider.getSigner();
@@ -304,7 +291,6 @@ export async function approveToken(tokenAddress, quicksnapAddress) {
 
 export async function getActiveSnapshotIncentives() {
   const activeSnapshotIncentives = [];
-  await checkNetwork();
   try {
     const { data } = await graphClient.query({
       query: CURRENT_SNAPSHOT_INCENTIVES,
@@ -348,10 +334,9 @@ export async function getActiveSnapshotIncentives() {
 }
 
 export async function getIncentivesForProposal(proposal, choices) {
-  await checkNetwork();
   const incentivizedChoices = [];
   try {
-    const provider = await getProvider();
+    const provider = getReadOnlyProvider();
     const { data } = await graphClient.query({
       query: INCENTIVES_BY_PROPOSAL_QUERY,
       variables: { id: proposal }
