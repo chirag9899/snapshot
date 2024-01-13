@@ -15,6 +15,9 @@ import { call, clone } from '@snapshot-labs/snapshot.js/src/utils';
 import { getTokenPrices } from '@/helpers/covalent';
 import { JsonRpcProvider } from '@ethersproject/providers';
 import { ERC20ABI } from '@/helpers/abi';
+import { supportedChain } from '@/helpers/supportedChains';
+import { useWeb3 } from '@/composables/useWeb3';
+const { web3 } = useWeb3();
 
 const DEFAULT_TOKEN = {
   name: '',
@@ -313,6 +316,7 @@ watch(
         </BaseBlock>
         <BaseButton
           :disabled="
+            !supportedChain.get(web3.network.chainId) ||
             isApproved ||
             tokenError.message !== '' ||
             amountError.message !== 'Amount is bigger than allowance'
@@ -324,6 +328,7 @@ watch(
         </BaseButton>
         <BaseButton
           :disabled="
+            !supportedChain.get(web3.network.chainId) ||
             !isApproved ||
             tokenError.message !== '' ||
             amountError.message !== ''

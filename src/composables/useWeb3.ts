@@ -4,6 +4,7 @@ import { Web3Provider } from '@ethersproject/providers';
 import { getInstance } from '@snapshot-labs/lock/plugins/vue3';
 import networks from '@snapshot-labs/snapshot.js/src/networks.json';
 import { formatUnits } from '@ethersproject/units';
+import { supportedChain } from '@/helpers/supportedChains';
 import {
   createWeb3Modal,
   defaultConfig,
@@ -25,6 +26,14 @@ const mainnet = {
   rpcUrl: import.meta.env.VITE_WEB3_ENDPOINT
 };
 
+const polygon = {
+  chainId: 137,
+  name: 'Polygon',
+  currency: 'MATIC',
+  explorerUrl: 'https://polygonscan.com/ ',
+  rpcUrl: 'https://polygon-rpc.com/'
+};
+
 // 3. Create modal
 const metadata = {
   name: 'QuickSnap Finance',
@@ -34,9 +43,9 @@ const metadata = {
   icons: []
 };
 
-createWeb3Modal({
-  ethersConfig: defaultConfig({ metadata, defaultChainId: 1 }),
-  chains: [mainnet],
+const wallet = createWeb3Modal({
+  ethersConfig: defaultConfig({ metadata, defaultChainId: 0 }),
+  chains: [mainnet, polygon],
   projectId,
   themeMode: 'dark',
   themeVariables: {
@@ -53,7 +62,7 @@ const state = reactive<{
   walletConnectType: string | null;
 }>({
   account: '',
-  network: networks[defaultNetwork],
+  network: {},
   authLoading: false,
   walletConnectType: null
 });
@@ -79,6 +88,7 @@ export function useWeb3() {
     auth = getInstance();
     auth.logout();
     state.account = '';
+    state.network = {};
   }
 
   function getProvider() {
@@ -109,7 +119,7 @@ export function useWeb3() {
           console.log(`failed to subscribe to events for provider: ${e}`);
         }
       }
-      console.log('Provider', auth.provider.value);
+      // console.log('Provider', auth.provider.value);
       let network, accounts;
       try {
         const connector = auth.provider.value?.connectorName;
@@ -126,8 +136,8 @@ export function useWeb3() {
       } catch (e) {
         console.log(e);
       }
-      console.log('Network', network);
-      console.log('Accounts', accounts);
+      // console.log('Network', network);
+      // console.log('Accounts', accounts);
       handleChainChanged(network.chainId);
       const acc = accounts.length > 0 ? accounts[0] : null;
 
@@ -143,11 +153,23 @@ export function useWeb3() {
     if (chainId === 1) {
       state.network = networks[chainId];
     } else {
-      open({ view: 'Networks' });
+      state.network = {};
+      // open({ view: 'Networks' });
+    }
+  }
+
+  function checkConnected() {
+    const isConnected = wallet.getIsConnected();
+    if (isConnected === true) {
+      return true;
+    } else {
+      return false;
     }
   }
 
   return {
+    checkConnected,
+    open,
     login,
     checkNetwork,
     logout,

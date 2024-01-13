@@ -1,10 +1,14 @@
 <script setup lang="ts">
 const { pendingTransactions, pendingTransactionsWithHash } = useTxStatus();
 const { env, showSidebar, domain } = useApp();
-const { web3Account } = useWeb3();
+const { web3Account, web3, open, login, checkConnected } = useWeb3();
+import { supportedChain } from '../helpers/supportedChains';
+import Alert from '../views/Alert.vue';
 
 const showDemoBanner = ref(true);
 const showPendingTransactionsModal = ref(false);
+const showAlert = ref(false);
+const showSwitch = ref(false);
 
 watch(
   () => pendingTransactionsWithHash.value.length === 0,
@@ -13,25 +17,40 @@ watch(
   }
 );
 
-const showChainDropdown = ref(false);
-const selectedChain = ref('');
+let updatedID;
+onMounted(async () => {
+  updatedID = setInterval(async () => {
+    const isConnected = checkConnected();
+    const isSupportedChain = supportedChain.get(web3.value.network.chainId);
 
-const toggleChainDropdown = () => {
-  showChainDropdown.value = !showChainDropdown.value;
-};
+    if (isConnected) {
+      if (isSupportedChain?.name === undefined) {
+        try {
+          await login();
+        } catch (error) {
+          showAlert.value = false;
+          console.error('Failed:', error);
+        }
+      }
+      if (!isSupportedChain) {
+        showAlert.value = true;
+      } else {
+        showAlert.value = false;
+      }
+    }
 
-const selectChain = (chain: string) => {
-  // Handle chain selection logic here
-  console.log(`Selected chain: ${chain}`);
-  selectedChain.value = chain; // Store the selected chain
-  showChainDropdown.value = false; // Close the dropdown after selection
-  console.log(selectedChain.value);
-};
+    showSwitch.value = isConnected;
+  }, 2000); // Delay
+});
+onUnmounted(() => {
+  clearInterval(updatedID);
+});
 
 import BaseNetworkItem from './BaseNetworkItem.vue';
 </script>
 
 <template>
+  <Alert v-show="showAlert" message="Switch to Supported Network First!" />
   <div
     v-if="env === 'demo' && showDemoBanner"
     class="relative bg-primary p-3 text-center"
@@ -86,38 +105,37 @@ import BaseNetworkItem from './BaseNetworkItem.vue';
           >
             rewards
           </router-link>
+
           <w3m-button balance="hide" />
 
-          <!-- multichain support  -->
-
-          <div class="relative" @click="toggleChainDropdown">
+          <!-- multichain switch  -->
+          <div
+            v-if="showSwitch"
+            class="relative"
+            tabindex="0"
+            @click="open({ view: 'Networks' })"
+          >
             <BaseButton
               class="flex items-center rounded-none"
-              style="font-size: 18px; width: 150px"
+              style="font-size: 18px; width: 170px; height: 40px"
             >
-              <p class="w-full">
-                {{ selectedChain ? selectedChain : 'Chains' }}
-              </p>
-              <i-ho-chevron-down class="ml-1" />
+              <div
+                v-if="
+                  checkConnected() && supportedChain.get(web3.network.chainId)
+                "
+                class="flex items-center justify-start"
+              >
+                <!-- <div v-if="checkWalletStatus()" class="flex items-center justify-start"> -->
+                <img
+                  :src="supportedChain.get(web3.network.chainId)?.imageUrl"
+                  alt=""
+                  class="mr-2 h-4 w-4 object-contain"
+                />
+                <p>{{ supportedChain.get(web3.network.chainId)?.name }}</p>
+              </div>
+              <p v-else>Switch Network</p>
             </BaseButton>
-            <div
-              v-show="showChainDropdown"
-              class="top-10 shadow-md absolute right-0 rounded bg-white p-2"
-            >
-              <!-- Add your chain options here -->
-              <div @click="selectChain('Ethereum')">Ethereum</div>
-              <div @click="selectChain('Binance')">Binance</div>
-              <!-- Add more chains as needed -->
-            </div>
           </div>
-
-          <BaseNetworkItem
-            :network="{
-              logo: 'your-logo-url',
-              name: 'Ethereum',
-              key: 'your-network-key'
-            }"
-          />
 
           <!--          <NavbarAccount />-->
           <!--          <NavbarNotifications v-if="web3Account && !domain" />-->

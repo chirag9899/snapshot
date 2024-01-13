@@ -3,6 +3,7 @@ import { onMounted, onUnmounted, reactive } from 'vue';
 import { commify, shorten } from '@/helpers/utils';
 import { getRewards, claimReward, claimAllRewards } from '@/helpers/rewards';
 import { useHead } from '@vueuse/head';
+import { supportedChain } from '@/helpers/supportedChains';
 
 const { userTheme } = useSkin();
 const { env } = useApp();
@@ -99,7 +100,10 @@ onUnmounted(() => {
                 class="mt-2 whitespace-nowrap text-right text-skin-text xs:ml-auto xs:mt-0"
               >
                 <BaseButton
-                  :disabled="state.rewards.length < 2"
+                  :disabled="
+                    state.rewards.length < 2 ||
+                    !supportedChain.get(web3.network.chainId)
+                  "
                   @click="claimAll()"
                   >claim all
                 </BaseButton>
@@ -156,7 +160,10 @@ onUnmounted(() => {
                   </div>
                 </div>
 
-                <BaseButton class="!mb-0" @click="claimReward(reward)"
+                <BaseButton
+                  :disabled="!supportedChain.get(web3.network.chainId)"
+                  class="!mb-0"
+                  @click="claimReward(reward)"
                   >claim
                 </BaseButton>
               </BaseBlock>
