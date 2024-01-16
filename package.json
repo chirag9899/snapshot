@@ -24,6 +24,8 @@
     ]
   },
   "dependencies": {
+    "@web3-onboard/injected-wallets": "^2.10.11",
+    "@web3-onboard/vue": "^2.7.12",
     "@apollo/client": "^3.8.7",
     "@braintree/sanitize-url": "^6.0.2",
     "@ensdomains/eth-ens-namehash": "^2.0.15",

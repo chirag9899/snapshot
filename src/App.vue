@@ -3,6 +3,40 @@ const { domain } = useApp();
 const { init, isReady, showSidebar } = useApp();
 const route = useRoute();
 const { restorePendingTransactions } = useTxStatus();
+import { init as onboardInit } from '@web3-onboard/vue';
+import injectedModule from '@web3-onboard/injected-wallets';
+import Onboard from '@web3-onboard/core';
+
+const injected = injectedModule();
+const infuraKey = '<INFURA_KEY>';
+const rpcUrl = `https://mainnet.infura.io/v3/${infuraKey}`;
+
+onboardInit({
+  wallets: [injected],
+  chains: [
+    {
+      id: '0x1',
+      token: 'ETH',
+      label: 'Ethereum Mainnet',
+      rpcUrl
+    },
+    {
+      id: 42161,
+      token: 'ARB-ETH',
+      label: 'Arbitrum One',
+      rpcUrl: 'https://rpc.ankr.com/arbitrum'
+    },
+    {
+      id: '0xa4ba',
+      token: 'ARB',
+      label: 'Arbitrum Nova',
+      rpcUrl: 'https://nova.arbitrum.io/rpc'
+    }
+  ],
+  connect: {
+    autoConnectLastWallet: true
+  }
+});
 
 onMounted(async () => {
   await init();

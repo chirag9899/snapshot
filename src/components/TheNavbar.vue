@@ -4,6 +4,7 @@ const { env, showSidebar, domain } = useApp();
 const { web3Account, web3, open, login, checkConnected } = useWeb3();
 import { supportedChain } from '../helpers/supportedChains';
 import Alert from '../views/Alert.vue';
+import ConnectWallet from '../components/ConnectButton.vue';
 
 const showDemoBanner = ref(true);
 const showPendingTransactionsModal = ref(false);
@@ -17,34 +18,36 @@ watch(
   }
 );
 
-let updatedID;
-onMounted(async () => {
-  updatedID = setInterval(async () => {
-    const isConnected = checkConnected();
-    const isSupportedChain = supportedChain.get(web3.value.network.chainId);
+// let updatedID;
+// onMounted(async () => {
+//   updatedID = setInterval(async () => {
+//     const isConnected = checkConnected();
+//     const isSupportedChain = supportedChain.get(web3.value.network.chainId);
 
-    if (isConnected) {
-      if (isSupportedChain?.name === undefined) {
-        try {
-          await login();
-        } catch (error) {
-          showAlert.value = false;
-          console.error('Failed:', error);
-        }
-      }
-      if (!isSupportedChain) {
-        showAlert.value = true;
-      } else {
-        showAlert.value = false;
-      }
-    }
+//     if(isConnected){
+//       if(isSupportedChain?.name === undefined) {
+//         try {
+//         await login();
+//       } catch (error) {
+//         showAlert.value= false
+//         console.error('Failed:', error);
+//       }
+//       }
+//       if(!isSupportedChain){
+//         showAlert.value= true
+//       }
+//       else{
+//         showAlert.value= false
+//       }
+//     }
 
-    showSwitch.value = isConnected;
-  }, 2000); // Delay
-});
-onUnmounted(() => {
-  clearInterval(updatedID);
-});
+//     showSwitch.value = isConnected;
+//   }, 2000); // Delay
+
+// });
+// onUnmounted(() => {
+//   clearInterval(updatedID);
+// });
 
 import BaseNetworkItem from './BaseNetworkItem.vue';
 </script>
@@ -106,36 +109,21 @@ import BaseNetworkItem from './BaseNetworkItem.vue';
             rewards
           </router-link>
 
-          <w3m-button balance="hide" />
+          <!-- <w3m-button balance="hide" /> -->
+          <ConnectWallet />
 
           <!-- multichain switch  -->
-          <div
-            v-if="showSwitch"
-            class="relative"
-            tabindex="0"
-            @click="open({ view: 'Networks' })"
-          >
-            <BaseButton
-              class="flex items-center rounded-none"
-              style="font-size: 18px; width: 170px; height: 40px"
-            >
-              <div
-                v-if="
-                  checkConnected() && supportedChain.get(web3.network.chainId)
-                "
-                class="flex items-center justify-start"
-              >
-                <!-- <div v-if="checkWalletStatus()" class="flex items-center justify-start"> -->
-                <img
-                  :src="supportedChain.get(web3.network.chainId)?.imageUrl"
-                  alt=""
-                  class="mr-2 h-4 w-4 object-contain"
-                />
+          <!-- <div v-if="showSwitch" class="relative" tabindex="0" @click="open({ view: 'Networks' })">
+            <BaseButton class="flex items-center rounded-none" style="font-size: 18px; width: 170px; height: 40px">
+              <div v-if="checkConnected() && supportedChain.get(web3.network.chainId)"
+                class="flex items-center justify-start">
+                <img :src="supportedChain.get(web3.network.chainId)?.imageUrl" alt=""
+                  class="mr-2 h-4 w-4 object-contain" />
                 <p>{{ supportedChain.get(web3.network.chainId)?.name }}</p>
               </div>
               <p v-else>Switch Network</p>
             </BaseButton>
-          </div>
+          </div> -->
 
           <!--          <NavbarAccount />-->
           <!--          <NavbarNotifications v-if="web3Account && !domain" />-->
