@@ -52,12 +52,6 @@ export default {
     >
       Disconnect
     </button>
-    <span class="text-gray-700">Network: {{ userAddress }}</span>
-    <!-- <span class="text-gray-700">Network: {{ parseInt(connectedChain?.id, 16) }}</span>
-    <span class="text-gray-700">Network: {{ userAddress }}</span> -->
-
-    <!-- <button class="px-4 py-2 bg-green-500 text-white rounded" @click="set">Set chain</button>
-    <span class="text-gray-700">Address: {{ connectedWallet?.accounts[0]?.address}}</span> -->
   </div>
 </template>
 
