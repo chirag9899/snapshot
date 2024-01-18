@@ -14,7 +14,8 @@ useMeta({
 const route = useRoute();
 const router = useRouter();
 const { followingSpaces, loadingFollows } = useFollowSpace();
-const { web3, web3Account } = useWeb3();
+// const { web3, web3Account } = useWeb3();
+const { userAddress, connectingWallet } = useConnectButton();
 const { apolloQuery } = useApolloQuery();
 const { profiles, loadProfiles } = useProfiles();
 const { loadBy, loadingMore, stopLoadingMore, loadMore } =
@@ -35,7 +36,7 @@ const isFeedJoinedSpaces = computed(
 );
 
 async function getProposals(skip = 0) {
-  if (!web3Account.value && isFeedJoinedSpaces.value) return [];
+  if (!userAddress.value && isFeedJoinedSpaces.value) return [];
 
   const spaces = isFeedJoinedSpaces.value ? followingSpaces.value : undefined;
 
@@ -176,11 +177,11 @@ useInfiniteScroll(
         />
       </div>
       <div class="border-skin-border bg-skin-block-bg md:rounded-lg md:border">
-        <LoadingRow v-if="loading || web3.authLoading || loadingFollows" />
+        <LoadingRow v-if="loading || connectingWallet || loadingFollows" />
         <div
           v-else-if="
             (isFeedJoinedSpaces && followingSpaces.length < 1) ||
-            (isFeedJoinedSpaces && !web3.account)
+            (isFeedJoinedSpaces && !userAddress)
           "
           class="p-4 text-center"
         >

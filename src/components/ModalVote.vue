@@ -4,7 +4,8 @@ import { getPower, voteValidation } from '@/helpers/snapshot';
 import { ExtendedSpace, Proposal } from '@/helpers/interfaces';
 import shutterEncryptChoice from '@/helpers/shutter';
 
-const { web3Account } = useWeb3();
+// const { web3Account } = useWeb3();
+const { userAddress } = useConnectButton();
 
 const votingPower = ref(0);
 const votingPowerByStrategy = ref([]);
@@ -103,7 +104,7 @@ async function loadVotingValidation() {
   try {
     const validationRes = await voteValidation(
       props.space,
-      web3Account.value,
+      userAddress.value,
       props.proposal
     );
     isValidVoter.value = validationRes;
@@ -118,7 +119,7 @@ async function loadVotingPower() {
   try {
     const powerRes = await getPower(
       props.space,
-      web3Account.value,
+      userAddress.value,
       props.proposal
     );
     votingPower.value = powerRes.vp;
@@ -143,7 +144,7 @@ async function loadValidationAndPower() {
 }
 
 watch(
-  () => [props.open, web3Account.value],
+  () => [props.open, userAddress.value],
   async () => {
     if (props.open === false) return;
     loadValidationAndPower();

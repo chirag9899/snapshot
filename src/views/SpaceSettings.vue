@@ -22,7 +22,8 @@ useMeta({
 const { t } = useI18n();
 const { domain } = useApp();
 const router = useRouter();
-const { web3Account } = useWeb3();
+// const { web3Account } = useWeb3();
+const { userAddress } = useConnectButton();
 const { send, isSending } = useClient();
 const { reloadSpace, deleteSpace } = useExtendedSpaces();
 const { loadFollows } = useFollowSpace();
@@ -75,7 +76,7 @@ const showFormErrors = ref(false);
 const isSpaceAdmin = computed(() => {
   if (!props.space) return false;
   const admins = (props.space?.admins || []).map(admin => admin.toLowerCase());
-  return admins.includes(web3Account.value?.toLowerCase());
+  return admins.includes(userAddress.value?.toLowerCase());
 });
 
 const settingsPages = computed(() => [

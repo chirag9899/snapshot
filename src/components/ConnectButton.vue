@@ -1,6 +1,72 @@
 <script>
+import { reactive, ref } from 'vue';
+import { useConnectButton } from '@/composables/onboard';
+import { supportedChain } from '@/helpers/supportedChains';
+import ModalPostVote from '@/components/ModalPostVote.vue';
+
+export default {
+  name: 'ConnectButton',
+  setup() {
+    const {
+      connect,
+      connectedWallet,
+      connectedChain,
+      set,
+      disconnect,
+      userAddress,
+      ethersProvider
+    } = useConnectButton();
+
+    // watch(ethersProvider, (newAddress) => {
+    //   console.log("shit", newAddress.provider)
+    //   // console.log("Address changed to", newAddress);
+    // });
+
+    // const chainId = parseInt(connectedChain?.id, 16);
+    return {
+      connect,
+      connectedWallet,
+      connectedChain,
+      set,
+      disconnect,
+      userAddress,
+      supportedChain
+    };
+  }
+};
+</script>
+
+<template>
+  <div class="flex items-center justify-center gap-4">
+    <button
+      v-if="!connectedWallet?.provider"
+      class="rounded bg-yellow-500 px-4 py-2 text-black"
+      @click="connect"
+    >
+      Connect
+    </button>
+    <button
+      v-else
+      class="rounded bg-yellow-500 px-4 py-2 text-black"
+      @click="disconnect"
+    >
+      Disconnect
+    </button>
+    <span class="text-gray-700">Network: {{ userAddress }}</span>
+    <!-- <span class="text-gray-700">Network: {{ parseInt(connectedChain?.id, 16) }}</span>
+    <span class="text-gray-700">Network: {{ userAddress }}</span> -->
+
+    <!-- <button class="px-4 py-2 bg-green-500 text-white rounded" @click="set">Set chain</button>
+    <span class="text-gray-700">Address: {{ connectedWallet?.accounts[0]?.address}}</span> -->
+  </div>
+</template>
+
+<!-- 
+<script>
 import { ref, onMounted, watch } from 'vue';
 import { useOnboard } from '@web3-onboard/vue';
+
+
 
 export default {
   name: 'ConnectButton',
@@ -11,17 +77,26 @@ export default {
       connectedChain,
       setChain,
       getChain,
-      disconnectConnectedWallet
+      disconnectConnectedWallet,
+      wallets
+      
+    
     } = useOnboard();
 
     const connect = async () => {
       await connectWallet();
     };
+    console.log(
+      "lol",wallets
+    )
 
     const set = () => setChain({ wallet: 'MetaMask', chainId: '0xa4ba' });
 
     const disconnect = async () => {
-      await disconnectConnectedWallet({ label: connectedWallet.label });
+      console.log(
+      "mom",wallets.value[0].accounts[0].address
+    )
+      // await disconnectConnectedWallet({ label: connectedWallet.label });
     };
     return {
       connect,
@@ -38,6 +113,7 @@ export default {
   <button type="button" @click="connect">Connect</button>
   <button type="button" @click="disconnect">disconnect</button>
   <button type="button" @click="set">Set chain</button>
-  <!-- <span>Connected Chain: {{ connectedChain?.namespace }}</span> -->
+
   <span>Network: {{ connectedChain }}</span>
-</template>
+
+</template> -->

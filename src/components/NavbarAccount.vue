@@ -3,6 +3,7 @@ import { shorten } from '@/helpers/utils';
 import { getInstance } from '@snapshot-labs/lock/plugins/vue3';
 
 const { login, web3, web3Account } = useWeb3();
+const { userAddress } = useConnectButton();
 const { profiles, loadProfiles, loadingProfiles, reloadingProfile } =
   useProfiles();
 const { modalAccountOpen } = useModal();
@@ -17,23 +18,23 @@ async function handleLogin(connector) {
   loading.value = false;
 }
 
-const profile = computed(() => profiles.value[web3Account.value]);
+const profile = computed(() => profiles.value[userAddress.value]);
 
 watchEffect(() => {
-  loadProfiles([web3Account.value]);
+  loadProfiles([userAddress.value]);
 });
 </script>
 
 <template>
   <template v-if="auth.isAuthenticated.value">
-    <MenuAccount :address="web3Account" @switchWallet="modalAccountOpen = true">
+    <MenuAccount :address="userAddress" @switchWallet="modalAccountOpen = true">
       <BaseButton
         :loading="web3.authLoading || loadingProfiles || reloadingProfile"
         class="flex items-center"
         data-testid="button-account-menu"
       >
         <AvatarUser
-          :address="web3Account"
+          :address="userAddress"
           size="18"
           class="-ml-1 -mr-1 sm:mr-2 md:mr-2 lg:mr-2 xl:mr-2"
         />
@@ -42,7 +43,7 @@ watchEffect(() => {
           class="hidden sm:block"
           v-text="profile.name || profile.ens"
         />
-        <span v-else class="hidden sm:block" v-text="shorten(web3Account)" />
+        <span v-else class="hidden sm:block" v-text="shorten(userAddress)" />
       </BaseButton>
     </MenuAccount>
   </template>

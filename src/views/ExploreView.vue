@@ -54,6 +54,8 @@ const items = computed(() => {
   return [];
 });
 
+import { useConnectButton } from '@/composables/onboard';
+
 watch(
   () => route.query.filter,
   () => {
@@ -100,6 +102,8 @@ useInfiniteScroll(
         "
         >Browse projects
       </BaseButton>
+
+      <!-- <span>Network: {{ connectedChain }}</span> -->
 
       <BaseButton
         :primary="showActiveSpaces"

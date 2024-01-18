@@ -27,7 +27,13 @@ const route = useRoute();
 
 const themeBefore = userTheme.value;
 
-const { web3, web3Account, login, getProvider } = useWeb3();
+// const { web3, web3Account, login, getProvider } = useWeb3();
+const { userAddress, ethersProvider } = useConnectButton();
+
+watch(ethersProvider, newAddress => {
+  console.log('provider', newAddress);
+});
+
 const { modalAccountOpen } = useModal();
 
 let epochEnd = new Date(getActivePeriod() * 1000);
@@ -65,7 +71,8 @@ async function loadGauges(skip = 0) {
   state.showTable = skip > 0 ? true : false;
   let gauges = [];
   try {
-    const provider = await getProvider();
+    const provider = ethersProvider.value;
+    // const provider = await getProvider();
 
     const gaugeControllerContract = new ethers.Contract(
       state.selectedProject.gaugeControllerAddress,
@@ -153,7 +160,7 @@ onUnmounted(() => {
 });
 
 async function openModal(gauge) {
-  if (web3Account.value === '') {
+  if (userAddress.value === '') {
     modalAccountOpen.value = true;
   } else {
     state.modalOpen = true;

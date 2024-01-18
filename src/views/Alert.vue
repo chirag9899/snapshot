@@ -1,7 +1,7 @@
 <template>
   <div
     v-if="alertOpen"
-    class="custom-bg-red left-0 right-0 top-0 z-50 mb-4 flex h-5 items-center rounded border-0 px-6 py-4 text-white"
+    class="left-0 right-0 top-0 z-50 mb-4 flex h-5 items-center justify-center rounded border-0 bg-[#f35354] px-6 py-4 text-white"
   >
     <span class="mr-5 inline-block align-middle text-xl">
       <i class="fas fa-bell"></i>
@@ -9,12 +9,12 @@
     <span class="mr-8 inline-block align-middle">
       <b class="capitalize"></b> {{ message }}
     </span>
-    <button
+    <!-- <button
       class="absolute right-0 top-0 mr-6 mt-2 bg-transparent text-xl font-extralight leading-none outline-none focus:outline-none"
       @click="closeAlert()"
     >
       <span class="font-thin text-white">×</span>
-    </button>
+    </button> -->
   </div>
 </template>
 

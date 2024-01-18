@@ -5,11 +5,13 @@ const { web3Account, web3, open, login, checkConnected } = useWeb3();
 import { supportedChain } from '../helpers/supportedChains';
 import Alert from '../views/Alert.vue';
 import ConnectWallet from '../components/ConnectButton.vue';
+import { useConnectButton } from '@/composables/onboard';
 
 const showDemoBanner = ref(true);
 const showPendingTransactionsModal = ref(false);
 const showAlert = ref(false);
 const showSwitch = ref(false);
+const { connectedChain } = useConnectButton();
 
 watch(
   () => pendingTransactionsWithHash.value.length === 0,
@@ -53,7 +55,10 @@ import BaseNetworkItem from './BaseNetworkItem.vue';
 </script>
 
 <template>
-  <Alert v-show="showAlert" message="Switch to Supported Network First!" />
+  <Alert
+    v-show="!supportedChain?.get(parseInt(connectedChain?.id || '1', 16))"
+    message="QuickSnap is not supported on this network. Please switch to a supported network."
+  />
   <div
     v-if="env === 'demo' && showDemoBanner"
     class="relative bg-primary p-3 text-center"
@@ -109,7 +114,7 @@ import BaseNetworkItem from './BaseNetworkItem.vue';
             rewards
           </router-link>
 
-          <!-- <w3m-button balance="hide" /> -->
+          <!-- <w3m-button balance="hide" />  -->
           <ConnectWallet />
 
           <!-- multichain switch  -->

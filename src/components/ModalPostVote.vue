@@ -4,7 +4,8 @@ import { ExtendedSpace, Proposal } from '@/helpers/interfaces';
 
 const { isGnosisSafe } = useClient();
 const { shareVote, shareProposalTwitter, shareProposalLenster } = useSharing();
-const { web3Account } = useWeb3();
+const { userAddress } = useConnectButton();
+// const { web3Account } = useWeb3();
 
 const props = defineProps<{
   open: boolean;
@@ -82,7 +83,9 @@ function share(shareTo: 'twitter' | 'lenster') {
 
         <div v-if="isGnosisSafe">
           <BaseLink
-            :link="`https://gnosis-safe.io/app/eth:${web3Account}/transactions/queue`"
+            :link="`https://gnosis-safe.io/app/eth:${{
+              userAddress
+            }}/transactions/queue`"
             hide-external-icon
           >
             <BaseButton tabindex="-1" class="w-full">

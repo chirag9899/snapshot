@@ -36,7 +36,8 @@ const { loadBy, loadingMore, stopLoadingMore, loadMore } = useInfiniteLoader();
 const { emitUpdateLastSeenProposal } = useUnseenProposals();
 const { profiles, loadProfiles } = useProfiles();
 const { apolloQuery } = useApolloQuery();
-const { web3Account } = useWeb3();
+// const { web3Account } = useWeb3();
+const { userAddress } = useConnectButton();
 const { isFollowing } = useFollowSpace(props.space.id);
 const {
   store,
@@ -103,7 +104,7 @@ useInfiniteScroll(
   { distance: 400 }
 );
 
-watch(web3Account, () => emitUpdateLastSeenProposal(props.space.id));
+watch(userAddress, () => emitUpdateLastSeenProposal(props.space.id));
 
 async function loadProposals() {
   if (!needToRefreshProposals()) return;

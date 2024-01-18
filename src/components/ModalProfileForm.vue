@@ -12,7 +12,8 @@ const props = defineProps<{
 const emit = defineEmits(['close']);
 
 const { aliasWallet, actionWithAlias, actionLoading } = useAliasAction();
-const { web3Account } = useWeb3();
+// const { web3Account } = useWeb3();
+const { userAddress } = useConnectButton();
 const { notify } = useFlashNotification();
 const { t } = useI18n();
 const { reloadProfile } = useProfiles();
@@ -24,10 +25,11 @@ const form = ref({
   avatar: '',
   about: ''
 });
+console.log('save', userAddress);
 
 async function save() {
   await client.profile(aliasWallet.value, aliasWallet.value.address, {
-    from: web3Account.value,
+    from: userAddress.value,
     timestamp: Number((Date.now() / 1e3).toFixed()),
     profile: JSON.stringify(form.value)
   });

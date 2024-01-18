@@ -34,7 +34,8 @@ const router = useRouter();
 const { t } = useI18n();
 const auth = getInstance();
 const { domain } = useApp();
-const { web3, web3Account } = useWeb3();
+// const { web3, web3Account } = useWeb3();
+const { userAddress, connectingWallet } = useConnectButton();
 const { send, isSending } = useClient();
 const { pluginIndex } = usePlugins();
 const { modalAccountOpen } = useModal();
@@ -96,7 +97,7 @@ const isFormValid = computed(() => {
     !form.value.choices.some((a, i) => a.text === '' && i === 0) &&
     isValidAuthor.value &&
     isSafeSnapPluginValid &&
-    !web3.value.authLoading
+    !connectingWallet
   );
 });
 
@@ -138,9 +139,9 @@ const isMember = computed(() => {
     return object.map(a => a.toLowerCase()).includes(account.toLowerCase());
   }
   return (
-    findAccount(props.space.members, web3Account.value) ||
-    findAccount(props.space.admins, web3Account.value) ||
-    findAccount(props.space.moderators, web3Account.value) ||
+    findAccount(props.space.members, userAddress.value) ||
+    findAccount(props.space.admins, userAddress.value) ||
+    findAccount(props.space.moderators, userAddress.value) ||
     false
   );
 });
@@ -235,7 +236,7 @@ function updateTime() {
 
 async function validateAuthor() {
   isValidAuthor.value = false;
-  if (web3Account.value && auth.isAuthenticated.value) {
+  if (userAddress.value && auth.isAuthenticated.value) {
     if (isMember.value) {
       isValidAuthor.value = true;
       return;
@@ -260,7 +261,7 @@ async function validateAuthor() {
       validationLoading.value = true;
       const validationRes = await proposalValidation(
         props.space,
-        web3Account.value
+        userAddress.value
       );
 
       isValidAuthor.value = validationRes;
@@ -275,7 +276,7 @@ async function validateAuthor() {
 }
 
 watch(
-  () => web3Account.value,
+  () => userAddress.value,
   () => {
     validateAuthor();
   },
@@ -383,21 +384,21 @@ onMounted(async () => {
           class="block w-full"
           :loading="validationLoading || isSnapshotLoading"
           :disabled="
-            (!stepIsValid && !!web3Account) ||
-            web3.authLoading ||
+            (!stepIsValid && !!userAddress) ||
+            connectingWallet ||
             hasAuthorValidationFailed ||
             validationLoading ||
             isGnosisAndNotSpaceNetwork
           "
           primary
           :data-testid="
-            web3Account
+            userAddress
               ? 'create-proposal-continue-button'
               : 'create-proposal-connect-wallet-button'
           "
-          @click="web3Account ? nextStep() : (modalAccountOpen = true)"
+          @click="userAddress ? nextStep() : (modalAccountOpen = true)"
         >
-          {{ web3Account ? $t('create.continue') : $t('connectWallet') }}
+          {{ userAddress ? $t('create.continue') : $t('connectWallet') }}
         </BaseButton>
       </BaseBlock>
     </template>

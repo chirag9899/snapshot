@@ -31,6 +31,12 @@ onboardInit({
       token: 'ARB',
       label: 'Arbitrum Nova',
       rpcUrl: 'https://nova.arbitrum.io/rpc'
+    },
+    {
+      id: '0x89',
+      token: 'MATIC',
+      label: 'Polygon Mainnet',
+      rpcUrl: 'https://rpc-mainnet.maticvigil.com/'
     }
   ],
   connect: {
